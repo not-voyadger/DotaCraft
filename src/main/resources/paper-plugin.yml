@@ -1,0 +1,6 @@
+name: DotaCraft
+version: '${version}'
+
+main: com.dotacraft.dotaCraft.DotaCraft
+api-version: '26.3'
+load: POSTWORLD
