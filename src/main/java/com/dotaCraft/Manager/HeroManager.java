@@ -1,0 +1,31 @@
+package com.dotaCraft.Manager;
+
+import com.dotaCraft.Hero.Hero;
+import org.bukkit.entity.Player;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class HeroManager {
+    private final Map activeHeroes = new HashMap<>();
+
+    public void registerHero(Player player, Hero hero) {
+        activeHeroes.put(player.getUniqueId(), hero);
+    }
+
+    public void unregisterHero(Player player) {
+        activeHeroes.remove(player.getUniqueId());
+    }
+
+    public Hero getHero(Player player) {
+        return (Hero) activeHeroes.get(player.getUniqueId());
+    }
+
+    public boolean hasHero(Player player) {
+        return activeHeroes.containsKey(player.getUniqueId());
+    }
+
+    public void clear() {
+        activeHeroes.clear();
+    }
+}

@@ -3,11 +3,11 @@ package com.dotaCraft.Hero;
 import com.dotaCraft.Ability.Ability;
 import org.bukkit.entity.Player;
 
-import java.util.Map;
 import java.util.HashMap;
+import java.util.Map;
 
-public class Hero {
-    public enum Attribute {STRENGTH, AGILITY, INTELLECT, UNIVERSAL }
+public abstract class Hero {
+    public enum Attribute { STRENGTH, AGILITY, INTELLECT, UNIVERSAL }
 
     private final Player player;
     private final String heroName;
@@ -27,20 +27,18 @@ public class Hero {
     private boolean isHeroDead = false;
     private int level = 1;
 
+    // Указываем явные дженерики
     private final Map abilitiesBySlot = new HashMap<>();
 
     public Hero(Player player, String heroName, Attribute primaryAttribute,
                 double baseStrength, double baseAgility, double baseIntellect,
                 double strengthGain, double agilityGain, double intellectGain) {
-
         this.player = player;
         this.heroName = heroName;
         this.primaryAttribute = primaryAttribute;
-
         this.baseStrength = baseStrength;
         this.baseAgility = baseAgility;
         this.baseIntellect = baseIntellect;
-
         this.strengthGain = strengthGain;
         this.agilityGain = agilityGain;
         this.intellectGain = intellectGain;
@@ -57,104 +55,44 @@ public class Hero {
         return false;
     }
 
-    public void takeDamage(double damage) {
-        if (isHeroDead) return;
-
-        currentHealth -= damage;
-        if (currentHealth <= 0) {
-            currentHealth = 0;
-            heroDie();
+    public boolean castAbility(int slot) {
+        Ability ability = (Ability) abilitiesBySlot.get(slot);
+        if (ability == null) {
+            player.sendMessage("§cСпособность в этом слоте отсутствует!");
+            return false;
         }
-    }
 
-    public void addAbility(int slot, Ability ability) {
-        this.abilitiesBySlot.put(slot, ability);
-    }
+        double manaCost = ability.getManaCost(ability.getAbilityLevel());
+        if (currentMana < manaCost) {
+            player.sendMessage("§bNot enough mana!");
+            return false;
+        }
 
-    public void addStrength(double amount) {
-        this.baseStrength += amount;
-    }
-
-    public void levelUp() {
-        level ++;
-    }
-
-    public void heroDie() {
-        this.isHeroDead = true;
-    }
-
-    public double calculateBuyback(double netWorth) {
-        return 200 + ( netWorth / 13.0 );
+        useMana(manaCost);
+        ability.cast(this);
+        return true;
     }
 
     public Hero getLastAttacker() {
         return null;
     }
 
-    public boolean useMana(int amount) {
-        if ( currentMana >= amount ) {
-            currentMana -= amount;
-            return true;
-        }
-        return false;
+    public void addAbility(int slot, Ability ability) {
+        this.abilitiesBySlot.put(slot, ability);
     }
 
-
-    // Characteristics
-
-    public double getStrength() {
-        return baseStrength + (strengthGain * (level - 1));
+    public void addStrength(int amount) {
+        baseStrength += amount;
     }
 
-    public double getAgility() {
-        return baseAgility + (agilityGain * (level - 1));
-    }
-
-    public double getIntellect() {
-        return baseIntellect + (intellectGain * (level - 1));
-    }
-
-    public double getMaxHealth() {
-        return 120.0 + (getStrength() * 22.0);
-    }
-
-    public double getMaxMana() {
-        return 75.0 + (getIntellect() * 12.0);
-    }
-
-    //Getters
-
-    public Player getPlayer() {
-        return player;
-    }
-
-    public String getHeroName() {
-        return heroName;
-    }
-
-    public double getCurrentHealth() {
-        return currentHealth;
-    }
-
-    public double getCurrentMana() {
-        return currentMana;
-    }
-
-    public boolean isDead() {
-        return isHeroDead;
-    }
-
-    public Attribute getPrimaryAttribute() {
-        return primaryAttribute;
-    }
-
-    public Ability getAbilityInSlot(int slot) {
-        return (Ability) abilitiesBySlot.get(slot);
-    }
-
-    public Map getAbilitiesBySlot() {
-        return abilitiesBySlot;
-    }
-
-    public double getLevel() { return level; }
+    // Getters & Stats calculations
+    public Player getPlayer() { return player; }
+    public String getHeroName() { return heroName; }
+    public double getStrength() { return baseStrength + (strengthGain * (level - 1)); }
+    public double getAgility() { return baseAgility + (agilityGain * (level - 1)); }
+    public double getIntellect() { return baseIntellect + (intellectGain * (level - 1)); }
+    public double getMaxHealth() { return 120.0 + (getStrength() * 22.0); }
+    public double getMaxMana() { return 75.0 + (getIntellect() * 12.0); }
+    public Ability getAbilityInSlot(int slot) { return (Ability) abilitiesBySlot.get(slot); }
+    public int getLevel() { return level; }
 }

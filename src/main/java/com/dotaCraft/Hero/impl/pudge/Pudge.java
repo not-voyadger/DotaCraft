@@ -8,5 +8,6 @@ public class Pudge extends Hero {
         super(player, "Pudge", Attribute.STRENGTH, 30.0, 14.0, 16.0, 3.0, 1.4, 1.8);
 
         this.addAbility(0, new FleshHeap());
+        this.addAbility(1, new MeatHook());
     }
 }

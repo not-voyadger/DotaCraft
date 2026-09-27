@@ -24,7 +24,7 @@ public abstract class Ability {
     private double[] effectRadius;
     private double[] duration;
 
-    private int castPoint; // time to cast
+    private int castPoint; // time to cast in ticks/ms
     private int abilityLevel;
     private int abilityMaxLevel;
     private int requiredHeroLevel;
@@ -70,11 +70,61 @@ public abstract class Ability {
 
     public void onTick(Hero hero) {}
 
-    // Getters
+    public abstract void cast(Hero hero);
+
+    // --- Getters ---
+
+    public int getAbilityLevel() {
+        return abilityLevel;
+    }
+
+    public void setAbilityLevel(int abilityLevel) {
+        this.abilityLevel = Math.min(abilityLevel, abilityMaxLevel);
+    }
 
     public double getDamage(int level) {
-        if (level <= 0) return 0;
-        int index = Math.min(level - 1, damage.length - 1);
-        return damage[index];
+        return getArrayValueByLevel(damage, level);
     }
+
+    public double getManaCost(int level) {
+        return getArrayValueByLevel(manaCost, level);
+    }
+
+    public double getHealthCost(int level) {
+        return getArrayValueByLevel(healthCost, level);
+    }
+
+    public double getCoolDown(int level) {
+        return getArrayValueByLevel(coolDown, level);
+    }
+
+    public double getCastRange(int level) {
+        return getArrayValueByLevel(castRange, level);
+    }
+
+    public double getEffectRadius(int level) {
+        return getArrayValueByLevel(effectRadius, level);
+    }
+
+    public double getDuration(int level) {
+        return getArrayValueByLevel(duration, level);
+    }
+
+    // Вспомогательный метод, чтобы не дублировать проверки массивов
+    private double getArrayValueByLevel(double[] array, int level) {
+        if (level <= 0 || array == null || array.length == 0) return 0;
+        int index = Math.min(level - 1, array.length - 1);
+        return array[index];
+    }
+
+    public DamageTypes getDamageType() { return damageType; }
+    public AbilityTypes getAbilityType() { return abilityType; }
+    public TargetTypes getTargetType() { return targetType; }
+    public DispelTypes getDispelType() { return dispelType; }
+    public int getCastPoint() { return castPoint; }
+    public int getAbilityMaxLevel() { return abilityMaxLevel; }
+    public int getRequiredHeroLevel() { return requiredHeroLevel; }
+    public boolean isInnate() { return isInnate; }
+    public boolean hasScepterUpgrade() { return hasScepterUpgrade; }
+    public boolean hasShardUpgrade() { return hasShardUpgrade; }
 }

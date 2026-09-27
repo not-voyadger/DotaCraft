@@ -34,7 +34,11 @@ public class FleshHeap extends Ability {
     public void onEnemyDeath(Hero Pudge, Hero victim, double radius) {
         if (Pudge.equals(victim.getLastAttacker()) || radius <= 450.0) {
             stackCount++;
-            Pudge.addStrength(2.0);
+            Pudge.addStrength(2);
         }
+    }
+
+    public void cast(Hero hero) {
+        hero.getPlayer().sendMessage("FleshHeap.");
     }
 }

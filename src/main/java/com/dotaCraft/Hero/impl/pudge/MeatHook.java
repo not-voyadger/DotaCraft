@@ -28,8 +28,7 @@ public class MeatHook extends Ability {
         );
     }
 
-    @Override
-    public void onCast(Hero Pudge) {
-
+    public void cast(Hero hero) {
+        hero.getPlayer().sendMessage("MeatHook.");
     }
 }

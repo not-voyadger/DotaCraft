@@ -1,4 +1,4 @@
-package com.dotacraft.dotaCraft;
+package com.dotaCraft.dotaCraft;
 
 import org.bukkit.plugin.java.JavaPlugin;
 
