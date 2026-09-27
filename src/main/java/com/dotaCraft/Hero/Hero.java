@@ -58,15 +58,15 @@ public abstract class Hero {
     public boolean castAbility(int slot) {
         Ability ability = (Ability) abilitiesBySlot.get(slot);
         if (ability == null) {
-            player.sendMessage("§cСпособность в этом слоте отсутствует!");
+            player.sendMessage("§cAbility does not exist.");
             return false;
         }
 
         double manaCost = ability.getManaCost(ability.getAbilityLevel());
-        if (currentMana < manaCost) {
+        /*if (currentMana < manaCost) {
             player.sendMessage("§bNot enough mana!");
             return false;
-        }
+        }*/
 
         useMana(manaCost);
         ability.cast(this);

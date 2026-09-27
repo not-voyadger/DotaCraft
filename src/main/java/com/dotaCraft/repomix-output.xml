@@ -1,0 +1,538 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+Ability/
+  Ability.java
+dotaCraft/
+  DotaCraft.java
+Hero/
+  impl/
+    pudge/
+      FleshHeap.java
+      MeatHook.java
+      Pudge.java
+  Hero.java
+Listeners/
+  AbilityListener.java
+Manager/
+  HeroManager.java
+DotaCraft.java
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="Ability/Ability.java">
+package com.dotaCraft.Ability;
+
+import com.dotaCraft.Hero.Hero;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public abstract class Ability {
+    public enum AbilityTypes { PASSIVE, UNIT_TARGET, POINT_TARGET, NO_TARGET, TOGGLE, AUTO_CAST }
+    public enum DamageTypes { PHYSICAL, MAGICAL, PURE, NONE }
+    public enum TargetTypes { ALLY, ENEMY, ALL, NONE }
+    public enum DispelTypes { NONE, BASIC, STRONG }
+
+    private final DamageTypes damageType;
+    private final AbilityTypes abilityType;
+    private final TargetTypes targetType;
+    private final DispelTypes dispelType;
+
+    private double[] damage;
+    private double[] manaCost;
+    private double[] healthCost;
+    private double[] coolDown;
+    private double[] castRange;
+    private double[] effectRadius;
+    private double[] duration;
+
+    private int castPoint; // time to cast in ticks/ms
+    private int abilityLevel;
+    private int abilityMaxLevel;
+    private int requiredHeroLevel;
+
+    private boolean isInnate;
+    private boolean hasScepterUpgrade;
+    private boolean hasShardUpgrade;
+
+    private final Map specialValues = new HashMap<>();
+
+    public Ability(DamageTypes damageType, AbilityTypes abilityType, TargetTypes targetType, DispelTypes dispelType,
+                   double[] damage, double[] manaCost, double[] healthCost, double[] coolDown, double[] castRange,
+                   int castPoint, double[] effectRadius, double[] duration, int abilityLevel, int abilityMaxLevel,
+                   int requiredHeroLevel, boolean isInnate, boolean hasScepterUpgrade, boolean hasShardUpgrade) {
+
+        this.damageType = damageType;
+        this.abilityType = abilityType;
+        this.targetType = targetType;
+        this.dispelType = dispelType;
+        this.damage = damage;
+        this.manaCost = manaCost;
+        this.healthCost = healthCost;
+        this.coolDown = coolDown;
+        this.castRange = castRange;
+        this.castPoint = castPoint;
+        this.effectRadius = effectRadius;
+        this.duration = duration;
+        this.abilityLevel = abilityLevel;
+        this.abilityMaxLevel = abilityMaxLevel;
+        this.requiredHeroLevel = requiredHeroLevel;
+        this.isInnate = isInnate;
+        this.hasScepterUpgrade = hasScepterUpgrade;
+        this.hasShardUpgrade = hasShardUpgrade;
+    }
+
+    public void onCast(Hero hero) {}
+
+    public double onTakeDamage(Hero hero, double incomingDamage) {
+        return incomingDamage;
+    }
+
+    public void onEnemyDeath(Hero hero, Hero victim, double radius) {}
+
+    public void onTick(Hero hero) {}
+
+    public abstract void cast(Hero hero);
+
+    // --- Getters ---
+
+    public int getAbilityLevel() {
+        return abilityLevel;
+    }
+
+    public void setAbilityLevel(int abilityLevel) {
+        this.abilityLevel = Math.min(abilityLevel, abilityMaxLevel);
+    }
+
+    public double getDamage(int level) {
+        return getArrayValueByLevel(damage, level);
+    }
+
+    public double getManaCost(int level) {
+        return getArrayValueByLevel(manaCost, level);
+    }
+
+    public double getHealthCost(int level) {
+        return getArrayValueByLevel(healthCost, level);
+    }
+
+    public double getCoolDown(int level) {
+        return getArrayValueByLevel(coolDown, level);
+    }
+
+    public double getCastRange(int level) {
+        return getArrayValueByLevel(castRange, level);
+    }
+
+    public double getEffectRadius(int level) {
+        return getArrayValueByLevel(effectRadius, level);
+    }
+
+    public double getDuration(int level) {
+        return getArrayValueByLevel(duration, level);
+    }
+
+    // Вспомогательный метод, чтобы не дублировать проверки массивов
+    private double getArrayValueByLevel(double[] array, int level) {
+        if (level <= 0 || array == null || array.length == 0) return 0;
+        int index = Math.min(level - 1, array.length - 1);
+        return array[index];
+    }
+
+    public DamageTypes getDamageType() { return damageType; }
+    public AbilityTypes getAbilityType() { return abilityType; }
+    public TargetTypes getTargetType() { return targetType; }
+    public DispelTypes getDispelType() { return dispelType; }
+    public int getCastPoint() { return castPoint; }
+    public int getAbilityMaxLevel() { return abilityMaxLevel; }
+    public int getRequiredHeroLevel() { return requiredHeroLevel; }
+    public boolean isInnate() { return isInnate; }
+    public boolean hasScepterUpgrade() { return hasScepterUpgrade; }
+    public boolean hasShardUpgrade() { return hasShardUpgrade; }
+}
+</file>
+
+<file path="dotaCraft/DotaCraft.java">
+package com.dotaCraft.dotaCraft;
+
+import org.bukkit.plugin.java.JavaPlugin;
+
+public final class DotaCraft extends JavaPlugin {
+
+    @Override
+    public void onEnable() {
+        // Plugin startup logic
+    }
+
+    @Override
+    public void onDisable() {
+        // Plugin shutdown logic
+    }
+}
+</file>
+
+<file path="Hero/impl/pudge/FleshHeap.java">
+package com.dotaCraft.Hero.impl.pudge;
+
+import com.dotaCraft.Ability.Ability;
+import com.dotaCraft.Hero.Hero;
+
+public class FleshHeap extends Ability {
+
+    private int stackCount = 0;
+
+    public FleshHeap() {
+        super(
+                DamageTypes.NONE,
+                AbilityTypes.PASSIVE,
+                TargetTypes.NONE,
+                DispelTypes.NONE,
+                new double[]{0,0,0,0},
+                new double[]{0,0,0,0},
+                new double[]{0,0,0,0},
+                new double[]{0,0,0,0},
+                new double[]{0,0,0,0},
+                0,
+                new double[]{0,0,0,0},
+                new double[]{0,0,0,0},
+                1,
+                1,
+                1,
+                true,  // isInnate = true
+                false, // hasScepterUpgrade
+                false  // hasShardUpgrade
+        );
+    }
+
+    @Override
+    public void onEnemyDeath(Hero Pudge, Hero victim, double radius) {
+        if (Pudge.equals(victim.getLastAttacker()) || radius <= 450.0) {
+            stackCount++;
+            Pudge.addStrength(2);
+        }
+    }
+
+    public void cast(Hero hero) {
+        hero.getPlayer().sendMessage("FleshHeap.");
+    }
+}
+</file>
+
+<file path="Hero/impl/pudge/MeatHook.java">
+package com.dotaCraft.Hero.impl.pudge;
+
+import com.dotaCraft.Ability.Ability;
+import com.dotaCraft.Hero.Hero;
+
+public class MeatHook extends Ability {
+
+    public MeatHook() {
+        super(
+                DamageTypes.PURE,
+                AbilityTypes.POINT_TARGET,
+                TargetTypes.NONE,
+                DispelTypes.NONE,
+                new double[]{150, 220, 290, 360}, //damage
+                new double[]{120,120,120,120}, //manaCost
+                new double[]{0,0,0,0}, // healthCost
+                new double[]{18,16,14,12}, // coolDown
+                new double[]{1300,1300,1300,1300}, // castRange
+                0, // castPoint
+                new double[]{0,0,0,0}, // effectRadius
+                new double[]{2,2,2,2}, // duration
+                1,
+                4,
+                1,
+                false, //isInnate
+                false, //hasScepterUpgrade
+                true //hasShardUpgrade
+        );
+    }
+
+    public void cast(Hero hero) {
+        hero.getPlayer().sendMessage("MeatHook.");
+    }
+}
+</file>
+
+<file path="Hero/impl/pudge/Pudge.java">
+package com.dotaCraft.Hero.impl.pudge;
+
+import com.dotaCraft.Hero.Hero;
+import org.bukkit.entity.Player;
+
+public class Pudge extends Hero {
+    public Pudge(Player player) {
+        super(player, "Pudge", Attribute.STRENGTH, 30.0, 14.0, 16.0, 3.0, 1.4, 1.8);
+
+        this.addAbility(0, new FleshHeap());
+        this.addAbility(1, new MeatHook());
+    }
+}
+</file>
+
+<file path="Hero/Hero.java">
+package com.dotaCraft.Hero;
+
+import com.dotaCraft.Ability.Ability;
+import org.bukkit.entity.Player;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public abstract class Hero {
+    public enum Attribute { STRENGTH, AGILITY, INTELLECT, UNIVERSAL }
+
+    private final Player player;
+    private final String heroName;
+    private final Attribute primaryAttribute;
+
+    private double baseStrength;
+    private double baseAgility;
+    private double baseIntellect;
+
+    private double strengthGain;
+    private double agilityGain;
+    private double intellectGain;
+
+    private double currentHealth;
+    private double currentMana;
+
+    private boolean isHeroDead = false;
+    private int level = 1;
+
+    // Указываем явные дженерики
+    private final Map abilitiesBySlot = new HashMap<>();
+
+    public Hero(Player player, String heroName, Attribute primaryAttribute,
+                double baseStrength, double baseAgility, double baseIntellect,
+                double strengthGain, double agilityGain, double intellectGain) {
+        this.player = player;
+        this.heroName = heroName;
+        this.primaryAttribute = primaryAttribute;
+        this.baseStrength = baseStrength;
+        this.baseAgility = baseAgility;
+        this.baseIntellect = baseIntellect;
+        this.strengthGain = strengthGain;
+        this.agilityGain = agilityGain;
+        this.intellectGain = intellectGain;
+
+        this.currentHealth = getMaxHealth();
+        this.currentMana = getMaxMana();
+    }
+
+    public boolean useMana(double amount) {
+        if (currentMana >= amount) {
+            currentMana -= amount;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean castAbility(int slot) {
+        Ability ability = (Ability) abilitiesBySlot.get(slot);
+        if (ability == null) {
+            player.sendMessage("§cСпособность в этом слоте отсутствует!");
+            return false;
+        }
+
+        double manaCost = ability.getManaCost(ability.getAbilityLevel());
+        if (currentMana < manaCost) {
+            player.sendMessage("§bNot enough mana!");
+            return false;
+        }
+
+        useMana(manaCost);
+        ability.cast(this);
+        return true;
+    }
+
+    public Hero getLastAttacker() {
+        return null;
+    }
+
+    public void addAbility(int slot, Ability ability) {
+        this.abilitiesBySlot.put(slot, ability);
+    }
+
+    public void addStrength(int amount) {
+        baseStrength += amount;
+    }
+
+    // Getters & Stats calculations
+    public Player getPlayer() { return player; }
+    public String getHeroName() { return heroName; }
+    public double getStrength() { return baseStrength + (strengthGain * (level - 1)); }
+    public double getAgility() { return baseAgility + (agilityGain * (level - 1)); }
+    public double getIntellect() { return baseIntellect + (intellectGain * (level - 1)); }
+    public double getMaxHealth() { return 120.0 + (getStrength() * 22.0); }
+    public double getMaxMana() { return 75.0 + (getIntellect() * 12.0); }
+    public Ability getAbilityInSlot(int slot) { return (Ability) abilitiesBySlot.get(slot); }
+    public int getLevel() { return level; }
+}
+</file>
+
+<file path="Listeners/AbilityListener.java">
+package com.dotaCraft.Listeners;
+
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Hero.impl.pudge.Pudge;
+import com.dotaCraft.Manager.HeroManager;
+import org.bukkit.Material;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.player.PlayerInteractEvent;
+
+public class AbilityListener implements Listener {
+
+    private final HeroManager heroManager;
+
+    public AbilityListener(HeroManager heroManager) {
+        this.heroManager = heroManager;
+    }
+
+    @EventHandler
+    public void onPlayerInteract(PlayerInteractEvent event) {
+        Player player = event.getPlayer();
+
+        if (event.getAction() == Action.RIGHT_CLICK_AIR || event.getAction() == Action.RIGHT_CLICK_BLOCK) {
+
+            if (!heroManager.hasHero(player)) {
+                if (event.getItem() != null && event.getItem().getType() == Material.FISHING_ROD) {
+                    heroManager.registerHero(player, new Pudge(player));
+                    player.sendMessage("§aYou have picked Pudge!");
+                }
+                return;
+            }
+
+            Hero hero = heroManager.getHero(player);
+
+            if (event.getItem() != null && event.getItem().getType() == Material.FISHING_ROD) {
+                hero.castAbility(1);
+            }
+        }
+    }
+}
+</file>
+
+<file path="Manager/HeroManager.java">
+package com.dotaCraft.Manager;
+
+import com.dotaCraft.Hero.Hero;
+import org.bukkit.entity.Player;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public class HeroManager {
+    private final Map activeHeroes = new HashMap<>();
+
+    public void registerHero(Player player, Hero hero) {
+        activeHeroes.put(player.getUniqueId(), hero);
+    }
+
+    public void unregisterHero(Player player) {
+        activeHeroes.remove(player.getUniqueId());
+    }
+
+    public Hero getHero(Player player) {
+        return (Hero) activeHeroes.get(player.getUniqueId());
+    }
+
+    public boolean hasHero(Player player) {
+        return activeHeroes.containsKey(player.getUniqueId());
+    }
+
+    public void clear() {
+        activeHeroes.clear();
+    }
+}
+</file>
+
+<file path="DotaCraft.java">
+package com.dotaCraft;
+
+import com.dotaCraft.Listeners.AbilityListener;
+import com.dotaCraft.Manager.HeroManager;
+import org.bukkit.plugin.java.JavaPlugin;
+
+public final class DotaCraft extends JavaPlugin {
+
+    private static DotaCraft instance;
+    private HeroManager heroManager;
+
+    @Override
+    public void onEnable() {
+        instance = this;
+
+        this.heroManager = new HeroManager();
+
+        getServer().getPluginManager().registerEvents(new AbilityListener(heroManager), this);
+
+        getLogger().info("DotaCraft successfully enabled!");
+    }
+
+    @Override
+    public void onDisable() {
+        if (heroManager != null) {
+            heroManager.clear();
+        }
+
+        getLogger().info("DotaCraft disabled.");
+    }
+
+    public static DotaCraft getInstance() {
+        return instance;
+    }
+
+    public HeroManager getHeroManager() {
+        return heroManager;
+    }
+}
+</file>
+
+</files>
