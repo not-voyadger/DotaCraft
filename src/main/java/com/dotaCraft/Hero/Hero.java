@@ -1,8 +1,14 @@
 package com.dotaCraft.Hero;
 
+import com.dotaCraft.Ability.Ability;
 import org.bukkit.entity.Player;
 
+import java.util.Map;
+import java.util.HashMap;
+
 public class Hero {
+    public enum Attribute {STRENGTH, AGILITY, INTELLECT, UNIVERSAL }
+
     private final Player player;
     private final String heroName;
     private final Attribute primaryAttribute;
@@ -20,6 +26,8 @@ public class Hero {
 
     private boolean isHeroDead = false;
     private int level = 1;
+
+    private final Map abilitiesBySlot = new HashMap<>();
 
     public Hero(Player player, String heroName, Attribute primaryAttribute,
                 double baseStrength, double baseAgility, double baseIntellect,
@@ -59,6 +67,14 @@ public class Hero {
         }
     }
 
+    public void addAbility(int slot, Ability ability) {
+        this.abilitiesBySlot.put(slot, ability);
+    }
+
+    public void addStrength(double amount) {
+        this.baseStrength += amount;
+    }
+
     public void levelUp() {
         level ++;
     }
@@ -70,6 +86,19 @@ public class Hero {
     public double calculateBuyback(double netWorth) {
         return 200 + ( netWorth / 13.0 );
     }
+
+    public Hero getLastAttacker() {
+        return null;
+    }
+
+    public boolean useMana(int amount) {
+        if ( currentMana >= amount ) {
+            currentMana -= amount;
+            return true;
+        }
+        return false;
+    }
+
 
     // Characteristics
 
@@ -118,4 +147,14 @@ public class Hero {
     public Attribute getPrimaryAttribute() {
         return primaryAttribute;
     }
+
+    public Ability getAbilityInSlot(int slot) {
+        return (Ability) abilitiesBySlot.get(slot);
+    }
+
+    public Map getAbilitiesBySlot() {
+        return abilitiesBySlot;
+    }
+
+    public double getLevel() { return level; }
 }
