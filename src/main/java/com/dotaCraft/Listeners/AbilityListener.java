@@ -1,6 +1,7 @@
 package com.dotaCraft.Listeners;
 
 import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Hero.impl.invoker.Invoker;
 import com.dotaCraft.Hero.impl.pudge.Pudge;
 import com.dotaCraft.Item.impl.IronBranch;
 import com.dotaCraft.Manager.HeroManager;
@@ -81,6 +82,17 @@ public class AbilityListener implements Listener {
                 player.sendMessage("§cYou need to pick a hero first!");
             }
             return;
+        } else if (item.getType() == Material.BLAZE_ROD) {
+            if (!heroManager.hasHero(player)) {
+                Invoker invoker = new Invoker(player);
+                heroManager.registerHero(player, invoker);
+                player.sendMessage("§aYou have picked Invoker!");
+                player.sendMessage("§7--- §eStats §7---");
+                player.sendMessage("§cStrength: §f" + invoker.getStrength());
+                player.sendMessage("§aAgility: §f" + invoker.getAgility());
+                player.sendMessage("§bIntelligence: §f" + invoker.getIntellect());
+                return;
+            }
         }
 
         Hero hero = heroManager.getHero(player);

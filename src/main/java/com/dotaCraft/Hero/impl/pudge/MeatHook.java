@@ -43,7 +43,7 @@ public class MeatHook extends Ability {
 
         int level = getAbilityLevel();
         double maxDistance = getCastRange(level);
-        //double damage = getDamage(level);
+        //double damage = getDamage(level); - temporary
         double damage = 0;
 
         Location spawnLoc = startLoc.clone().subtract(0, 2.5, 0);
