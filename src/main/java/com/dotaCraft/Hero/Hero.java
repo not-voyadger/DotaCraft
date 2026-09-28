@@ -1,6 +1,7 @@
 package com.dotaCraft.Hero;
 
 import com.dotaCraft.Ability.Ability;
+import com.dotaCraft.Item.Item;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -13,25 +14,25 @@ public abstract class Hero {
     private final String heroName;
     private final Attribute primaryAttribute;
 
-    private double baseStrength;
-    private double baseAgility;
-    private double baseIntellect;
+    private int baseStrength;
+    private int baseAgility;
+    private int baseIntellect;
 
     private double strengthGain;
     private double agilityGain;
     private double intellectGain;
 
-    private double currentHealth;
-    private double currentMana;
+    private static int currentHealth;
+    private static int currentMana;
 
     private boolean isHeroDead = false;
     private int level = 1;
 
-    // Указываем явные дженерики
     private final Map abilitiesBySlot = new HashMap<>();
+    private final Map itemsBySlot = new HashMap<>();
 
     public Hero(Player player, String heroName, Attribute primaryAttribute,
-                double baseStrength, double baseAgility, double baseIntellect,
+                int baseStrength, int baseAgility, int baseIntellect,
                 double strengthGain, double agilityGain, double intellectGain) {
         this.player = player;
         this.heroName = heroName;
@@ -81,18 +82,28 @@ public abstract class Hero {
         this.abilitiesBySlot.put(slot, ability);
     }
 
+    public void addItem(int slot, Item item) {
+        if (item != null) {
+            item.onEquip(this);
+        }
+    }
+
     public void addStrength(int amount) {
         baseStrength += amount;
     }
+    public void addAgility(int amount) { baseAgility += amount; }
+    public void addIntellect(int amount) { baseIntellect += amount; }
 
     // Getters & Stats calculations
     public Player getPlayer() { return player; }
     public String getHeroName() { return heroName; }
-    public double getStrength() { return baseStrength + (strengthGain * (level - 1)); }
-    public double getAgility() { return baseAgility + (agilityGain * (level - 1)); }
-    public double getIntellect() { return baseIntellect + (intellectGain * (level - 1)); }
-    public double getMaxHealth() { return 120.0 + (getStrength() * 22.0); }
-    public double getMaxMana() { return 75.0 + (getIntellect() * 12.0); }
+    public int getStrength() { return (int) (baseStrength + (strengthGain * (level - 1))); }
+    public int getAgility() { return (int) (baseAgility + (agilityGain * (level - 1))); }
+    public int getIntellect() { return (int) (baseIntellect + (intellectGain * (level - 1))); }
+    public int getMaxHealth() { return 120 + (getStrength() * 22); }
+    public static int getCurrentHealth() { return currentHealth; }
+    public int getMaxMana() { return 75 + (getIntellect() * 12); }
+    public static int getCurrentMana() { return currentMana; }
     public Ability getAbilityInSlot(int slot) { return (Ability) abilitiesBySlot.get(slot); }
     public int getLevel() { return level; }
 }

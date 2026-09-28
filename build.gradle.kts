@@ -14,6 +14,8 @@ dependencies {
     compileOnly("com.google.guava:guava:33.0.0-jre")
     compileOnly("org.jetbrains:annotations:24.1.0")
     compileOnly("net.kyori:adventure-api:4.17.0")
+
+    compileOnly(fileTree("libs") { include("*.jar") })
 }
 
 java {

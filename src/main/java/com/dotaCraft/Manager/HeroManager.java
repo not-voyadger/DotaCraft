@@ -7,7 +7,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public class HeroManager {
-    private final Map activeHeroes = new HashMap<>();
+    private static final Map activeHeroes = new HashMap<>();
 
     public void registerHero(Player player, Hero hero) {
         activeHeroes.put(player.getUniqueId(), hero);
@@ -17,7 +17,8 @@ public class HeroManager {
         activeHeroes.remove(player.getUniqueId());
     }
 
-    public Hero getHero(Player player) {
+    public static Hero getHero(Player player) {
+        if (player == null) return null;
         return (Hero) activeHeroes.get(player.getUniqueId());
     }
 
