@@ -2,6 +2,7 @@ package com.dotaCraft.Hero;
 
 import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.Item.Item;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -22,8 +23,8 @@ public abstract class Hero {
     private double agilityGain;
     private double intellectGain;
 
-    private static int currentHealth;
-    private static int currentMana;
+    private int currentHealth;
+    private int currentMana;
 
     private boolean isHeroDead = false;
     private int level = 1;
@@ -74,6 +75,30 @@ public abstract class Hero {
         return true;
     }
 
+    public void useItem(int slot, Entity target) {
+        Item item = (Item) itemsBySlot.get(slot);
+        if (item == null) {
+            player.sendMessage("§cNo item in slot " + slot);
+            return;
+        }
+
+        if (item.getTargetType() == Item.TargetTypes.UNIT_TARGET) {
+            if (target != null) {
+                if (currentMana < item.getManaCost()) {
+                    player.sendMessage("§bNot enough mana! Needed: " + item.getManaCost() + ", Current: " + currentMana);
+                    return;
+                }
+
+                useMana(item.getManaCost());
+                item.startCooldown();
+                item.onUseUnitTarget(this.player, target);
+                player.sendMessage("§aHex used on " + target.getType().name());
+            } else {
+                player.sendMessage("§cThis item requires a target!");
+            }
+        }
+    }
+
     public Hero getLastAttacker() {
         return null;
     }
@@ -84,8 +109,17 @@ public abstract class Hero {
 
     public void addItem(int slot, Item item) {
         if (item != null) {
+            this.itemsBySlot.put(slot, item);
             item.onEquip(this);
         }
+    }
+
+    public void addHealth(double amount) {
+        this.currentHealth = (int) Math.min(this.currentHealth + amount, getMaxHealth());
+    }
+
+    public void addMana(double amount) {
+        this.currentMana = (int) Math.min(this.currentMana + amount, getMaxMana());
     }
 
     public void addStrength(int amount) {
@@ -101,9 +135,9 @@ public abstract class Hero {
     public int getAgility() { return (int) (baseAgility + (agilityGain * (level - 1))); }
     public int getIntellect() { return (int) (baseIntellect + (intellectGain * (level - 1))); }
     public int getMaxHealth() { return 120 + (getStrength() * 22); }
-    public static int getCurrentHealth() { return currentHealth; }
+    public int getCurrentHealth() { return currentHealth; }
     public int getMaxMana() { return 75 + (getIntellect() * 12); }
-    public static int getCurrentMana() { return currentMana; }
+    public int getCurrentMana() { return currentMana; }
     public Ability getAbilityInSlot(int slot) { return (Ability) abilitiesBySlot.get(slot); }
     public int getLevel() { return level; }
 }

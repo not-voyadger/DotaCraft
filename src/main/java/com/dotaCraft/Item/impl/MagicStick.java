@@ -2,6 +2,8 @@ package com.dotaCraft.Item.impl;
 
 import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Item.Item;
+import com.dotaCraft.Manager.HeroManager;
+import org.bukkit.entity.Player;
 
 public class MagicStick extends Item {
 
@@ -11,22 +13,24 @@ public class MagicStick extends Item {
     }
 
     @Override
-    public void onUseNoTarget(org.bukkit.entity.Player player) {
+    public void onUseNoTarget(Player player) {
+        Hero hero = HeroManager.getHero(player);
+        if (hero == null) return;
+
         int currentCharges = getCurrentCharges();
 
-        if (currentCharges != 0) {
-            int manaToAdd = currentCharges * 15;
-            int healthToAdd = currentCharges * 15;
+        if (currentCharges > 0) {
+            double manaToAdd = currentCharges * 15.0;
+            double healthToAdd = currentCharges * 15.0;
 
-            int currentMana = Hero.getCurrentMana();
-            int currentHealth = Hero.getCurrentHealth();
-
-            currentMana += manaToAdd;
-            currentHealth += healthToAdd;
+            // Пополняем ресурсы герою
+            hero.addMana(manaToAdd);
+            hero.addHealth(healthToAdd);
 
             currentCharges = 0;
         } else {
             // TO DO: logic to refuse adding mana/health, sound effect
+            player.sendMessage("§cNo charges!");
         }
     }
 }

@@ -3,9 +3,10 @@ package com.dotaCraft.Listeners;
 import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Hero.impl.invoker.Invoker;
 import com.dotaCraft.Hero.impl.pudge.Pudge;
-import com.dotaCraft.Item.impl.IronBranch;
+import com.dotaCraft.Item.impl.ScytheOfVyse;
 import com.dotaCraft.Manager.HeroManager;
 import org.bukkit.Material;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.entity.Slime;
 import org.bukkit.event.EventHandler;
@@ -34,6 +35,27 @@ public class AbilityListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGH)
+    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
+        if (event.getHand() != EquipmentSlot.HAND) return;
+
+        Player player = event.getPlayer();
+        Hero hero = heroManager.getHero(player);
+        if (hero == null) return;
+
+        ItemStack item = player.getInventory().getItemInMainHand();
+        if (item == null || item.getType() == Material.AIR) return;
+
+        if (item.getType() == Material.STICK) {
+            Entity target = event.getRightClicked();
+            player.sendMessage("§eDebug: Clicked on " + target.getType().name());
+
+            hero.useItem(2, target);
+
+            event.setCancelled(true);
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
     public void onPlayerInteract(PlayerInteractEvent event) {
         if (event.getHand() != EquipmentSlot.HAND) return;
 
@@ -41,63 +63,60 @@ public class AbilityListener implements Listener {
         Action action = event.getAction();
 
         if (action == Action.RIGHT_CLICK_AIR || action == Action.RIGHT_CLICK_BLOCK) {
-            handleRightClick(player, event.getItem());
+            ItemStack item = event.getItem();
+            if (item == null) return;
+
+            handleRightClick(player, item);
         }
     }
 
-    @EventHandler(priority = EventPriority.HIGH)
-    public void onPlayerInteractEntity(PlayerInteractEntityEvent event) {
-        if (event.getHand() != EquipmentSlot.HAND) return;
-
-        Player player = event.getPlayer();
-        ItemStack item = player.getInventory().getItemInMainHand();
-
-        handleRightClick(player, item);
-    }
-
     private void handleRightClick(Player player, ItemStack item) {
-
-        if (item.getType() == Material.COPPER_SPEAR ) {
+        if (item.getType() == Material.COPPER_SPEAR) {
             if (!heroManager.hasHero(player)) {
                 Pudge pudge = new Pudge(player);
                 heroManager.registerHero(player, pudge);
                 player.sendMessage("§aYou have picked Pudge!");
-                player.sendMessage("§7--- §eStats §7---");
-                player.sendMessage("§cStrength: §f" + pudge.getStrength());
-                player.sendMessage("§aAgility: §f" + pudge.getAgility());
-                player.sendMessage("§bIntelligence: §f" + pudge.getIntellect());
-                return;
-            }
-        } else if (item.getType() == Material.STICK) {
-            Hero hero = heroManager.getHero(player);
-            if (hero != null) {
-                IronBranch branch = new IronBranch();
-                hero.addItem(2, branch);
-                player.sendMessage("§aYou added Iron Branch to slot 1!");
-                player.sendMessage("§7--- §eStats §7---");
-                player.sendMessage("§cStrength: §f" + hero.getStrength());
-                player.sendMessage("§aAgility: §f" + hero.getAgility());
-                player.sendMessage("§bIntelligence: §f" + hero.getIntellect());
-            } else {
-                player.sendMessage("§cYou need to pick a hero first!");
+                printHeroStats(player, pudge);
             }
             return;
-        } else if (item.getType() == Material.BLAZE_ROD) {
+        }
+
+        if (item.getType() == Material.BLAZE_ROD) {
             if (!heroManager.hasHero(player)) {
                 Invoker invoker = new Invoker(player);
                 heroManager.registerHero(player, invoker);
                 player.sendMessage("§aYou have picked Invoker!");
-                player.sendMessage("§7--- §eStats §7---");
-                player.sendMessage("§cStrength: §f" + invoker.getStrength());
-                player.sendMessage("§aAgility: §f" + invoker.getAgility());
-                player.sendMessage("§bIntelligence: §f" + invoker.getIntellect());
-                return;
+                printHeroStats(player, invoker);
             }
+            return;
         }
 
         Hero hero = heroManager.getHero(player);
-        if (hero != null) {
-            hero.castAbility(1);
+        if (hero == null) {
+            player.sendMessage("§cYou need to pick a hero first!");
+            return;
         }
+
+        if (item.getType() == Material.AMETHYST_SHARD || item.getType() == Material.FEATHER) {
+            ScytheOfVyse scytheOfVyse = new ScytheOfVyse();
+            hero.addItem(2, scytheOfVyse);
+            player.sendMessage("§aYou added Scythe of Vyse to Slot 2!");
+            printHeroStats(player, hero);
+            return;
+        }
+
+        if (item.getType() == Material.STICK) {
+            hero.useItem(2, null);
+            return;
+        }
+
+        hero.castAbility(1);
+    }
+
+    private void printHeroStats(Player player, Hero hero) {
+        player.sendMessage("§7--- §eStats §7---");
+        player.sendMessage("§cStrength: §f" + hero.getStrength());
+        player.sendMessage("§aAgility: §f" + hero.getAgility());
+        player.sendMessage("§bIntelligence: §f" + hero.getIntellect());
     }
 }
