@@ -67,19 +67,7 @@ public abstract class Item {
         return (double) statBonuses.getOrDefault(stat, 0.0);
     }
 
-    public void onEquip(Hero hero) {
-        for (Map.Entry<StatType, Double> entry : statBonuses.entrySet()) {
-            StatType type = (StatType) entry.getKey();
-            int amount = entry.getValue().intValue();
-
-            switch (type) {
-                case STRENGTH -> hero.addStrength(amount);
-                case AGILITY -> hero.addAgility(amount);
-                case INTELLECT -> hero.addIntellect(amount);
-                default -> {}
-            }
-        }
-    }
+    public void onEquip(Hero hero) {}
 
     public boolean canCast(Player player) {
         Hero hero = HeroManager.getHero(player);

@@ -19,8 +19,8 @@ public final class DotaCraft extends JavaPlugin {
     public void onEnable() {
         instance = this;
 
-        this.heroManager = new HeroManager();
         this.heroBarManager = new HeroBarManager();
+        this.heroManager = new HeroManager(this.heroBarManager);
 
         getServer().getPluginManager().registerEvents(new AbilityListener(heroManager), this);
 

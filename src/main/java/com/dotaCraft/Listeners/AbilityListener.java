@@ -93,12 +93,16 @@ public class AbilityListener implements Listener {
     }
 
     private void handleTrigger(Hero hero, PlayerBinds.BindTarget bindTarget) {
-        if (bindTarget == null) return;
-
-        if (bindTarget.getType() == BindTrigger.BindType.ABILITY) {
-            hero.castAbility(bindTarget.getTargetSlot());
-        } else if (bindTarget.getType() == BindTrigger.BindType.ITEM) {
-            hero.useItem(bindTarget.getTargetSlot());
+        if (bindTarget == null) {
+            return;
         }
+
+        org.bukkit.Bukkit.getScheduler().runTask(com.dotaCraft.DotaCraft.getInstance(), () -> {
+            if (bindTarget.getType() == BindTrigger.BindType.ABILITY) {
+                hero.castAbility(bindTarget.getTargetSlot());
+            } else if (bindTarget.getType() == BindTrigger.BindType.ITEM) {
+                hero.useItem(bindTarget.getTargetSlot());
+            }
+        });
     }
 }

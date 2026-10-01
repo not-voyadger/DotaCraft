@@ -13,9 +13,15 @@ import java.util.function.Function;
 
 public class HeroManager {
 
+    public HeroManager(HeroBarManager heroBarManager) {
+        this.heroBarManager = heroBarManager;
+    }
+
     private static final Map activeHeroes = new HashMap<>();
 
     private static final Map heroFactories = new HashMap<>();
+
+    private HeroBarManager heroBarManager;
 
     static {
         registerHeroType("pudge", player -> new Pudge((Player) player));
@@ -34,6 +40,10 @@ public class HeroManager {
 
         Hero hero = (Hero) factory.apply(player);
         registerHero(player, hero);
+
+        if (heroBarManager != null) {
+            heroBarManager.createBars(player, hero);
+        }
         return hero;
     }
 

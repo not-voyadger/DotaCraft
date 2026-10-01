@@ -12,7 +12,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 public class ScytheOfVyse extends Item {
 
     private static final double HEX_DURATION_SECONDS = 3.5;
-    private static final int MANA_COST = 0;
+    private static final int MANA_COST = 250;
 
     public ScytheOfVyse() {
         super("scythe_of_vyse", TargetTypes.UNIT_TARGET, 5200, 20.0, MANA_COST, 800, 0, false);

@@ -7,6 +7,8 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.entity.*;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.entity.EntityUnleashEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
@@ -14,7 +16,7 @@ import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
-public class MeatHook extends Ability {
+public class MeatHook extends Ability implements org.bukkit.event.Listener {
 
     public MeatHook() {
         super(
@@ -33,6 +35,15 @@ public class MeatHook extends Ability {
                 1, 4, 1,
                 false, false, true
         );
+        org.bukkit.Bukkit.getPluginManager().registerEvents(this, DotaCraft.getInstance());
+    }
+
+    // fix for leash breaking
+    @EventHandler
+    public void onLeashBreak(EntityUnleashEvent event) {
+        if (event.getReason() == EntityUnleashEvent.UnleashReason.DISTANCE) {
+            event.setCancelled(true);
+        }
     }
 
     @Override

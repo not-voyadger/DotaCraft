@@ -27,8 +27,8 @@ public abstract class Hero {
     private double baseHealthRegen;
     private double baseManaRegen;
 
-    private int currentHealth;
-    private int currentMana;
+    private double currentHealth;
+    private double currentMana;
 
     private boolean isHeroDead = false;
     private int level = 1;
@@ -57,8 +57,8 @@ public abstract class Hero {
 
     public void onTick() {
         if (player != null && player.isOnline()) {
-            double hpRegen = baseHealthRegen + ( 0.05 + getStrength());
-            double manaRegen = baseManaRegen + ( 0.05 + getIntellect());
+            double hpRegen = (baseHealthRegen + (getStrength() * 0.1)) / 20.0;
+            double manaRegen = (baseManaRegen + (getIntellect() * 0.05)) / 20.0;
 
             addHealth(hpRegen);
             addMana(manaRegen);
@@ -83,6 +83,7 @@ public abstract class Hero {
         double manaCost = ability.getManaCost(ability.getAbilityLevel());
         if (currentMana < manaCost) {
             player.sendMessage("§bNot enough mana!");
+            player.getWorld().playSound(player.getLocation(), "dotacraft:ui.ui_deny_mana", 0.8f, 1.0f);
             return false;
         }
 
@@ -178,11 +179,11 @@ public abstract class Hero {
     }
 
     public void addHealth(double amount) {
-        this.currentHealth = (int) Math.min(this.currentHealth + amount, getMaxHealth());
+        this.currentHealth = Math.min(this.currentHealth + amount, getMaxHealth());
     }
 
     public void addMana(double amount) {
-        this.currentMana = (int) Math.min(this.currentMana + amount, getMaxMana());
+        this.currentMana = Math.min(this.currentMana + amount, getMaxMana());
     }
 
     public void addStrength(int amount) { baseStrength += amount; }
@@ -232,9 +233,9 @@ public abstract class Hero {
     public int getIntellect() { return getBaseIntellect() + getBonusIntellect(); }
 
     public int getMaxHealth() { return 120 + (getStrength() * 22); }
-    public int getCurrentHealth() { return currentHealth; }
+    public int getCurrentHealth() { return (int) currentHealth; }
     public int getMaxMana() { return 75 + (getIntellect() * 12); }
-    public int getCurrentMana() { return currentMana; }
+    public int getCurrentMana() { return (int) currentMana; }
     public Ability getAbilityInSlot(int slot) { return (Ability) abilitiesBySlot.get(slot); }
     public Item getItemInSlot(int slot) { return (Item) itemsBySlot.get(slot); }
     public int getLevel() { return level; }
