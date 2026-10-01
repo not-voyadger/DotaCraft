@@ -14,7 +14,7 @@ public class Pudge extends Hero {
     private ActiveModel activeModel;
 
     public Pudge(Player player) {
-        super(player, "Pudge", Attribute.STRENGTH, 25, 14, 16, 5.0, 0.8, 3.0, 1.4, 1.8);
+        super(player, "Pudge", Attribute.STRENGTH, 25, 14, 16, 5.0, 0.8, 3.0, 1.4, 1.8, 1.7z );
 
         this.addAbility(0, new FleshHeap());
         this.addAbility(1, new MeatHook());

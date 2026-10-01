@@ -29,6 +29,9 @@ public abstract class Hero {
 
     private double currentHealth;
     private double currentMana;
+    private double baseAttackTime = 1.7;
+
+    private long lastAttackTime = 0;
 
     private boolean isHeroDead = false;
     private int level = 1;
@@ -38,7 +41,7 @@ public abstract class Hero {
 
     public Hero(Player player, String heroName, Attribute primaryAttribute,
                 int baseStrength, int baseAgility, int baseIntellect, double baseHealthRegen, double baseManaRegen,
-                double strengthGain, double agilityGain, double intellectGain) {
+                double strengthGain, double agilityGain, double intellectGain, double baseAttackTime) {
         this.player = player;
         this.heroName = heroName;
         this.primaryAttribute = primaryAttribute;
@@ -50,6 +53,7 @@ public abstract class Hero {
         this.strengthGain = strengthGain;
         this.agilityGain = agilityGain;
         this.intellectGain = intellectGain;
+        this.baseAttackTime = baseAttackTime;
 
         this.currentHealth = getMaxHealth();
         this.currentMana = getMaxMana();
@@ -198,6 +202,33 @@ public abstract class Hero {
     public int getBaseAgility() { return (int) (baseAgility + (agilityGain * (level - 1))); }
     public int getBaseIntellect() { return (int) (baseIntellect + (intellectGain * (level - 1))); }
 
+    public double getBaseAttackTime() {
+        return baseAttackTime;
+    }
+
+    public double getAttackSpeed() {
+        double speedFromItems = 0;
+        for (Object obj : itemsBySlot.values()) {
+            if (obj instanceof Item item) {
+                speedFromItems += item.getStatBonus(Item.StatType.ATTACK_SPEED);
+            }
+        }
+        return 100.0 + getAgility() + speedFromItems;
+    }
+
+    public long getAttackIntervalMillis() {
+        double attacksPerSecond = (getAttackSpeed() / 100.0) / getBaseAttackTime();
+        return (long) (1000.0 / attacksPerSecond);
+    }
+
+    public boolean canAttack() {
+        return (System.currentTimeMillis() - lastAttackTime) >= getAttackIntervalMillis();
+    }
+
+    public void resetAttackCooldown() {
+        this.lastAttackTime = System.currentTimeMillis();
+    }
+
     public int getBonusStrength() {
         int bonus = 0;
         for (Object obj : itemsBySlot.values()) {
@@ -206,6 +237,33 @@ public abstract class Hero {
             }
         }
         return bonus;
+    }
+
+    public double getMainDamage() {
+        int primaryAttrValue = switch (primaryAttribute) {
+            case Attribute.STRENGTH -> getStrength();
+            case Attribute.AGILITY -> getAgility();
+            case Attribute.INTELLECT -> getIntellect();
+            case Attribute.UNIVERSAL -> (int) ((getStrength() + getAgility() + getIntellect()) * 0.7);
+        };
+
+        double bonusDamage = 0;
+        for (Object obj : itemsBySlot.values()) {
+            if (obj instanceof Item item) {
+                bonusDamage += item.getStatBonus(Item.StatType.DAMAGE);
+            }
+        }
+
+        return primaryAttrValue + bonusDamage;
+    }
+
+    public boolean hasCleave() {
+        for (Object obj : itemsBySlot.values()) {
+            if (obj instanceof Item item && item.getId().equalsIgnoreCase("battle_fury")) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public int getBonusAgility() {
@@ -239,4 +297,10 @@ public abstract class Hero {
     public Ability getAbilityInSlot(int slot) { return (Ability) abilitiesBySlot.get(slot); }
     public Item getItemInSlot(int slot) { return (Item) itemsBySlot.get(slot); }
     public int getLevel() { return level; }
+
+    // Setters
+
+    public void setBaseAttackTime(double baseAttackTime) {
+        this.baseAttackTime = baseAttackTime;
+    }
 }

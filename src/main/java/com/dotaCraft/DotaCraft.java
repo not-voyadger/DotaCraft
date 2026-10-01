@@ -2,6 +2,7 @@ package com.dotaCraft;
 
 import com.dotaCraft.Command.CommandDotaTest;
 import com.dotaCraft.Listeners.AbilityListener;
+import com.dotaCraft.Manager.AttackManager;
 import com.dotaCraft.Manager.HeroBarManager;
 import com.dotaCraft.Manager.HeroManager;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -23,6 +24,7 @@ public final class DotaCraft extends JavaPlugin {
         this.heroManager = new HeroManager(this.heroBarManager);
 
         getServer().getPluginManager().registerEvents(new AbilityListener(heroManager), this);
+        getServer().getPluginManager().registerEvents(new AttackManager(), this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             event.registrar().register("dotatest", "Test command", new CommandDotaTest(heroManager));
