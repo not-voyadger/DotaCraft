@@ -6,7 +6,7 @@ import org.bukkit.entity.Player;
 
 public class Invoker extends Hero {
     public Invoker(Player player) {
-        super(player, "Invoker", Attribute.INTELLECT, 19, 14, 22, 2.15, 1.1, 2.5, 2.0, 4.0, 1.7);
+        super(player, "Invoker", Attribute.INTELLECT, 19, 14, 22, 2.15, 1.1, 2.5, 2.0, 4.0, 1.7, AttackType.RANGED, 12, 18.0);
 
         this.addAbility(1, new ForgeSpirits());
 

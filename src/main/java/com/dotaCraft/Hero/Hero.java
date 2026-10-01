@@ -11,6 +11,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 public abstract class Hero {
+    public enum AttackType { MELEE, RANGED }
     public enum Attribute { STRENGTH, AGILITY, INTELLECT, UNIVERSAL }
 
     private final Player player;
@@ -36,12 +37,16 @@ public abstract class Hero {
     private boolean isHeroDead = false;
     private int level = 1;
 
+    private AttackType attackType;
+    private double attackRange = 3.5;
+    private double projectileSpeed = 20.0;
+
     private final Map abilitiesBySlot = new HashMap<>();
     private final Map itemsBySlot = new HashMap<>();
 
     public Hero(Player player, String heroName, Attribute primaryAttribute,
                 int baseStrength, int baseAgility, int baseIntellect, double baseHealthRegen, double baseManaRegen,
-                double strengthGain, double agilityGain, double intellectGain, double baseAttackTime) {
+                double strengthGain, double agilityGain, double intellectGain, double baseAttackTime, AttackType attackType, double attackRange, double projectileSpeed) {
         this.player = player;
         this.heroName = heroName;
         this.primaryAttribute = primaryAttribute;
@@ -55,8 +60,25 @@ public abstract class Hero {
         this.intellectGain = intellectGain;
         this.baseAttackTime = baseAttackTime;
 
+        this.attackType = attackType;
+        this.attackRange = attackRange;
+        this.projectileSpeed = projectileSpeed;
+
         this.currentHealth = getMaxHealth();
         this.currentMana = getMaxMana();
+    }
+
+    public Hero(Player player, String heroName, Attribute primaryAttribute,
+                int baseStrength, int baseAgility, int baseIntellect,
+                double baseHealthRegen, double baseManaRegen,
+                double strengthGain, double agilityGain, double intellectGain,
+                double baseAttackTime) {
+        this(player, heroName, primaryAttribute,
+                baseStrength, baseAgility, baseIntellect,
+                baseHealthRegen, baseManaRegen,
+                strengthGain, agilityGain, intellectGain,
+                baseAttackTime,
+                AttackType.MELEE, 3.5, 0.0);
     }
 
     public void onTick() {
@@ -298,9 +320,20 @@ public abstract class Hero {
     public Item getItemInSlot(int slot) { return (Item) itemsBySlot.get(slot); }
     public int getLevel() { return level; }
 
+    public AttackType getAttackType() { return attackType; }
+    public boolean isRanged() { return attackType == AttackType.RANGED; }
+
+    public double getAttackRange() { return attackRange; }
+
+    public double getProjectileSpeed() { return projectileSpeed; }
+
     // Setters
 
     public void setBaseAttackTime(double baseAttackTime) {
         this.baseAttackTime = baseAttackTime;
     }
+    public void setAttackType(AttackType attackType) { this.attackType = attackType; }
+    public void setAttackRange(double attackRange) { this.attackRange = attackRange; }
+    public void setProjectileSpeed(double projectileSpeed) { this.projectileSpeed = projectileSpeed; }
+
 }

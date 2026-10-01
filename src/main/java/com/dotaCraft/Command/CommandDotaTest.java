@@ -46,6 +46,10 @@ public class CommandDotaTest implements BasicCommand {
             hero.addItem(1, new MagicStick());
         }
 
+        if (heroId.equals("lion")) {
+            hero.addItem(1, new MagicStick());
+        }
+
         player.sendMessage("§aYou've picked : " + hero.getHeroName());
     }
 }

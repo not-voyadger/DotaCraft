@@ -2,6 +2,7 @@ package com.dotaCraft.Manager;
 
 import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Hero.impl.invoker.Invoker;
+import com.dotaCraft.Hero.impl.lion.Lion;
 import com.dotaCraft.Hero.impl.pudge.Pudge;
 import org.bukkit.entity.Player;
 
@@ -26,6 +27,7 @@ public class HeroManager {
     static {
         registerHeroType("pudge", player -> new Pudge((Player) player));
         registerHeroType("invoker", player -> new Invoker((Player) player));
+        registerHeroType("lion", player -> new Lion((Player) player));
     }
 
     public static void registerHeroType(String id, Function factory) {
