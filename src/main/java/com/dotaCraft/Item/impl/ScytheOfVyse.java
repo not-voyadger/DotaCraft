@@ -4,10 +4,7 @@ import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Item.Item;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Pig;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -32,9 +29,10 @@ public class ScytheOfVyse extends Item {
 
         int durationTicks = (int) (HEX_DURATION_SECONDS * 20);
 
-        player.getWorld().playSound(targetEntity.getLocation(), Sound.ENTITY_PIG_BIG_HURT, 1.0f, 1.0f);
+        player.getWorld().playSound(player.getLocation(), "dotacraft:scythe_of_vyse.scythe_of_vyse_cast", 0.8f, 1.0f);
+        /*player.getWorld().playSound(targetEntity.getLocation(), Sound.ENTITY_PIG_BIG_HURT, 1.0f, 1.0f);
         player.getWorld().playSound(targetEntity.getLocation(), Sound.ENTITY_PIG_MINI_HURT, 1.0f, 1.0f);
-        player.getWorld().playSound(targetEntity.getLocation(), Sound.ENTITY_PIG_AMBIENT, 1.0f, 1.0f);
+        player.getWorld().playSound(targetEntity.getLocation(), Sound.ENTITY_PIG_AMBIENT, 1.0f, 1.0f);*/
 
         targetEntity.getWorld().spawnParticle(Particle.EXPLOSION, targetEntity.getLocation().add(0, 1, 0), 10, 0.3, 0.3, 0.3);
 
@@ -48,6 +46,15 @@ public class ScytheOfVyse extends Item {
             p.setAI(false);
             p.setGravity(false);
             p.setSilent(true);
+        });
+
+        ArmorStand hologram = targetEntity.getWorld().spawn(targetEntity.getLocation().add(0, 0.8, 0), ArmorStand.class, armorStand -> {
+            armorStand.setVisible(false);
+            armorStand.setGravity(false);
+            armorStand.setMarker(true);
+            armorStand.setInvulnerable(true);
+            armorStand.setCustomName("§f§lHEXED");
+            armorStand.setCustomNameVisible(true);
         });
 
         new BukkitRunnable() {
@@ -64,6 +71,8 @@ public class ScytheOfVyse extends Item {
 
                     pig.teleport(targetEntity.getLocation());
 
+                    hologram.teleport(targetEntity.getLocation().add(0, 0.8, 0));
+
                     if (ticksLived % 5 == 0) {
                         targetEntity.getWorld().spawnParticle(
                                 Particle.WITCH,
@@ -77,9 +86,17 @@ public class ScytheOfVyse extends Item {
             }
 
             private void cleanup() {
+
+                player.getWorld().playSound(player.getLocation(), "dotacraft:scythe_of_vyse.scythe_of_vyse_return", 0.8f, 1.0f);
+
                 if (pig != null && pig.isValid()) {
                     pig.remove();
                 }
+
+                if (hologram != null && hologram.isValid()) {
+                    hologram.remove();
+                }
+
                 if (targetEntity.isValid()) {
                     targetEntity.getWorld().spawnParticle(Particle.POOF, targetEntity.getLocation().add(0, 1, 0), 10, 0.2, 0.2, 0.2);
                     targetEntity.removePotionEffect(PotionEffectType.INVISIBILITY);
