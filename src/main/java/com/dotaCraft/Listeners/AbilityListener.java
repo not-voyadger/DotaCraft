@@ -45,7 +45,7 @@ public class AbilityListener implements Listener {
             case 5 -> BindTrigger.SLOT_6;
             case 6 -> BindTrigger.SLOT_7;
             case 7 -> BindTrigger.SLOT_8;
-            case 8 -> BindTrigger.SLOT_9;
+            case 8 -> BindTrigger.PRESS_DOUBLE_W;
             default -> null;
         };
 
@@ -103,6 +103,8 @@ public class AbilityListener implements Listener {
             } else if (bindTarget.getType() == BindTrigger.BindType.ITEM) {
                 hero.useItem(bindTarget.getTargetSlot());
             }
+
+            hero.getPlayer().getInventory().setHeldItemSlot(8);
         });
     }
 }

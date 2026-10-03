@@ -3,6 +3,7 @@ package com.dotaCraft.Hero.impl.lion;
 import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Manager.HologramManager;
 import org.bukkit.Particle;
 import org.bukkit.entity.*;
 import org.bukkit.potion.PotionEffect;
@@ -17,7 +18,7 @@ public class Hex extends Ability {
     @Override
     public void cast(Hero hero) {
 
-        org.bukkit.entity.Player player = hero.getPlayer();
+        Player player = hero.getPlayer();
 
         double range = this.getCastRange(hero.getLevel());
 
@@ -44,21 +45,14 @@ public class Hex extends Ability {
         targetEntity.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, durationTicks, 3, false, false));
         targetEntity.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, durationTicks, 255, false, false));
 
+        HologramManager.spawnHexIndicator(targetEntity, durationSeconds);
+
         Frog frog = targetEntity.getWorld().spawn(targetEntity.getLocation(), Frog.class, f -> {
             f.setBaby();
             f.setInvulnerable(true);
             f.setAI(false);
             f.setGravity(false);
             f.setSilent(true);
-        });
-
-        ArmorStand hologram = targetEntity.getWorld().spawn(targetEntity.getLocation().add(0, 0.8, 0), ArmorStand.class, armorStand -> {
-            armorStand.setVisible(false);
-            armorStand.setGravity(false);
-            armorStand.setMarker(true);
-            armorStand.setInvulnerable(true);
-            armorStand.setCustomName("§f§lHEXED");
-            armorStand.setCustomNameVisible(true);
         });
 
         new BukkitRunnable() {
@@ -74,8 +68,6 @@ public class Hex extends Ability {
                     }
 
                     frog.teleport(targetEntity.getLocation());
-
-                    hologram.teleport(targetEntity.getLocation().add(0, 0.8, 0));
 
                     if (ticksLived % 5 == 0) {
                         targetEntity.getWorld().spawnParticle(
@@ -95,10 +87,6 @@ public class Hex extends Ability {
 
                 if (frog != null && frog.isValid()) {
                     frog.remove();
-                }
-
-                if (hologram != null && hologram.isValid()) {
-                    hologram.remove();
                 }
 
                 if (targetEntity.isValid()) {

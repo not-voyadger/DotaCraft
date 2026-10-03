@@ -1,5 +1,6 @@
 package com.dotaCraft.Manager;
 
+import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Hero.Hero;
 import org.bukkit.*;
@@ -129,35 +130,21 @@ public class AttackManager implements Listener {
             // --- RANGE ---
             if (primaryTarget != null) {
                 launchProjectile(attackerHero, primaryTarget, damage);
-                player.getWorld().playSound(player.getLocation(), Sound.BLOCK_CANDLE_BREAK,1.0f, 1.2f);
-                player.sendMessage("§b[Debug Attack] Выстрел снаряда по: §6" + primaryTarget.getName());
-            } else {
-                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_NODAMAGE, 0.8f, 1.2f);
-                player.sendMessage("§7[Debug Attack] Выстрел по воздуху (нет цели)");
+                boolean isCrit = ThreadLocalRandom.current().nextInt(100) < 15;
+                double finalDamage = isCrit ? damage * 2.0 : damage;
+
+                if (isCrit) {
+                    player.getWorld().playSound(primaryTarget.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_WOODEN_DOOR, 0.8f, 1.5f);
+                }
+
+                DamageManager.dealDamage(attackerHero, primaryTarget, finalDamage, Ability.DamageTypes.PHYSICAL);
             }
         } else {
             // --- MELEE ---
             if (primaryTarget != null) {
-                primaryTarget.setNoDamageTicks(0);
-                primaryTarget.damage(damage, player);
+                double finalDamage = (damage * 2.0);
 
-                // Damage number
-                ArmorStand hologram = primaryTarget.getWorld().spawn(primaryTarget.getLocation().add(0, 0.5, 0), ArmorStand.class, armorStand -> {
-                    armorStand.setVisible(false);
-                    armorStand.setGravity(false);
-                    armorStand.setMarker(true);
-                    armorStand.setInvulnerable(true);
-                    armorStand.setCustomName("§f§l " + (int) damage);
-                    armorStand.setCustomNameVisible(true);
-                });
-
-                Bukkit.getScheduler().runTaskLater(DotaCraft.getInstance(), hologram::remove, 10L);
-
-                player.getWorld().playSound(primaryTarget.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1.0f, 1.0f);
-                player.sendMessage("§e[Debug Attack] §fПопадание по: §6" + primaryTarget.getName() + " §fУрон: §c" + damage);
-            } else {
-                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_PLAYER_ATTACK_NODAMAGE, 0.8f, 1.2f);
-                player.sendMessage("§7[Debug Attack] Удар по воздуху (цель не найдена)");
+                DamageManager.dealDamage(attackerHero, primaryTarget, finalDamage, Ability.DamageTypes.PHYSICAL);
             }
 
             // Cleave works only for close range!

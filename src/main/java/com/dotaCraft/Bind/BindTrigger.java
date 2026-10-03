@@ -14,7 +14,7 @@ public enum BindTrigger {
     SLOT_6(BindType.ITEM, 1),
     SLOT_7(BindType.ITEM, 2),
     SLOT_8(BindType.ITEM, 3),
-    SLOT_9(BindType.ITEM, 4),
+    PRESS_DOUBLE_W(BindType.ITEM, 4),
     PRESS_SHIFT(BindType.ITEM, 5);
 
     public enum BindType { ABILITY, ITEM }

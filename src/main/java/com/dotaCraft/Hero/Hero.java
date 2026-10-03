@@ -41,6 +41,10 @@ public abstract class Hero {
     private double attackRange = 3.5;
     private double projectileSpeed = 20.0;
 
+    private Hero lastAttacker;
+    private long lastAttackTimestamp;
+    private static final long DAMAGE_TIMEOUT_MS = 15_000;
+
     private final Map abilitiesBySlot = new HashMap<>();
     private final Map itemsBySlot = new HashMap<>();
 
@@ -101,6 +105,17 @@ public abstract class Hero {
 
     public boolean castAbility(int slot) {
         Ability ability = (Ability) abilitiesBySlot.get(slot);
+
+        if (ability == null) {
+            player.sendMessage("§cAbility in slot " + slot + " does not exist.");
+            return false;
+        }
+
+        if (ability.getAbilityLevel() <= 0) {
+            player.sendMessage("§cAbility is not leveled up!");
+            return false;
+        }
+
         if (ability == null) {
             player.sendMessage("§cAbility in slot " + slot + " does not exist.");
             return false;
@@ -108,7 +123,7 @@ public abstract class Hero {
 
         double manaCost = ability.getManaCost(ability.getAbilityLevel());
         if (currentMana < manaCost) {
-            player.sendMessage("§bNot enough mana!");
+            player.sendMessage("§bNot enough mana! Needs: " + manaCost + ", Current: " + currentMana);
             player.getWorld().playSound(player.getLocation(), "dotacraft:ui.ui_deny_mana", 0.8f, 1.0f);
             return false;
         }
@@ -190,7 +205,17 @@ public abstract class Hero {
     }
 
     public Hero getLastAttacker() {
-        return null;
+        if (lastAttacker == null) {
+            return null;
+        }
+
+        // Если прошло больше 15 секунд с последнего удара, считать, что бой завершился
+        if (System.currentTimeMillis() - lastAttackTimestamp > DAMAGE_TIMEOUT_MS) {
+            this.lastAttacker = null;
+            return null;
+        }
+
+        return lastAttacker;
     }
 
     public void addAbility(int slot, Ability ability) {
@@ -306,6 +331,29 @@ public abstract class Hero {
             }
         }
         return bonus;
+    }
+
+    public double getArmor() {
+        double armorFromAgility = getAgility() * 0.166;
+        double armorFromItems = 0;
+        for (Object obj : itemsBySlot.values()) {
+            if (obj instanceof Item item) {
+                armorFromItems += item.getStatBonus(Item.StatType.ARMOR);
+            }
+        }
+        return armorFromAgility + armorFromItems;
+    }
+
+    public double getMagicResist() {
+        double baseResist = 0.25;
+        double intBonus = (getIntellect() * 0.1) / 100.0; // +0.1% for intellect
+        return Math.min(0.9, baseResist + intBonus);
+    }
+
+    public void setLastAttacker(Hero attacker) {
+        if (attacker == null || attacker.equals(this)) return;
+        this.lastAttacker = attacker;
+        this.lastAttackTimestamp = System.currentTimeMillis();
     }
 
     public int getStrength() { return getBaseStrength() + getBonusStrength(); }
