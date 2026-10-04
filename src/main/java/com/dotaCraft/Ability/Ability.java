@@ -25,7 +25,9 @@ public abstract class Ability {
     private double[] effectRadius;
     private double[] duration;
 
-    private int castPoint; // time to cast in ticks/ms
+    private double castPoint; // time to cast in ticks/ms
+
+
     private int abilityLevel;
     private int abilityMaxLevel;
     private int requiredHeroLevel;
@@ -38,7 +40,7 @@ public abstract class Ability {
 
     public Ability(DamageTypes damageType, AbilityTypes abilityType, TargetTypes targetType, DispelTypes dispelType,
                    double[] damage, double[] manaCost, double[] healthCost, double[] coolDown, double[] castRange,
-                   int castPoint, double[] effectRadius, double[] duration, int abilityLevel, int abilityMaxLevel,
+                   double castPoint, double[] effectRadius, double[] duration, int abilityLevel, int abilityMaxLevel,
                    int requiredHeroLevel, boolean isInnate, boolean hasScepterUpgrade, boolean hasShardUpgrade) {
 
         this.damageType = damageType;
@@ -122,7 +124,7 @@ public abstract class Ability {
     public AbilityTypes getAbilityType() { return abilityType; }
     public TargetTypes getTargetType() { return targetType; }
     public DispelTypes getDispelType() { return dispelType; }
-    public int getCastPoint() { return castPoint; }
+    public double getCastPoint() { return castPoint; }
     public int getAbilityMaxLevel() { return abilityMaxLevel; }
     public int getRequiredHeroLevel() { return requiredHeroLevel; }
     public boolean isInnate() { return isInnate; }

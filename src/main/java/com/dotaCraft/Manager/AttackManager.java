@@ -91,7 +91,6 @@ public class AttackManager implements Listener {
                     Long lastInput = (Long) lastInputTime.get(uuid);
 
                     if (lastInput == null || (now - lastInput) > 350) {
-                        player.sendMessage("§7[Debug Attack] Зажатие прекращено.");
                         iterator.remove();
                         lastInputTime.remove(uuid);
                         continue;
@@ -106,15 +105,15 @@ public class AttackManager implements Listener {
     private void tryExecuteAttack(Hero hero) {
         Player player = hero.getPlayer();
 
+        if (hero.isChanneling()) {
+            return;
+        }
+
         if (!hero.canAttack()) {
             return;
         }
 
         hero.resetAttackCooldown();
-
-        player.sendMessage("§a[Debug Attack] §lУДАР ПРОШЁЛ! §f(AS: " + hero.getAttackSpeed() +
-                ", BAT: " + hero.getBaseAttackTime() +
-                ", Interval: " + hero.getAttackIntervalMillis() + "ms)");
         performAttack(hero);
     }
 

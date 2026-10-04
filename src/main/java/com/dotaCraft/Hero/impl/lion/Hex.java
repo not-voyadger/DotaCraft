@@ -66,6 +66,7 @@ public class Hex extends Ability {
         HologramManager.spawnHexIndicator(targetEntity, durationSeconds);
 
         Frog frog = targetEntity.getWorld().spawn(targetEntity.getLocation(), Frog.class, f -> {
+            f.setVariant(Frog.Variant.COLD);
             f.setBaby();
             f.setInvulnerable(true);
             f.setAI(false);
@@ -100,8 +101,6 @@ public class Hex extends Ability {
             }
 
             private void cleanup() {
-
-                //player.getWorld().playSound(player.getLocation(), "dotacraft:scythe_of_vyse.scythe_of_vyse_return", 0.8f, 1.0f);
 
                 if (frog != null && frog.isValid()) {
                     frog.remove();

@@ -50,6 +50,8 @@ public abstract class Hero {
     private int baseDamageMin;
     private int baseDamageMax;
 
+    private boolean isChanneling = false;
+
     private final Map abilitiesBySlot = new HashMap<>();
     private final Map itemsBySlot = new HashMap<>();
 
@@ -206,6 +208,14 @@ public abstract class Hero {
                 entity -> !entity.equals(player) && entity instanceof LivingEntity
         );
         return result != null ? result.getHitEntity() : null;
+    }
+
+    public boolean isChanneling() {
+        return isChanneling;
+    }
+
+    public void setChanneling(boolean channeling) {
+        this.isChanneling = channeling;
     }
 
     public void setCurrentHealth(int currentHealth) {
