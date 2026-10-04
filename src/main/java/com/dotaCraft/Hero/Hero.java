@@ -4,6 +4,7 @@ import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.Item.Item;
 import com.dotaCraft.Manager.DamageManager;
 import com.dotaCraft.Manager.HologramManager;
+import com.dotaCraft.Manager.ItemManager;
 import com.dotaCraft.Utils.DotaUnits;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -60,7 +61,7 @@ public abstract class Hero {
     private double baseMoveSpeed = 300.0;
 
     private final Map abilitiesBySlot = new HashMap<>();
-    private final Map itemsBySlot = new HashMap<>();
+    private final Map<Integer, Item> itemsBySlot = new HashMap<>();
 
     public Hero(Player player, String heroName, Attribute primaryAttribute,
                 int baseStrength, int baseAgility, int baseIntellect, double baseHealthRegen, double baseManaRegen,
@@ -231,6 +232,21 @@ public abstract class Hero {
         }
     }
 
+    public void removeItemFromSlot(int slot) {
+        this.itemsBySlot.remove(slot);
+    }
+
+    public int getSlotOfItem(Item item) {
+        if (item == null) return -1;
+
+        for (Map.Entry entry : itemsBySlot.entrySet()) {
+            if (entry.getValue().equals(item)) {
+                return (int) entry.getKey();
+            }
+        }
+        return -1;
+    }
+
     private Entity getTargetEntity(double range) {
         var result = player.getWorld().rayTraceEntities(
                 player.getEyeLocation(),
@@ -279,6 +295,8 @@ public abstract class Hero {
         if (item != null) {
             this.itemsBySlot.put(slot, item);
             item.onEquip(this);
+
+            ItemManager.tryCraftItems(this);
         }
     }
 

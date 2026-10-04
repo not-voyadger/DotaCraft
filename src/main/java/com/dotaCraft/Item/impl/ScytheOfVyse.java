@@ -10,16 +10,20 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.List;
+
 public class ScytheOfVyse extends Item {
 
     private static final double HEX_DURATION_SECONDS = 3.5;
     private static final int MANA_COST = 250;
 
     public ScytheOfVyse() {
-        super("scythe_of_vyse", TargetTypes.UNIT_TARGET, 5200, 20.0, MANA_COST, 800.0, 0, false);
+        super("scythe_of_vyse", TargetTypes.UNIT_TARGET, 700, 20.0, MANA_COST, 800.0, 0, false);
 
         addStatBonus(StatType.INTELLECT, 30.0);
         addStatBonus(StatType.MANA_REGEN, 8.5);
+
+        setRecipeComponents(List.of("mystic_stuff", "tiara_of_selemene", "recipe_scythe_of_vyse"));
     }
 
     @Override

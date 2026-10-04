@@ -11,6 +11,8 @@ import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
+import java.util.List;
+
 public class PhaseBoots extends Item {
     private final int activeDuration = 3;
 
@@ -18,7 +20,7 @@ public class PhaseBoots extends Item {
         super(
                 "phase_boots",
                 TargetTypes.NO_TARGET,
-                1450,
+                0,
                 8.0,
                 0,
                 0,
@@ -28,6 +30,8 @@ public class PhaseBoots extends Item {
 
         addStatBonus(StatType.MOVEMENT_SPEED, 50.0);
         addStatBonus(StatType.ARMOR, 4.0);
+
+        setRecipeComponents(List.of("boots_of_speed", "chainmail", "blades_of_attack"));
     }
 
     @Override

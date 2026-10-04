@@ -7,6 +7,7 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.Location;
 
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -16,7 +17,7 @@ public abstract class Item {
 
     private final String id;
     private final TargetTypes targetType;
-    private final int cost;
+    private final int baseCost; // cost of the base item or recipe scroll
 
     private final double coolDown;
     private final double manaCost;
@@ -34,18 +35,18 @@ public abstract class Item {
     private long lastUsedTime = 0;
 
     protected Map<StatType, Double> statBonuses = new HashMap<>();
-    private List recipeComponents;
+    private List recipeComponents = new ArrayList<>();
 
     public enum StatType {
         STRENGTH, AGILITY, INTELLECT, DAMAGE, ARMOR, HEALTH_REGEN, MANA_REGEN, ATTACK_SPEED, MOVEMENT_SPEED, CRIT_CHANCE, CRIT_MULTIPLIER
     }
 
-    public Item(String id, TargetTypes targetType, int cost,
+    public Item(String id, TargetTypes targetType, int baseCost,
                 double coolDown, double manaCost, double castRange,
                 int maxCharges, boolean isConsumable) {
         this.id = id;
         this.targetType = targetType;
-        this.cost = cost;
+        this.baseCost = baseCost;
         this.coolDown = coolDown;
         this.manaCost = manaCost;
         this.castRange = castRange;
@@ -94,10 +95,36 @@ public abstract class Item {
     public void onUsePointTarget(Player player, Location targetLocation) { }
     public void onToggle(Player player, boolean active) { }
 
+    public int getCost() {
+        if (isRecipeItem()) {
+            int totalCost = baseCost;
+            for (Object componentId : getRecipeComponents()) {
+                Item component = com.dotaCraft.Manager.ItemManager.createItem(componentId.toString());
+                if (component != null) {
+                    totalCost += component.getCost();
+                }
+            }
+            return totalCost;
+        }
+
+        return baseCost;
+    }
+
+    public boolean isRecipeItem() {
+        return recipeComponents != null && !recipeComponents.isEmpty();
+    }
+
+    public List getRecipeComponents() {
+        return recipeComponents;
+    }
+
+    public void setRecipeComponents(List components) {
+        this.recipeComponents = components;
+    }
+
     // Getters
     public String getId() { return id; }
     public TargetTypes getTargetType() { return targetType; }
-    public int getCost() { return cost; }
     public double getCoolDown() { return coolDown; }
     public double getManaCost() { return manaCost; }
     public double getCastRange() { return DotaUnits.toBlocks(castRange); }
