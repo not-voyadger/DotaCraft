@@ -43,6 +43,8 @@ public class HeroManager {
         Hero hero = (Hero) factory.apply(player);
         registerHero(player, hero);
 
+        hero.updateSpeedAttribute();
+
         if (heroBarManager != null) {
             heroBarManager.createBars(player, hero);
         }

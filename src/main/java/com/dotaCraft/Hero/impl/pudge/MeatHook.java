@@ -5,12 +5,10 @@ import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Hero.Hero;
 import org.bukkit.Location;
 import org.bukkit.Material;
-import org.bukkit.Sound;
 import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.entity.EntityUnleashEvent;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -28,7 +26,7 @@ public class MeatHook extends Ability implements org.bukkit.event.Listener {
                 new double[]{120, 120, 120, 120}, // manaCost
                 new double[]{0, 0, 0, 0},         // healthCost
                 new double[]{18, 16, 14, 12},     // coolDown
-                new double[]{1300, 1300, 1300, 1300},     // castRange (units)
+                new double[]{1300, 1300, 1300, 1300}, // castRange (units)
                 0,
                 new double[]{0, 0, 0, 0},
                 new double[]{2, 2, 2, 2},
@@ -38,7 +36,6 @@ public class MeatHook extends Ability implements org.bukkit.event.Listener {
         org.bukkit.Bukkit.getPluginManager().registerEvents(this, DotaCraft.getInstance());
     }
 
-    // fix for leash breaking
     @EventHandler
     public void onLeashBreak(EntityUnleashEvent event) {
         if (event.getReason() == EntityUnleashEvent.UnleashReason.DISTANCE) {
@@ -47,33 +44,35 @@ public class MeatHook extends Ability implements org.bukkit.event.Listener {
     }
 
     @Override
-    public void cast(Hero hero) {
+    public boolean cast(Hero hero) {
         Player player = hero.getPlayer();
-        Location startLoc = player.getEyeLocation();
-        Vector direction = startLoc.getDirection().normalize();
 
+        Location eyeLoc = player.getEyeLocation();
         int level = getAbilityLevel();
         double maxDistance = getCastRange(level);
-        //double damage = getDamage(level); - temporary
-        double damage = 0;
 
-        Location spawnLoc = startLoc.clone().subtract(0, 2.5, 0);
+        Location targetPoint = eyeLoc.clone().add(eyeLoc.getDirection().multiply(maxDistance));
+        Location spawnLoc = eyeLoc.clone().subtract(0, 0.4, 0);
 
-        ArmorStand hookHead = player.getWorld().spawn(spawnLoc, ArmorStand.class, stand -> {
-            stand.setVisible(false);
-            stand.setGravity(false);
-            stand.setMarker(true);
-            stand.getEquipment().setHelmet(new ItemStack(Material.TRIPWIRE_HOOK));
+        Vector direction = targetPoint.toVector().subtract(spawnLoc.toVector()).normalize();
+
+        spawnLoc.setDirection(direction);
+
+        double damage = 0; // temp
+
+        ItemDisplay hookHead = player.getWorld().spawn(spawnLoc, ItemDisplay.class, display -> {
+            display.setItemStack(new ItemStack(Material.TRIPWIRE_HOOK));
+            display.setTeleportDuration(1);
         });
 
-        Slime leashHolder = player.getWorld().spawn(spawnLoc.clone().add(0, 1.5, 0), Slime.class, slime -> {
+        Slime leashHolder = player.getWorld().spawn(spawnLoc, Slime.class, slime -> {
             slime.setSize(0);
             slime.setSilent(true);
             slime.setGravity(false);
             slime.setAI(false);
             slime.setInvulnerable(true);
-            slime.addPotionEffect(new org.bukkit.potion.PotionEffect(
-                    org.bukkit.potion.PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 1, false, false
+            slime.addPotionEffect(new PotionEffect(
+                    PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 1, false, false
             ));
             slime.setLeashHolder(player);
         });
@@ -84,6 +83,7 @@ public class MeatHook extends Ability implements org.bukkit.event.Listener {
             private double currentDistance = 0;
             private boolean returning = false;
             private LivingEntity hookedTarget = null;
+            private Location currentHookLoc = spawnLoc.clone();
 
             @Override
             public void run() {
@@ -93,24 +93,29 @@ public class MeatHook extends Ability implements org.bukkit.event.Listener {
                     return;
                 }
 
-                Location currentHookLoc = hookHead.getLocation();
-
                 if (!returning) {
                     currentDistance += 1.2;
-                    Location nextLoc = currentHookLoc.add(direction.clone().multiply(1.2));
+                    currentHookLoc = currentHookLoc.clone().add(direction.clone().multiply(1.2));
 
-                    hookHead.teleport(nextLoc);
-                    leashHolder.teleport(nextLoc.clone().add(0, 1.5, 0));
+                    hookHead.teleport(currentHookLoc);
 
-                    for (Entity entity : nextLoc.getWorld().getNearbyEntities(nextLoc, 1.2, 1.2, 1.2)) {
-                        if (entity instanceof LivingEntity && !entity.equals(player) && !entity.equals(hookHead) && !entity.equals(leashHolder)) {
-                            hookedTarget = (LivingEntity) entity;
+                    Location leashLoc = currentHookLoc.clone().add(direction.clone().multiply(-5));
+                    leashLoc.add(0, 0.1, 0);
+
+                    leashHolder.teleport(leashLoc.subtract(0, 0.5, 0));
+
+                    for (Entity entity : currentHookLoc.getWorld().getNearbyEntities(currentHookLoc, 1.2, 1.2, 1.2)) {
+                        if (entity instanceof LivingEntity target
+                                && !entity.equals(player)
+                                && !entity.equals(hookHead)
+                                && !entity.equals(leashHolder)
+                                && !(entity instanceof ArmorStand)) {
+
+                            hookedTarget = target;
                             returning = true;
 
                             player.stopSound("dotacraft:pudge.hook_cast");
-
                             player.playSound(player.getLocation(), "dotacraft:pudge.hook_impact", 0.5f, 1.0f);
-
                             player.getWorld().playSound(player.getLocation(), "dotacraft:pudge.hook_cast", 0.8f, 1.0f);
 
                             hookedTarget.damage(damage, player);
@@ -123,23 +128,23 @@ public class MeatHook extends Ability implements org.bukkit.event.Listener {
                     }
 
                 } else {
-                    Location pLoc = player.getEyeLocation().subtract(0, 2, 0);
-                    Vector toPlayer = pLoc.toVector().subtract(hookHead.getLocation().toVector());
+                    Location pLoc = player.getEyeLocation().subtract(0, 0.4, 0);
+                    Vector toPlayer = pLoc.toVector().subtract(currentHookLoc.toVector());
 
-                    if (toPlayer.length() < 1.5) {
+                    if (toPlayer.length() < 1.2) {
                         removeEntities();
                         cancel();
                         return;
                     }
 
-                    toPlayer.normalize().multiply(1.2);
-                    Location nextLoc = hookHead.getLocation().add(toPlayer);
+                    Vector returnDir = toPlayer.normalize().multiply(1.2);
+                    currentHookLoc = currentHookLoc.clone().add(returnDir);
 
-                    hookHead.teleport(nextLoc);
-                    leashHolder.teleport(nextLoc.clone().add(0, 1.5, 0));
+                    hookHead.teleport(currentHookLoc);
+                    leashHolder.teleport(currentHookLoc.clone().subtract(0, 0.5, 0));
 
                     if (hookedTarget != null && !hookedTarget.isDead()) {
-                        hookedTarget.teleport(nextLoc.clone().add(0, 0.5, 0));
+                        hookedTarget.teleport(currentHookLoc.clone().add(0, 0.2, 0));
                         hookedTarget.setFallDistance(0);
                     }
                 }
@@ -150,15 +155,12 @@ public class MeatHook extends Ability implements org.bukkit.event.Listener {
 
                 if (leashHolder != null && leashHolder.isValid()) {
                     leashHolder.setLeashHolder(null);
-
                     Location loc = leashHolder.getLocation();
                     leashHolder.remove();
 
                     for (Entity entity : loc.getWorld().getNearbyEntities(loc, 2, 2, 2)) {
-                        if (entity instanceof Item item) {
-                            if (item.getItemStack().getType() == Material.LEAD) {
-                                item.remove();
-                            }
+                        if (entity instanceof Item item && item.getItemStack().getType() == Material.LEAD) {
+                            item.remove();
                         }
                     }
                 }
@@ -167,5 +169,7 @@ public class MeatHook extends Ability implements org.bukkit.event.Listener {
                 }
             }
         }.runTaskTimer(DotaCraft.getInstance(), 0L, 1L);
+
+        return true;
     }
 }

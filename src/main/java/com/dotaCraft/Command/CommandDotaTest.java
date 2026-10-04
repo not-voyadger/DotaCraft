@@ -1,7 +1,9 @@
 package com.dotaCraft.Command;
 
 import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Item.impl.Daedalus;
 import com.dotaCraft.Item.impl.MagicStick;
+import com.dotaCraft.Item.impl.PhaseBoots;
 import com.dotaCraft.Item.impl.ScytheOfVyse;
 import com.dotaCraft.Manager.HeroManager;
 import io.papermc.paper.command.brigadier.BasicCommand;
@@ -39,6 +41,8 @@ public class CommandDotaTest implements BasicCommand {
         if (heroId.equals("pudge")) {
             hero.addItem(0, new ScytheOfVyse());
             hero.addItem(1, new MagicStick());
+            hero.addItem(2, new PhaseBoots());
+            hero.addItem(3, new Daedalus());
         }
 
         if (heroId.equals("invoker")) {

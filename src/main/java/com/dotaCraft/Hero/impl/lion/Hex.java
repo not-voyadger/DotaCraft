@@ -34,7 +34,7 @@ public class Hex extends Ability {
     }
 
     @Override
-    public void cast(Hero hero) {
+    public boolean cast(Hero hero) {
 
         Player player = hero.getPlayer();
 
@@ -49,7 +49,7 @@ public class Hex extends Ability {
         );
 
         if (result == null || !(result.getHitEntity() instanceof LivingEntity targetEntity)) {
-            return;
+            return false;
         }
 
         double durationSeconds = this.getDuration(hero.getLevel());
@@ -114,5 +114,6 @@ public class Hex extends Ability {
                 }
             }
         }.runTaskTimer(DotaCraft.getInstance(), 0L, 1L);
+        return true;
     }
 }

@@ -25,7 +25,6 @@ import org.bukkit.util.Vector;
 
 import java.util.HashSet;
 import java.util.Set;
-import java.util.UUID;
 
 public class EarthSpike extends Ability {
 
@@ -49,9 +48,9 @@ public class EarthSpike extends Ability {
     }
 
     @Override
-    public void cast(Hero hero) {
+    public boolean cast(Hero hero) {
         Player player = hero.getPlayer();
-        if (player == null || !player.isOnline()) return;
+        if (player == null || !player.isOnline()) return false;
 
         int level = getAbilityLevel();
         double maxDistance = getCastRange(level);
@@ -162,6 +161,7 @@ public class EarthSpike extends Ability {
             }
 
         }.runTaskTimer(DotaCraft.getInstance(), 0L, 1L);
+        return true;
     }
 
     private void applyStun(LivingEntity victim, double durationSeconds) {

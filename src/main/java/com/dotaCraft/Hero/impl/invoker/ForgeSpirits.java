@@ -35,7 +35,7 @@ public class ForgeSpirits extends Ability {
     }
 
     @Override
-    public void cast(Hero hero) {
+    public boolean cast(Hero hero) {
         Player player = hero.getPlayer();
         Location startLoc = player.getEyeLocation();
         Vector direction = startLoc.getDirection().normalize();
@@ -55,6 +55,7 @@ public class ForgeSpirits extends Ability {
 
         spawnForgeSpirit(player, leftSpawn);
         spawnForgeSpirit(player, rightSpawn);
+        return true;
     }
 
     private void spawnForgeSpirit(Player owner, Location loc) {

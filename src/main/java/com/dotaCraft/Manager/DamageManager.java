@@ -19,6 +19,17 @@ public class DamageManager {
         Hero targetHero = (target instanceof Player playerTarget) ? HeroManager.getHero(playerTarget) : null;
 
         double finalDamage = rawDamage;
+        boolean isCrit = false;
+
+        if (damageType == Ability.DamageTypes.PHYSICAL && attacker != null) {
+            double critChance = attacker.getCritChance();
+
+            if (critChance > 0 && ThreadLocalRandom.current().nextDouble(100.0) < critChance) {
+                double critMultiplier = attacker.getCritMultiplier();
+                finalDamage *= critMultiplier;
+                isCrit = true;
+            }
+        }
 
         if (damageType == Ability.DamageTypes.PHYSICAL) {
             double armor = targetHero != null ? targetHero.getArmor() : 0.0;
@@ -56,7 +67,11 @@ public class DamageManager {
         }
 
         // Damage indicator
-        HologramManager.spawnDamageIndicator(target, finalDamage, damageType);
+        if (isCrit) {
+            HologramManager.spawnCritIndicator(target, finalDamage);
+        } else {
+            HologramManager.spawnDamageIndicator(target, finalDamage, damageType);
+        }
 
         return finalDamage;
     }

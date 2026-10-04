@@ -73,7 +73,7 @@ public abstract class Ability {
 
     public void onTick(Hero hero) {}
 
-    public abstract void cast(Hero hero);
+    public abstract boolean cast(Hero hero);
 
     // --- Getters ---
 

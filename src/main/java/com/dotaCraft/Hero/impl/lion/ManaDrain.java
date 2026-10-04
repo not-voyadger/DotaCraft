@@ -7,7 +7,6 @@ import com.dotaCraft.Utils.DotaUnits;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
-import org.bukkit.Sound;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -40,9 +39,9 @@ public class ManaDrain extends Ability {
     }
 
     @Override
-    public void cast(Hero hero) {
+    public boolean cast(Hero hero) {
         Player player = hero.getPlayer();
-        if (player == null || !player.isOnline()) return;
+        if (player == null || !player.isOnline()) return false;
 
         int level = getAbilityLevel();
         double castRangeBlocks = getCastRange(level);
@@ -60,7 +59,7 @@ public class ManaDrain extends Ability {
 
         if (result == null || !(result.getHitEntity() instanceof LivingEntity target)) {
             player.sendMessage("§cNo target for Mana Drain!");
-            return;
+            return false;
         }
 
         double manaPerSecond = MANA_DRAIN_PER_SECOND[Math.min(level - 1, MANA_DRAIN_PER_SECOND.length - 1)];
@@ -119,6 +118,7 @@ public class ManaDrain extends Ability {
             }
 
         }.runTaskTimer(DotaCraft.getInstance(), 0L, 1L);
+        return true;
     }
 
     private void drawDrainBeam(Location start, Location end) {

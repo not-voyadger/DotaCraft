@@ -3,6 +3,7 @@ package com.dotaCraft.Manager;
 import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.DotaCraft;
 import org.bukkit.Bukkit;
+import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.LivingEntity;
@@ -24,6 +25,40 @@ public class HologramManager {
 
         Bukkit.getScheduler().runTaskLater(com.dotaCraft.DotaCraft.getInstance(), hologram::remove, 15L);
 
+        target.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1.0f, 1.0f);
+    }
+
+    public static void spawnMissIndicator(LivingEntity target) {
+        Location targetLoc = target.getLocation().clone().add(0, target.getHeight() / 2.0, 0);
+
+        target.getWorld().playSound(targetLoc, Sound.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0f, 1.5f);
+
+        // MISS
+        ArmorStand hologram = target.getWorld().spawn(target.getLocation().clone().add(0, 1, 0), ArmorStand.class, armorStand -> {
+            armorStand.setVisible(false);
+            armorStand.setGravity(false);
+            armorStand.setMarker(true);
+            armorStand.setInvulnerable(true);
+            armorStand.setCustomName("§c§lMISS");
+            armorStand.setCustomNameVisible(true);
+        });
+
+        Bukkit.getScheduler().runTaskLater(DotaCraft.getInstance(), hologram::remove, 12L);
+    }
+
+    public static void spawnCritIndicator(LivingEntity target, double damage) {
+        ArmorStand hologram = target.getWorld().spawn(target.getLocation().add(0, 0.8, 0), ArmorStand.class, armorStand -> {
+            armorStand.setVisible(false);
+            armorStand.setGravity(false);
+            armorStand.setMarker(true);
+            armorStand.setInvulnerable(true);
+            armorStand.setCustomName("§c§l " + (int) damage + "!");
+            armorStand.setCustomNameVisible(true);
+        });
+
+        Bukkit.getScheduler().runTaskLater(DotaCraft.getInstance(), hologram::remove, 20L);
+
+        target.getWorld().playSound(target.getLocation(), "dotacraft:ui.ui_critical_strike", 0.2f, 1.0f);
         target.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1.0f, 1.0f);
     }
 

@@ -2,8 +2,13 @@ package com.dotaCraft.Hero;
 
 import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.Item.Item;
+import com.dotaCraft.Manager.DamageManager;
+import com.dotaCraft.Manager.HologramManager;
 import com.dotaCraft.Utils.DotaUnits;
 import org.bukkit.Location;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
+import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
@@ -52,13 +57,15 @@ public abstract class Hero {
 
     private boolean isChanneling = false;
 
+    private double baseMoveSpeed = 300.0;
+
     private final Map abilitiesBySlot = new HashMap<>();
     private final Map itemsBySlot = new HashMap<>();
 
     public Hero(Player player, String heroName, Attribute primaryAttribute,
                 int baseStrength, int baseAgility, int baseIntellect, double baseHealthRegen, double baseManaRegen,
                 double strengthGain, double agilityGain, double intellectGain, double baseAttackTime,
-                AttackType attackType, double attackRange, double projectileSpeed, int baseDamageMin, int baseDamageMax) {
+                AttackType attackType, double attackRange, double projectileSpeed, int baseDamageMin, int baseDamageMax, double baseMoveSpeed) {
         this.player = player;
         this.heroName = heroName;
         this.primaryAttribute = primaryAttribute;
@@ -82,6 +89,8 @@ public abstract class Hero {
         this.currentHealth = getMaxHealth();
         this.currentMana = getMaxMana();
 
+        this.baseMoveSpeed = baseMoveSpeed;
+
         this.attackRange = DotaUnits.toBlocks(attackRange);
         this.projectileSpeed = DotaUnits.toBlocks(projectileSpeed);
     }
@@ -90,13 +99,13 @@ public abstract class Hero {
                 int baseStrength, int baseAgility, int baseIntellect,
                 double baseHealthRegen, double baseManaRegen,
                 double strengthGain, double agilityGain, double intellectGain,
-                double baseAttackTime, int baseDamageMin, int baseDamageMax) {
+                double baseAttackTime, int baseDamageMin, int baseDamageMax, double baseMoveSpeed) {
         this(player, heroName, primaryAttribute,
                 baseStrength, baseAgility, baseIntellect,
                 baseHealthRegen, baseManaRegen,
                 strengthGain, agilityGain, intellectGain,
                 baseAttackTime,
-                AttackType.MELEE, 3.5, 0.0, baseDamageMin, baseDamageMax);
+                AttackType.MELEE, 3.5, 0.0, baseDamageMin, baseDamageMax, baseMoveSpeed);
     }
 
     public void onTick() {
@@ -106,6 +115,8 @@ public abstract class Hero {
 
             addHealth(hpRegen);
             addMana(manaRegen);
+
+            updateSpeedAttribute();
         }
     }
 
@@ -130,11 +141,6 @@ public abstract class Hero {
             return false;
         }
 
-        if (ability == null) {
-            player.sendMessage("§cAbility in slot " + slot + " does not exist.");
-            return false;
-        }
-
         double manaCost = ability.getManaCost(ability.getAbilityLevel());
         if (currentMana < manaCost) {
             player.sendMessage("§bNot enough mana! Needs: " + manaCost + ", Current: " + currentMana);
@@ -142,9 +148,34 @@ public abstract class Hero {
             return false;
         }
 
-        useMana(manaCost);
-        ability.cast(this);
-        return true;
+        boolean castSuccess = ability.cast(this);
+
+        if (castSuccess) {
+            useMana(manaCost);
+            return true;
+        }
+
+        return false;
+    }
+
+    public void launchProjectile(Hero attacker, LivingEntity target, double damage) {
+        // Default behavior for Melee heroes.
+    }
+
+    protected void onProjectileHit(LivingEntity target, double damage) {
+        boolean isLowGround = target.getLocation().getY() - player.getLocation().getY() > 0.5;
+        boolean isMiss = isLowGround && ThreadLocalRandom.current().nextInt(100) < 25;
+
+        if (isMiss) {
+            target.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0f, 1.5f);
+            HologramManager.spawnMissIndicator(target);
+        } else {
+            target.setNoDamageTicks(0);
+            DamageManager.dealDamage(this, target, damage, Ability.DamageTypes.PHYSICAL);
+            HologramManager.spawnDamageIndicator(target, damage, Ability.DamageTypes.PHYSICAL);
+            target.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, target.getLocation(), 10, 0.2, 0.2, 0.2, 0.1);
+            target.getWorld().playSound(target.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_HIT, 1.0f, 1.2f);
+        }
     }
 
     public void useItem(int slot) {
@@ -160,7 +191,7 @@ public abstract class Hero {
 
         if (!item.canCast(player)) {
             if (item.isOnCooldown()) {
-                player.sendMessage("§cItem is on cooldown!");
+                player.getWorld().playSound(player.getLocation(), "dotacraft:ui.ui_deny_cooldown", 0.5f, 1.0f);
             } else if (currentMana < item.getManaCost()) {
                 player.sendMessage("§bNot enough mana!");
             }
@@ -377,6 +408,53 @@ public abstract class Hero {
         if (attacker == null || attacker.equals(this)) return;
         this.lastAttacker = attacker;
         this.lastAttackTimestamp = System.currentTimeMillis();
+    }
+
+    public double getBonusMoveSpeed() {
+        double bonus = 0;
+        for (Object obj : itemsBySlot.values()) {
+            if (obj instanceof Item item) {
+                bonus += item.getStatBonus(Item.StatType.MOVEMENT_SPEED);
+            }
+        }
+        return bonus;
+    }
+
+    public double getMoveSpeed() {
+        return baseMoveSpeed + getBonusMoveSpeed();
+    }
+
+    public void updateSpeedAttribute() {
+        if (player == null || !player.isOnline()) return;
+
+        double mcSpeed = (getMoveSpeed() / 300.0) * 0.1;
+
+        var attribute = player.getAttribute(org.bukkit.attribute.Attribute.MOVEMENT_SPEED);
+        if (attribute != null) {
+            attribute.setBaseValue(mcSpeed);
+        }
+    }
+
+    public double getCritChance() {
+        double highestChance = 0;
+        for (Object obj : itemsBySlot.values()) {
+            if (obj instanceof Item item) {
+                highestChance = Math.max(highestChance, item.getStatBonus(Item.StatType.CRIT_CHANCE));
+            }
+        }
+        return highestChance;
+    }
+
+    public double getCritMultiplier() {
+        double highestMultiplier = 1.0;
+        for (Object obj : itemsBySlot.values()) {
+            if (obj instanceof Item item) {
+                if (item.getStatBonus(Item.StatType.CRIT_CHANCE) > 0) {
+                    highestMultiplier = Math.max(highestMultiplier, item.getStatBonus(Item.StatType.CRIT_MULTIPLIER));
+                }
+            }
+        }
+        return highestMultiplier;
     }
 
     public int getStrength() { return getBaseStrength() + getBonusStrength(); }

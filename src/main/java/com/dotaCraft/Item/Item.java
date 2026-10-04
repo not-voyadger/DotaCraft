@@ -37,7 +37,7 @@ public abstract class Item {
     private List recipeComponents;
 
     public enum StatType {
-        STRENGTH, AGILITY, INTELLECT, DAMAGE, ARMOR, HEALTH_REGEN, MANA_REGEN, ATTACK_SPEED
+        STRENGTH, AGILITY, INTELLECT, DAMAGE, ARMOR, HEALTH_REGEN, MANA_REGEN, ATTACK_SPEED, MOVEMENT_SPEED, CRIT_CHANCE, CRIT_MULTIPLIER
     }
 
     public Item(String id, TargetTypes targetType, int cost,

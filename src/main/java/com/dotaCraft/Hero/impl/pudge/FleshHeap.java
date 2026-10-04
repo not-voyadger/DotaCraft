@@ -39,7 +39,8 @@ public class FleshHeap extends Ability {
         }
     }
 
-    public void cast(Hero hero) {
+    public boolean cast(Hero hero) {
         hero.getPlayer().sendMessage("FleshHeap.");
+        return false;
     }
 }

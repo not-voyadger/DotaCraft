@@ -129,7 +129,7 @@ public class AttackManager implements Listener {
         double damage = attackerHero.getMainDamage();
 
         if (attackerHero.isRanged()) {
-            launchProjectile(attackerHero, primaryTarget, damage);
+            attackerHero.launchProjectile(attackerHero , primaryTarget, damage);
         } else {
             DamageManager.dealDamage(attackerHero, primaryTarget, damage, Ability.DamageTypes.PHYSICAL);
         }
