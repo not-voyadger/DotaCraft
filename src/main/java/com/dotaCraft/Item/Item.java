@@ -2,6 +2,7 @@ package com.dotaCraft.Item;
 
 import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Manager.HeroManager;
+import com.dotaCraft.Utils.DotaUnits;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.Location;
@@ -99,7 +100,7 @@ public abstract class Item {
     public int getCost() { return cost; }
     public double getCoolDown() { return coolDown; }
     public double getManaCost() { return manaCost; }
-    public double getCastRange() { return castRange; }
+    public double getCastRange() { return DotaUnits.toBlocks(castRange); }
     public int getCurrentCharges() { return currentCharges; }
     public int getMaxCharges() { return maxCharges; }
 }

@@ -124,33 +124,15 @@ public class AttackManager implements Listener {
 
         double range = attackerHero.getAttackRange();
         LivingEntity primaryTarget = findPrimaryTarget(player, range);
+
+        if (primaryTarget == null) return;
+
         double damage = attackerHero.getMainDamage();
 
         if (attackerHero.isRanged()) {
-            // --- RANGE ---
-            if (primaryTarget != null) {
-                launchProjectile(attackerHero, primaryTarget, damage);
-                boolean isCrit = ThreadLocalRandom.current().nextInt(100) < 15;
-                double finalDamage = isCrit ? damage * 2.0 : damage;
-
-                if (isCrit) {
-                    player.getWorld().playSound(primaryTarget.getLocation(), Sound.ENTITY_ZOMBIE_BREAK_WOODEN_DOOR, 0.8f, 1.5f);
-                }
-
-                DamageManager.dealDamage(attackerHero, primaryTarget, finalDamage, Ability.DamageTypes.PHYSICAL);
-            }
+            launchProjectile(attackerHero, primaryTarget, damage);
         } else {
-            // --- MELEE ---
-            if (primaryTarget != null) {
-                double finalDamage = (damage * 2.0);
-
-                DamageManager.dealDamage(attackerHero, primaryTarget, finalDamage, Ability.DamageTypes.PHYSICAL);
-            }
-
-            // Cleave works only for close range!
-            /*if (attackerHero.hasCleave()) {
-                applyCleave(attackerHero, primaryTarget, damage * 0.7, 4.5, 120.0);
-            }*/
+            DamageManager.dealDamage(attackerHero, primaryTarget, damage, Ability.DamageTypes.PHYSICAL);
         }
     }
 
@@ -240,22 +222,12 @@ public class AttackManager implements Listener {
 
                     } else {
                         target.setNoDamageTicks(0);
-                        target.damage(damage, player);
+                        DamageManager.dealDamage(attacker, target, damage, Ability.DamageTypes.PHYSICAL);
 
-                        ArmorStand hologram = target.getWorld().spawn(target.getLocation().clone().add(0, 0.8, 0), ArmorStand.class, armorStand -> {
-                            armorStand.setVisible(false);
-                            armorStand.setGravity(false);
-                            armorStand.setMarker(true);
-                            armorStand.setInvulnerable(true);
-                            armorStand.setCustomName("§f§l" + (int) damage);
-                            armorStand.setCustomNameVisible(true);
-                        });
+                        HologramManager.spawnDamageIndicator(target, damage, Ability.DamageTypes.PHYSICAL);
 
                         target.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, targetLoc, 10, 0.2, 0.2, 0.2, 0.1);
                         target.getWorld().playSound(targetLoc, Sound.BLOCK_AMETHYST_BLOCK_HIT, 1.0f, 1.2f);
-                        player.sendMessage("§e[Debug Attack] §fСнаряд попал в: §6" + target.getName() + " §fУрон: §c" + damage);
-
-                        Bukkit.getScheduler().runTaskLater(DotaCraft.getInstance(), hologram::remove, 12L);
                     }
 
                     cancel();

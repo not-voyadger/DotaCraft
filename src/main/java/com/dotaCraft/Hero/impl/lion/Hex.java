@@ -12,7 +12,25 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 public class Hex extends Ability {
     public Hex() {
-        super(DamageTypes.NONE, AbilityTypes.UNIT_TARGET, TargetTypes.ENEMY, DispelTypes.STRONG, new double []{0,0,0,0}, new double[]{110, 140, 170, 200}, new double []{0,0,0,0}, new double []{24,20,16,12}, new double []{550, 575, 600, 625}, 0, new double []{0,0,0,0}, new double []{2,2.4,2.8,3.2}, 1, 4, 1, false, false, false);
+        super(
+                DamageTypes.NONE,
+                AbilityTypes.UNIT_TARGET,
+                TargetTypes.ENEMY,
+                DispelTypes.STRONG,
+                new double []{0,0,0,0},
+                new double[]{110, 140, 170, 200},
+                new double []{0,0,0,0},
+                new double []{24,20,16,12},
+                new double[]{500, 525, 550, 575},
+                0,
+                new double []{0,0,0,0},
+                new double []{2,2.4,2.8,3.2},
+                1,
+                4,
+                1,
+                false,
+                false,
+                false);
     }
 
     @Override

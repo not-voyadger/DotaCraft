@@ -28,7 +28,7 @@ public class MeatHook extends Ability implements org.bukkit.event.Listener {
                 new double[]{120, 120, 120, 120}, // manaCost
                 new double[]{0, 0, 0, 0},         // healthCost
                 new double[]{18, 16, 14, 12},     // coolDown
-                new double[]{30, 35, 40, 45},     // castRange (blocks)
+                new double[]{1300, 1300, 1300, 1300},     // castRange (units)
                 0,
                 new double[]{0, 0, 0, 0},
                 new double[]{2, 2, 2, 2},

@@ -9,7 +9,6 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
-import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
@@ -40,9 +39,9 @@ public class EarthSpike extends Ability {
                 new double[]{90, 110, 130, 150},  // manaCost
                 new double[]{0, 0, 0, 0},         // healthCost
                 new double[]{14, 13, 12, 11},     // coolDown
-                new double[]{18, 20, 22, 24},     // castRange
+                new double[]{575, 650, 725, 800},     // castRange
                 0,
-                new double[]{1.8, 1.8, 1.8, 1.8}, // effectRadius
+                new double[]{125, 125, 125, 125}, // effectRadius
                 new double[]{1.3, 1.6, 1.9, 2.2}, // duration (stun)
                 1, 4, 1,
                 false, false, false
@@ -64,13 +63,9 @@ public class EarthSpike extends Ability {
         Vector direction = startLoc.getDirection().setY(0).normalize();
         World world = player.getWorld();
 
-        world.playSound(startLoc, Sound.BLOCK_ROOTED_DIRT_BREAK, 1.2f, 0.5f);
-        world.playSound(startLoc, Sound.ENTITY_EVOKER_FANGS_ATTACK, 1.0f, 0.6f);
+        world.playSound(startLoc, "dotacraft:lion.lion_earth_spike_cast", org.bukkit.SoundCategory.PLAYERS, 0.8f, 1.0f);
 
-        // Явно указан тип Set
         final Set hitEntityIds = new HashSet<>();
-
-        Bukkit.getLogger().info("[Debug EarthSpike] Cast started by " + player.getName() + " | MaxDist: " + maxDistance);
 
         new BukkitRunnable() {
             private double currentDistance = 0;
@@ -81,7 +76,6 @@ public class EarthSpike extends Ability {
             @Override
             public void run() {
                 if (!player.isOnline() || currentDistance >= maxDistance) {
-                    Bukkit.getLogger().info("[Debug EarthSpike] Finished spell trail. Total entities hit: " + hitEntityIds.size());
                     cancel();
                     return;
                 }
@@ -98,7 +92,6 @@ public class EarthSpike extends Ability {
                 spawnSpikeBlock(targetBlock);
 
                 world.spawnParticle(Particle.BLOCK, spikeLoc.clone().add(0.5, 1, 0.5), 15, 0.3, 0.3, 0.3, targetBlock.getBlockData());
-                world.playSound(spikeLoc, Sound.BLOCK_STONE_BREAK, 0.8f, 0.6f);
 
                 for (Entity entity : world.getNearbyEntities(spikeLoc, radius, 2.5, radius)) {
                     if (entity instanceof LivingEntity victim
@@ -115,6 +108,7 @@ public class EarthSpike extends Ability {
                         Bukkit.getScheduler().runTaskLater(DotaCraft.getInstance(), () -> {
                             if (victim.isValid() && !victim.isDead()) {
                                 Vector toss = new Vector(0, 0.65, 0).add(direction.clone().multiply(0.15));
+                                world.playSound(spikeLoc, "dotacraft:lion.lion_earth_spike_impact", org.bukkit.SoundCategory.PLAYERS, 0.8f, 1.0f);
                                 victim.setVelocity(toss);
                             }
                         }, 1L);
@@ -145,11 +139,23 @@ public class EarthSpike extends Ability {
                     block.setBlockData(directional, false);
                 }
 
+                Location spawnLoc = block.getLocation().add(0.5, 0.5, 0.5);
+                World world = block.getWorld();
+
+                world.spawnParticle(Particle.LAVA, spawnLoc, 4, 0.2, 0.2, 0.2, 0.0);
+
+                world.spawnParticle(Particle.FLAME, spawnLoc, 8, 0.25, 0.25, 0.25, 0.05);
+
+                world.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, spawnLoc, 2, 0.1, 0.1, 0.1, 0.02);
+
                 new BukkitRunnable() {
                     @Override
                     public void run() {
                         if (block.getType() == Material.POINTED_DRIPSTONE) {
                             block.setBlockData(originalData, false);
+
+                            // Небольшой эффект дыма/угасания, когда шип прячется обратно
+                            world.spawnParticle(Particle.SMOKE, spawnLoc, 5, 0.2, 0.2, 0.2, 0.02);
                         }
                     }
                 }.runTaskLater(DotaCraft.getInstance(), 18L);

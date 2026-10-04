@@ -23,7 +23,7 @@ public class MagicStick extends Item {
             double manaToAdd = currentCharges * 15.0;
             double healthToAdd = currentCharges * 15.0;
 
-            // Пополняем ресурсы герою
+            // adding mana/health
             hero.addMana(manaToAdd);
             hero.addHealth(healthToAdd);
 

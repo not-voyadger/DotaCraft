@@ -2,6 +2,7 @@ package com.dotaCraft.Item.impl;
 
 import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Item.Item;
+import com.dotaCraft.Manager.HologramManager;
 import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.entity.*;
@@ -15,7 +16,7 @@ public class ScytheOfVyse extends Item {
     private static final int MANA_COST = 250;
 
     public ScytheOfVyse() {
-        super("scythe_of_vyse", TargetTypes.UNIT_TARGET, 5200, 20.0, MANA_COST, 800, 0, false);
+        super("scythe_of_vyse", TargetTypes.UNIT_TARGET, 5200, 20.0, MANA_COST, 800.0, 0, false);
 
         addStatBonus(StatType.INTELLECT, 30.0);
         addStatBonus(StatType.MANA_REGEN, 8.5);
@@ -48,14 +49,7 @@ public class ScytheOfVyse extends Item {
             p.setSilent(true);
         });
 
-        ArmorStand hologram = targetEntity.getWorld().spawn(targetEntity.getLocation().add(0, 0.8, 0), ArmorStand.class, armorStand -> {
-            armorStand.setVisible(false);
-            armorStand.setGravity(false);
-            armorStand.setMarker(true);
-            armorStand.setInvulnerable(true);
-            armorStand.setCustomName("§f§lHEXED");
-            armorStand.setCustomNameVisible(true);
-        });
+        HologramManager.spawnHexIndicator(targetEntity, HEX_DURATION_SECONDS);
 
         new BukkitRunnable() {
             private int ticksLived = 0;
@@ -70,8 +64,6 @@ public class ScytheOfVyse extends Item {
                     }
 
                     pig.teleport(targetEntity.getLocation());
-
-                    hologram.teleport(targetEntity.getLocation().add(0, 0.8, 0));
 
                     if (ticksLived % 5 == 0) {
                         targetEntity.getWorld().spawnParticle(
@@ -91,10 +83,6 @@ public class ScytheOfVyse extends Item {
 
                 if (pig != null && pig.isValid()) {
                     pig.remove();
-                }
-
-                if (hologram != null && hologram.isValid()) {
-                    hologram.remove();
                 }
 
                 if (targetEntity.isValid()) {

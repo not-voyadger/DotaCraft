@@ -2,6 +2,7 @@ package com.dotaCraft.Hero;
 
 import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.Item.Item;
+import com.dotaCraft.Utils.DotaUnits;
 import org.bukkit.Location;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
@@ -9,6 +10,7 @@ import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class Hero {
     public enum AttackType { MELEE, RANGED }
@@ -45,12 +47,16 @@ public abstract class Hero {
     private long lastAttackTimestamp;
     private static final long DAMAGE_TIMEOUT_MS = 15_000;
 
+    private int baseDamageMin;
+    private int baseDamageMax;
+
     private final Map abilitiesBySlot = new HashMap<>();
     private final Map itemsBySlot = new HashMap<>();
 
     public Hero(Player player, String heroName, Attribute primaryAttribute,
                 int baseStrength, int baseAgility, int baseIntellect, double baseHealthRegen, double baseManaRegen,
-                double strengthGain, double agilityGain, double intellectGain, double baseAttackTime, AttackType attackType, double attackRange, double projectileSpeed) {
+                double strengthGain, double agilityGain, double intellectGain, double baseAttackTime,
+                AttackType attackType, double attackRange, double projectileSpeed, int baseDamageMin, int baseDamageMax) {
         this.player = player;
         this.heroName = heroName;
         this.primaryAttribute = primaryAttribute;
@@ -68,21 +74,27 @@ public abstract class Hero {
         this.attackRange = attackRange;
         this.projectileSpeed = projectileSpeed;
 
+        this.baseDamageMin = baseDamageMin;
+        this.baseDamageMax = baseDamageMax;
+
         this.currentHealth = getMaxHealth();
         this.currentMana = getMaxMana();
+
+        this.attackRange = DotaUnits.toBlocks(attackRange);
+        this.projectileSpeed = DotaUnits.toBlocks(projectileSpeed);
     }
 
     public Hero(Player player, String heroName, Attribute primaryAttribute,
                 int baseStrength, int baseAgility, int baseIntellect,
                 double baseHealthRegen, double baseManaRegen,
                 double strengthGain, double agilityGain, double intellectGain,
-                double baseAttackTime) {
+                double baseAttackTime, int baseDamageMin, int baseDamageMax) {
         this(player, heroName, primaryAttribute,
                 baseStrength, baseAgility, baseIntellect,
                 baseHealthRegen, baseManaRegen,
                 strengthGain, agilityGain, intellectGain,
                 baseAttackTime,
-                AttackType.MELEE, 3.5, 0.0);
+                AttackType.MELEE, 3.5, 0.0, baseDamageMin, baseDamageMax);
     }
 
     public void onTick() {
@@ -301,7 +313,8 @@ public abstract class Hero {
             }
         }
 
-        return primaryAttrValue + bonusDamage;
+        int randomBase = ThreadLocalRandom.current().nextInt(baseDamageMin, baseDamageMax + 1);
+        return randomBase + primaryAttrValue + bonusDamage;
     }
 
     public boolean hasCleave() {

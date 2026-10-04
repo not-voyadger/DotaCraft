@@ -2,6 +2,7 @@ package com.dotaCraft.Hero.impl.pudge;
 
 import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Utils.DotaUnits;
 
 public class FleshHeap extends Ability {
 
@@ -32,7 +33,7 @@ public class FleshHeap extends Ability {
 
     @Override
     public void onEnemyDeath(Hero Pudge, Hero victim, double radius) {
-        if (Pudge.equals(victim.getLastAttacker()) || radius <= 450.0) {
+        if (Pudge.equals(victim.getLastAttacker()) || radius <= DotaUnits.toBlocks(450.0)) {
             stackCount++;
             Pudge.addStrength(2);
         }

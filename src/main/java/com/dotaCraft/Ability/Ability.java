@@ -1,6 +1,7 @@
 package com.dotaCraft.Ability;
 
 import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Utils.DotaUnits;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -99,11 +100,11 @@ public abstract class Ability {
     }
 
     public double getCastRange(int level) {
-        return getArrayValueByLevel(castRange, level);
+        return DotaUnits.toBlocks(getArrayValueByLevel(castRange, level));
     }
 
     public double getEffectRadius(int level) {
-        return getArrayValueByLevel(effectRadius, level);
+        return DotaUnits.toBlocks(getArrayValueByLevel(effectRadius, level));
     }
 
     public double getDuration(int level) {
