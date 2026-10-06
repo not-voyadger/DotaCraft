@@ -16,6 +16,8 @@ import org.bukkit.entity.Player;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
 import java.util.concurrent.ThreadLocalRandom;
 
 public abstract class Hero {
@@ -42,6 +44,8 @@ public abstract class Hero {
 
     private long lastAttackTime = 0;
 
+    private double currentGold = 600.0;
+
     private boolean isHeroDead = false;
     private int level = 1;
 
@@ -58,10 +62,18 @@ public abstract class Hero {
 
     private boolean isChanneling = false;
 
+    private int currentXp = 0;
+
     private double baseMoveSpeed = 300.0;
 
     private final Map abilitiesBySlot = new HashMap<>();
     private final Map<Integer, Item> itemsBySlot = new HashMap<>();
+
+    private static final int[] XP_VALUES = {
+            240, 400, 520, 600, 680, 760, 800, 900, 1000, 1100,
+            1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2200,
+            2400, 2600, 2800, 3000, 4000, 5000, 6000, 7000, 8000, 0
+    };
 
     public Hero(Player player, String heroName, Attribute primaryAttribute,
                 int baseStrength, int baseAgility, int baseIntellect, double baseHealthRegen, double baseManaRegen,
@@ -113,12 +125,61 @@ public abstract class Hero {
         if (player != null && player.isOnline()) {
             double hpRegen = (baseHealthRegen + (getStrength() * 0.1)) / 20.0;
             double manaRegen = (baseManaRegen + (getIntellect() * 0.05)) / 20.0;
+            double goldPerTick = 90.0 / 1200.0;
 
             addHealth(hpRegen);
             addMana(manaRegen);
 
             updateSpeedAttribute();
+            addGold(goldPerTick);
+            //player.sendMessage("Current gold: " + (int) this.currentGold);
         }
+    }
+
+    public int getRequiredXpToNextLevel(int currentLevel) {
+        if (currentLevel <= 0) return XP_VALUES[0];
+
+        if (currentLevel >= XP_VALUES.length) {
+            return 0;
+        }
+
+        return XP_VALUES[currentLevel - 1];
+    }
+
+    public void addXp(int amount) {
+        if (amount < 0) {
+            return;
+        }
+
+        this.currentXp += amount;
+        if (currentXp >= (getRequiredXpToNextLevel(this.level))) {
+            currentXp -= getRequiredXpToNextLevel(this.level);
+            levelUp();
+        }
+    }
+
+    public void addGold(double amount) {
+        if (amount < 0) {
+            return;
+        }
+
+        this.currentGold += amount;
+    }
+
+    public void levelUp() {
+        this.level++;
+        this.player.sendMessage("Current level: " + this.level);
+
+        player.playSound(player.getLocation(),Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.0f);
+
+        //Add stats
+        int currentMaxStrength = getStrength();
+        int currentMaxAgility = getAgility();
+        int currentMaxIntellect = getIntellect();
+
+        currentMaxStrength += this.strengthGain;
+        currentMaxAgility += this.agilityGain;
+        currentMaxIntellect += this.intellectGain;
     }
 
     public boolean useMana(double amount) {
@@ -414,6 +475,14 @@ public abstract class Hero {
             }
         }
         return armorFromAgility + armorFromItems;
+    }
+
+    public int getCurrentXp() {
+        return currentXp;
+    }
+
+    public int getCurrentGold() {
+        return (int) currentGold;
     }
 
     public double getMagicResist() {

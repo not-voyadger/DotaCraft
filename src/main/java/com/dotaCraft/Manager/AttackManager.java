@@ -41,7 +41,6 @@ public class AttackManager implements Listener {
     public void onEntityDamage(EntityDamageByEntityEvent event) {
         if (!(event.getDamager() instanceof Player player)) return;
 
-        // Гасим ванильный урон
         event.setCancelled(true);
 
         registerPlayerInput(player);

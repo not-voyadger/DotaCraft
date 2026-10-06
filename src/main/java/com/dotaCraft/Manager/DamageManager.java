@@ -1,11 +1,9 @@
 package com.dotaCraft.Manager;
 
 import com.dotaCraft.Ability.Ability;
+import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Hero.Hero;
-import org.bukkit.Bukkit;
-import org.bukkit.Particle;
-import org.bukkit.Sound;
-import org.bukkit.entity.ArmorStand;
+import com.dotaCraft.Units.NeutralCreep;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -17,6 +15,8 @@ public class DamageManager {
         if (target == null || target.isDead()) return 0;
 
         Hero targetHero = (target instanceof Player playerTarget) ? HeroManager.getHero(playerTarget) : null;
+
+        NeutralCreep neutralCreep = DotaCraft.getInstance().getNeutralManager().getActiveCreep(target.getUniqueId());
 
         double finalDamage = rawDamage;
         boolean isCrit = false;
@@ -32,14 +32,14 @@ public class DamageManager {
         }
 
         if (damageType == Ability.DamageTypes.PHYSICAL) {
-            double armor = targetHero != null ? targetHero.getArmor() : 0.0;
+            double armor = targetHero != null ? targetHero.getArmor() : 0.0; // В будущем можно добавить армор и крипам
             double reduction = calculateArmorReduction(armor);
             finalDamage *= (1.0 - reduction);
         } else if (damageType == Ability.DamageTypes.MAGICAL) {
             double magicResist = targetHero != null ? targetHero.getMagicResist() : 0.25;
             finalDamage *= (1.0 - magicResist);
         } else if (damageType == Ability.DamageTypes.PURE) {
-            // TO DO: pure damage isn't lowered by resists
+            // Pure damage
         }
 
         // Passives
@@ -61,12 +61,17 @@ public class DamageManager {
             if (targetHero.getCurrentHealth() <= 0) {
                 onHeroDeath(attacker, targetHero);
             }
+        } else if (neutralCreep != null) {
+            neutralCreep.takeDamage(finalDamage, attacker);
+
+            if (neutralCreep.isDead()) {
+                DotaCraft.getInstance().getNeutralManager().removeActiveCreep(target.getUniqueId());
+            }
         } else {
             target.setNoDamageTicks(0);
             target.damage(finalDamage, attacker != null ? attacker.getPlayer() : null);
         }
 
-        // Damage indicator
         if (isCrit) {
             HologramManager.spawnCritIndicator(target, finalDamage);
         } else {
