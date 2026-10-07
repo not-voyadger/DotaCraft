@@ -77,7 +77,7 @@ public class FingerOfDeath extends Ability {
         drawFingerOfDeathBeam(player.getEyeLocation().subtract(0, 0.3, 0), targetEntity.getEyeLocation().subtract(0, 0.2, 0));
 
         double spellDamage = this.getDamage(level);
-        DamageManager.dealDamage(hero, targetEntity, spellDamage, DamageTypes.MAGICAL);
+        DamageManager.dealDamageFromAbility(hero, targetEntity, spellDamage, getDamageType());
 
         new BukkitRunnable() {
             @Override

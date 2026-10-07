@@ -1,6 +1,7 @@
 package com.dotaCraft.Units;
 
 import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Manager.HologramManager;
 import org.bukkit.EntityEffect;
 import org.bukkit.Location;
 import org.bukkit.attribute.Attribute;
@@ -86,6 +87,7 @@ public class NeutralCreep {
             if (killer != null) {
                 killer.addXp(xpReward);
                 killer.addGold(goldReward);
+                HologramManager.spawnGoldIndicator(entity, goldReward);
                 killer.getPlayer().sendMessage("[Debug] Current xp:" + killer.getCurrentXp());
             }
 

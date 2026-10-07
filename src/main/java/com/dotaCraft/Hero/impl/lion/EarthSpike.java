@@ -100,7 +100,7 @@ public class EarthSpike extends Ability {
 
                         hitEntityIds.add(entity.getUniqueId());
 
-                        DamageManager.dealDamage(hero, victim, damage, getDamageType());
+                        DamageManager.dealDamageFromAbility(hero, victim, damage, getDamageType());
                         applyStun(victim, stunDuration);
                         HologramManager.spawnStunIndicator(victim, stunDuration);
 

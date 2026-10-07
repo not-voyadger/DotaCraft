@@ -69,6 +69,20 @@ public class HologramManager {
         target.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1.0f, 1.0f);
     }
 
+    public static void spawnGoldIndicator(LivingEntity target, int amount) {
+        ArmorStand hologram = target.getWorld().spawn(target.getLocation().add(1, 1.4, 0), ArmorStand.class, armorStand -> {
+            armorStand.setVisible(false);
+            armorStand.setGravity(false);
+            armorStand.setMarker(true);
+            armorStand.setInvulnerable(true);
+            armorStand.setCustomName("§e + " + amount);
+            armorStand.setCustomNameVisible(true);
+        });
+
+        Bukkit.getScheduler().runTaskLater(DotaCraft.getInstance(), hologram::remove, 20L);
+        target.getWorld().playSound(target.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+    }
+
     public static void spawnStunIndicator(LivingEntity target, double stunLength) {
         createEntityProgressBar(target, "STUNNED", stunLength, "§f");
     }

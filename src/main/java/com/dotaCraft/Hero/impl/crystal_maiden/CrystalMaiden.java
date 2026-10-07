@@ -32,6 +32,7 @@ public class CrystalMaiden extends Hero {
                 280.0
         );
 
+        addAbility(0, new CrystalNova());
         addAbility(1, new Frostbite());
     }
 

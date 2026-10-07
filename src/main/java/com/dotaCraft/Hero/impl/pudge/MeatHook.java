@@ -3,6 +3,7 @@ package com.dotaCraft.Hero.impl.pudge;
 import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Manager.DamageManager;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.entity.*;
@@ -58,7 +59,7 @@ public class MeatHook extends Ability implements org.bukkit.event.Listener {
 
         spawnLoc.setDirection(direction);
 
-        double damage = 0; // temp
+        double damage = getDamage(level);
 
         ItemDisplay hookHead = player.getWorld().spawn(spawnLoc, ItemDisplay.class, display -> {
             display.setItemStack(new ItemStack(Material.TRIPWIRE_HOOK));
@@ -118,7 +119,7 @@ public class MeatHook extends Ability implements org.bukkit.event.Listener {
                             player.playSound(player.getLocation(), "dotacraft:pudge.hook_impact", 0.5f, 1.0f);
                             player.getWorld().playSound(player.getLocation(), "dotacraft:pudge.hook_cast", 0.8f, 1.0f);
 
-                            hookedTarget.damage(damage, player);
+                            DamageManager.dealDamageFromAbility(hero, hookedTarget, damage, getDamageType());
                             break;
                         }
                     }

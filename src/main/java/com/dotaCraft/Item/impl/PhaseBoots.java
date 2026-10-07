@@ -5,6 +5,7 @@ import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Item.Item;
 import com.dotaCraft.Manager.HeroManager;
 import org.bukkit.Bukkit;
+import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.Particle;
 import org.bukkit.entity.Player;
@@ -73,6 +74,9 @@ public class PhaseBoots extends Item {
                         loc,
                         2, 0.2, 0.1, 0.2, 0.02
                 );
+
+                Particle.DustOptions purpleDust = new Particle.DustOptions(Color.fromRGB(128, 0, 255), 0.6f);
+                player.getWorld().spawnParticle(Particle.DUST, loc, 7, 0.2, 0.2, 0.2, 0.1, purpleDust);
 
                 player.getWorld().spawnParticle(
                         Particle.CRIT,
