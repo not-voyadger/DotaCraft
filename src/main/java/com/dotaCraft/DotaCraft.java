@@ -29,7 +29,7 @@ public final class DotaCraft extends JavaPlugin {
 
         getServer().getPluginManager().registerEvents(new AbilityListener(heroManager), this);
         getServer().getPluginManager().registerEvents(new AttackManager(), this);
-        getServer().getPluginManager().registerEvents(new VisionManager(), this);
+        getServer().getPluginManager().registerEvents(this.visionManager, this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             event.registrar().register("dotatest", "Test command", new CommandDotaTest(heroManager));

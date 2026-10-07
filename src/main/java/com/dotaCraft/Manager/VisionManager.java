@@ -21,16 +21,16 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class VisionManager implements Listener {
 
-    private final Map<UUID, Set<UUID>> hiddenEntities = new HashMap<>();
-    private final Map<UUID, Set<Location>> playerLightBlocks = new HashMap<>();
+    private final Map<UUID, Set<UUID>> hiddenEntities = new ConcurrentHashMap<>();
+    private final Map<UUID, Set<Location>> playerLightBlocks = new ConcurrentHashMap<>();
 
     public VisionManager() {
         startVisionTask();
@@ -42,6 +42,7 @@ public class VisionManager implements Listener {
     }
 
     private void startVisionTask() {
+        // Запускаем синхронно раз в 3 тика для идеальной стабильности Paper API
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -49,25 +50,16 @@ public class VisionManager implements Listener {
                     Hero viewerHero = HeroManager.getHero(viewer);
                     if (viewerHero == null || !viewer.isOnline() || viewer.isDead()) continue;
 
-                    if (viewer.hasPotionEffect(PotionEffectType.DARKNESS)) {
-                        viewer.removePotionEffect(PotionEffectType.DARKNESS);
-                    }
-                    if (viewer.hasPotionEffect(PotionEffectType.NIGHT_VISION)) {
-                        viewer.removePotionEffect(PotionEffectType.NIGHT_VISION);
-                    }
-
-                    updateVisionForPlayer(viewer, viewerHero);
+                    processPlayerVision(viewer, viewerHero);
                 }
             }
-        }.runTaskTimer(DotaCraft.getInstance(), 1L, 2L);
+        }.runTaskTimer(DotaCraft.getInstance(), 1L, 3L);
     }
 
-    private void updateVisionForPlayer(Player viewer, Hero viewerHero) {
+    private void processPlayerVision(Player viewer, Hero viewerHero) {
+        Location currentLoc = viewer.getLocation();
         long worldTime = viewer.getWorld().getTime();
         boolean isDay = worldTime < 12300 || worldTime > 23850;
-
-        long clientTime = isDay ? 12800L : 18000L;
-        viewer.setPlayerTime(clientTime, false);
 
         Location eyeLoc = viewer.getEyeLocation();
         World world = viewer.getWorld();
@@ -75,11 +67,42 @@ public class VisionManager implements Listener {
         double visionRadius = viewerHero.getCurrentVisionRadius();
         double visionRadiusSq = visionRadius * visionRadius;
 
-        int lightLevel = isDay ? 15 : 9;
-        updateDynamicLightGrid(viewer, eyeLoc, visionRadius, lightLevel);
+        int lightLevel = isDay ? 15 : 10;
+
+        Set<Location> activeLights = playerLightBlocks.computeIfAbsent(viewer.getUniqueId(), k -> new HashSet<>());
+        Set<Location> newLights = calculateDynamicLightGrid(eyeLoc, currentLoc, visionRadius);
+
+        if (viewer.hasPotionEffect(PotionEffectType.DARKNESS)) {
+            viewer.removePotionEffect(PotionEffectType.DARKNESS);
+        }
+        if (viewer.hasPotionEffect(PotionEffectType.NIGHT_VISION)) {
+            viewer.removePotionEffect(PotionEffectType.NIGHT_VISION);
+        }
+
+        long clientTime = isDay ? 12800L : 18000L;
+        viewer.setPlayerTime(clientTime, false);
+
+        Light lightData = (Light) Material.LIGHT.createBlockData();
+        lightData.setLevel(lightLevel);
+
+        for (Location oldLoc : activeLights) {
+            if (!newLights.contains(oldLoc)) {
+                viewer.sendBlockChange(oldLoc, oldLoc.getBlock().getBlockData());
+            }
+        }
+
+        for (Location newLoc : newLights) {
+            if (!activeLights.contains(newLoc)) {
+                viewer.sendBlockChange(newLoc, lightData);
+            }
+        }
+        playerLightBlocks.put(viewer.getUniqueId(), newLights);
 
         Set<UUID> currentlyHidden = hiddenEntities.computeIfAbsent(viewer.getUniqueId(), k -> new HashSet<>());
-        double checkRadius = visionRadius + 10.0;
+        Set<UUID> toShow = new HashSet<>();
+        Set<UUID> toHide = new HashSet<>();
+
+        double checkRadius = visionRadius + 5.0;
 
         for (Entity target : world.getNearbyEntities(eyeLoc, checkRadius, checkRadius, checkRadius)) {
             if (!(target instanceof LivingEntity livingTarget) || target.equals(viewer)) {
@@ -108,27 +131,43 @@ public class VisionManager implements Listener {
 
             if (canSee) {
                 if (currentlyHidden.contains(targetId)) {
-                    viewer.showEntity(DotaCraft.getInstance(), target);
-                    currentlyHidden.remove(targetId);
+                    toShow.add(targetId);
                 }
             } else {
                 if (!currentlyHidden.contains(targetId)) {
-                    viewer.hideEntity(DotaCraft.getInstance(), target);
-                    currentlyHidden.add(targetId);
+                    toHide.add(targetId);
+                }
+            }
+        }
+
+        for (UUID id : toShow) {
+            Entity e = Bukkit.getEntity(id);
+            if (e != null) {
+                viewer.showEntity(DotaCraft.getInstance(), e);
+                currentlyHidden.remove(id);
+
+                if (e instanceof LivingEntity living) {
+                    living.setSilent(false);
+                }
+            }
+        }
+
+        for (UUID id : toHide) {
+            Entity e = Bukkit.getEntity(id);
+            if (e != null) {
+                viewer.hideEntity(DotaCraft.getInstance(), e);
+                currentlyHidden.add(id);
+
+                if (e instanceof LivingEntity living) {
+                    living.setSilent(true);
                 }
             }
         }
     }
 
-    private void updateDynamicLightGrid(Player player, Location eyeLoc, double radius, int lightLevel) {
-        Set<Location> activeLights = playerLightBlocks.computeIfAbsent(player.getUniqueId(), k -> new HashSet<>());
+    private Set<Location> calculateDynamicLightGrid(Location eyeLoc, Location center, double radius) {
         Set<Location> newLights = new HashSet<>();
-
-        Light lightData = (Light) Material.LIGHT.createBlockData();
-        lightData.setLevel(lightLevel);
-
-        Location center = player.getLocation();
-        int step = 4;
+        int step = 3;
         int intRadius = (int) radius;
 
         for (int x = -intRadius; x <= intRadius; x += step) {
@@ -147,20 +186,7 @@ public class VisionManager implements Listener {
                 }
             }
         }
-
-        for (Location oldLoc : activeLights) {
-            if (!newLights.contains(oldLoc)) {
-                player.sendBlockChange(oldLoc, oldLoc.getBlock().getBlockData());
-            }
-        }
-
-        for (Location newLoc : newLights) {
-            if (!activeLights.contains(newLoc)) {
-                player.sendBlockChange(newLoc, lightData);
-            }
-        }
-
-        playerLightBlocks.put(player.getUniqueId(), newLights);
+        return newLights;
     }
 
     private Block getAirBlockAboveGround(Location loc) {
@@ -193,14 +219,14 @@ public class VisionManager implements Listener {
     }
 
     private boolean isAlly(Player viewer, Entity target) {
-        // TODO
         return false;
     }
 
     public void clearPlayer(Player player) {
-        hiddenEntities.remove(player.getUniqueId());
+        UUID uuid = player.getUniqueId();
+        hiddenEntities.remove(uuid);
 
-        Set<Location> lights = playerLightBlocks.remove(player.getUniqueId());
+        Set<Location> lights = playerLightBlocks.remove(uuid);
         if (lights != null) {
             for (Location loc : lights) {
                 player.sendBlockChange(loc, loc.getBlock().getBlockData());
