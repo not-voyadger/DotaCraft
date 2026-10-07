@@ -66,6 +66,9 @@ public abstract class Hero {
 
     private double baseMoveSpeed = 300.0;
 
+    private double baseHeroDayVision = 1800.0;
+    private double baseHeroNightVision = 800.0;
+
     private final Map abilitiesBySlot = new HashMap<>();
     private final Map<Integer, Item> itemsBySlot = new HashMap<>();
 
@@ -164,6 +167,24 @@ public abstract class Hero {
         }
 
         this.currentGold += amount;
+    }
+
+    public void spendGold(double amount) {
+        if (amount < 0) {
+            return;
+        }
+
+        this.currentGold -= amount;
+    }
+
+    public void buyItem(Item item) {
+        int cost = item.getCost();
+
+        if (cost < 0) {
+            return;
+        }
+
+        spendGold(cost);
     }
 
     public void levelUp() {
@@ -542,6 +563,30 @@ public abstract class Hero {
             }
         }
         return highestMultiplier;
+    }
+
+    public double getDayVision() {
+        return DotaUnits.toBlocks(baseHeroDayVision);
+    }
+
+    public double getNightVision() {
+        return DotaUnits.toBlocks(baseHeroNightVision);
+    }
+
+    public double getCurrentVisionRadius() {
+        if (player == null || player.getWorld() == null) return getDayVision();
+
+        long time = player.getWorld().getTime();
+
+        // NOT SURE
+        boolean isDay = time < 12300 || time > 23850;
+        return isDay ? getDayVision() : getNightVision();
+    }
+
+    public boolean isInUnexploredArea() {
+        if (player == null || player.getWorld() == null) return false;
+
+        return true;
     }
 
     public int getStrength() { return getBaseStrength() + getBonusStrength(); }
