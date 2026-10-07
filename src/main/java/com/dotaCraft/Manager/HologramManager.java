@@ -9,12 +9,19 @@ import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.concurrent.ThreadLocalRandom;
+
 public class HologramManager {
 
     public HologramManager() {}
 
     public static void spawnDamageIndicator(LivingEntity target, double damage, Ability.DamageTypes damageType) {
-        ArmorStand hologram = target.getWorld().spawn(target.getLocation().add(0, 0.5, 0), ArmorStand.class, armorStand -> {
+        if (target == null || !target.isValid()) return;
+
+        double offsetX = (ThreadLocalRandom.current().nextDouble() - 0.5) * 0.8;
+        double offsetZ = (ThreadLocalRandom.current().nextDouble() - 0.5) * 0.8;
+
+        ArmorStand hologram = target.getWorld().spawn(target.getLocation().add(offsetX, 0.5, offsetZ), ArmorStand.class, armorStand -> {
             armorStand.setVisible(false);
             armorStand.setGravity(false);
             armorStand.setMarker(true);
@@ -25,7 +32,7 @@ public class HologramManager {
 
         Bukkit.getScheduler().runTaskLater(com.dotaCraft.DotaCraft.getInstance(), hologram::remove, 15L);
 
-        target.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1.0f, 1.0f);
+        target.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 0.7f, 1.0f);
     }
 
     public static void spawnMissIndicator(LivingEntity target) {
@@ -68,6 +75,10 @@ public class HologramManager {
 
     public static void spawnHexIndicator(LivingEntity target, double hexLength) {
         createEntityProgressBar(target, "HEXED", hexLength, "§f");
+    }
+
+    public static void spawnRootedIndicator(LivingEntity target, double rootLength) {
+        createEntityProgressBar(target, "ROOTED", rootLength, "§f");
     }
 
     public static void createEntityProgressBar(LivingEntity target, String title, double durationSeconds, String colorCode) {

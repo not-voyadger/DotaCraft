@@ -153,7 +153,6 @@ public class EarthSpike extends Ability {
                         if (block.getType() == Material.POINTED_DRIPSTONE) {
                             block.setBlockData(originalData, false);
 
-                            // Небольшой эффект дыма/угасания, когда шип прячется обратно
                             world.spawnParticle(Particle.SMOKE, spawnLoc, 5, 0.2, 0.2, 0.2, 0.02);
                         }
                     }
