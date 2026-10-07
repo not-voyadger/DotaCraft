@@ -439,6 +439,26 @@ public abstract class Hero {
         return bonus;
     }
 
+    public int getBonusAgility() {
+        int bonus = 0;
+        for (Object obj : itemsBySlot.values()) {
+            if (obj instanceof Item item) {
+                bonus += (int) item.getStatBonus(Item.StatType.AGILITY);
+            }
+        }
+        return bonus;
+    }
+
+    public int getBonusIntellect() {
+        int bonus = 0;
+        for (Object obj : itemsBySlot.values()) {
+            if (obj instanceof Item item) {
+                bonus += (int) item.getStatBonus(Item.StatType.INTELLECT);
+            }
+        }
+        return bonus;
+    }
+
     public double getMainDamage() {
         int primaryAttrValue = switch (primaryAttribute) {
             case Attribute.STRENGTH -> getStrength();
@@ -458,6 +478,11 @@ public abstract class Hero {
         return randomBase + primaryAttrValue + bonusDamage;
     }
 
+    public void setMainDamage(double bonusBaseDamage) {
+        this.baseDamageMin += bonusBaseDamage;
+        this.baseDamageMax += bonusBaseDamage;
+    }
+
     public boolean hasCleave() {
         for (Object obj : itemsBySlot.values()) {
             if (obj instanceof Item item && item.getId().equalsIgnoreCase("battle_fury")) {
@@ -465,26 +490,6 @@ public abstract class Hero {
             }
         }
         return false;
-    }
-
-    public int getBonusAgility() {
-        int bonus = 0;
-        for (Object obj : itemsBySlot.values()) {
-            if (obj instanceof Item item) {
-                bonus += (int) item.getStatBonus(Item.StatType.AGILITY);
-            }
-        }
-        return bonus;
-    }
-
-    public int getBonusIntellect() {
-        int bonus = 0;
-        for (Object obj : itemsBySlot.values()) {
-            if (obj instanceof Item item) {
-                bonus += (int) item.getStatBonus(Item.StatType.INTELLECT);
-            }
-        }
-        return bonus;
     }
 
     public double getArmor() {
@@ -578,7 +583,6 @@ public abstract class Hero {
 
         long time = player.getWorld().getTime();
 
-        // NOT SURE
         boolean isDay = time < 12300 || time > 23850;
         return isDay ? getDayVision() : getNightVision();
     }

@@ -1,0 +1,2 @@
+Kill from Fist of Death does not add stack to ability.
+Strange view of MeatHook.

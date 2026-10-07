@@ -21,6 +21,7 @@ public class Lion extends Hero {
         this.addAbility(0, new EarthSpike());
         this.addAbility(1, new Hex());
         this.addAbility(2, new ManaDrain());
+        this.addAbility(3, new FingerOfDeath());
     }
 
     @Override
