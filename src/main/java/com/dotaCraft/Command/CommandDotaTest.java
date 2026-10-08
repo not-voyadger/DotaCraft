@@ -1,10 +1,7 @@
 package com.dotaCraft.Command;
 
 import com.dotaCraft.Hero.Hero;
-import com.dotaCraft.Item.impl.Daedalus;
-import com.dotaCraft.Item.impl.MagicStick;
-import com.dotaCraft.Item.impl.PhaseBoots;
-import com.dotaCraft.Item.impl.ScytheOfVyse;
+import com.dotaCraft.Item.impl.*;
 import com.dotaCraft.Manager.HeroManager;
 import io.papermc.paper.command.brigadier.BasicCommand;
 import io.papermc.paper.command.brigadier.CommandSourceStack;
@@ -55,7 +52,7 @@ public class CommandDotaTest implements BasicCommand {
         }
 
         if (heroId.equals("crystal_maiden")) {
-            //items
+            hero.addItem(1, new ObserverWardItem());
         }
 
         player.sendMessage("§aYou've picked : " + hero.getHeroName());

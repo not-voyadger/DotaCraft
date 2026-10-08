@@ -17,6 +17,7 @@ public final class DotaCraft extends JavaPlugin {
     private HeroBarManager heroBarManager;
     private NeutralManager neutralManager;
     private VisionManager visionManager;
+    private WardManager wardManager;
 
     @Override
     public void onEnable() {
@@ -26,6 +27,7 @@ public final class DotaCraft extends JavaPlugin {
         this.heroManager = new HeroManager(this.heroBarManager);
         this.neutralManager = new NeutralManager();
         this.visionManager = new VisionManager();
+        this.wardManager = new WardManager();
 
         getServer().getPluginManager().registerEvents(new AbilityListener(heroManager), this);
         getServer().getPluginManager().registerEvents(new AttackManager(), this);
@@ -69,4 +71,6 @@ public final class DotaCraft extends JavaPlugin {
     public NeutralManager getNeutralManager() {
         return neutralManager;
     }
+
+    public WardManager getWardManager() { return wardManager; }
 }

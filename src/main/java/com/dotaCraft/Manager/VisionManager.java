@@ -9,10 +9,7 @@ import org.bukkit.Material;
 import org.bukkit.World;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.type.Light;
-import org.bukkit.entity.ArmorStand;
-import org.bukkit.entity.Entity;
-import org.bukkit.entity.LivingEntity;
-import org.bukkit.entity.Player;
+import org.bukkit.entity.*;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerQuitEvent;
@@ -21,13 +18,23 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
-import java.util.HashSet;
-import java.util.Map;
-import java.util.Set;
-import java.util.UUID;
+import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
 
 public class VisionManager implements Listener {
+
+    private static class VisionSource {
+        private final Location location;
+        private final double visionRadius;
+
+        public VisionSource(Location location, double visionRadius) {
+            this.location = location;
+            this.visionRadius = visionRadius;
+        }
+
+        public Location getLocation() { return location; }
+        public double getVisionRadius() { return visionRadius; }
+    }
 
     private final Map<UUID, Set<UUID>> hiddenEntities = new ConcurrentHashMap<>();
     private final Map<UUID, Set<Location>> playerLightBlocks = new ConcurrentHashMap<>();
@@ -42,7 +49,6 @@ public class VisionManager implements Listener {
     }
 
     private void startVisionTask() {
-        // Запускаем синхронно раз в 3 тика для идеальной стабильности Paper API
         new BukkitRunnable() {
             @Override
             public void run() {
@@ -64,13 +70,15 @@ public class VisionManager implements Listener {
         Location eyeLoc = viewer.getEyeLocation();
         World world = viewer.getWorld();
 
-        double visionRadius = viewerHero.getCurrentVisionRadius();
-        double visionRadiusSq = visionRadius * visionRadius;
+        List<VisionSource> visionSources = new ArrayList<>();
 
-        int lightLevel = isDay ? 15 : 10;
+        visionSources.add(new VisionSource(eyeLoc, viewerHero.getCurrentVisionRadius()));
 
-        Set<Location> activeLights = playerLightBlocks.computeIfAbsent(viewer.getUniqueId(), k -> new HashSet<>());
-        Set<Location> newLights = calculateDynamicLightGrid(eyeLoc, currentLoc, visionRadius);
+        for (WardManager.Ward ward : DotaCraft.getInstance().getWardManager().getActiveWards()) {
+            if (ward.getTeam() != null && ward.getTeam().equalsIgnoreCase(viewerHero.getTeam())) {
+                visionSources.add(new VisionSource(ward.getLocation().clone().add(0, 1.8, 0), ward.getVisionRadius()));
+            }
+        }
 
         if (viewer.hasPotionEffect(PotionEffectType.DARKNESS)) {
             viewer.removePotionEffect(PotionEffectType.DARKNESS);
@@ -82,8 +90,16 @@ public class VisionManager implements Listener {
         long clientTime = isDay ? 12800L : 18000L;
         viewer.setPlayerTime(clientTime, false);
 
+        int lightLevel = isDay ? 15 : 10;
         Light lightData = (Light) Material.LIGHT.createBlockData();
         lightData.setLevel(lightLevel);
+
+        Set<Location> activeLights = playerLightBlocks.computeIfAbsent(viewer.getUniqueId(), k -> new HashSet<>());
+        Set<Location> newLights = new HashSet<>();
+
+        for (VisionSource source : visionSources) {
+            newLights.addAll(calculateDynamicLightGrid(source.getLocation(), source.getLocation(), source.getVisionRadius()));
+        }
 
         for (Location oldLoc : activeLights) {
             if (!newLights.contains(oldLoc)) {
@@ -102,14 +118,14 @@ public class VisionManager implements Listener {
         Set<UUID> toShow = new HashSet<>();
         Set<UUID> toHide = new HashSet<>();
 
-        double checkRadius = visionRadius + 5.0;
+        double checkRadius = viewerHero.getCurrentVisionRadius() + 25.0;
 
         for (Entity target : world.getNearbyEntities(eyeLoc, checkRadius, checkRadius, checkRadius)) {
             if (!(target instanceof LivingEntity livingTarget) || target.equals(viewer)) {
                 continue;
             }
 
-            if (target instanceof ArmorStand || target.hasMetadata("no_vision_check")) {
+            if (target instanceof ArmorStand || target instanceof ItemDisplay || target.hasMetadata("no_vision_check")) {
                 continue;
             }
 
@@ -120,11 +136,14 @@ public class VisionManager implements Listener {
                 canSee = true;
             } else {
                 Location targetEyeLoc = livingTarget.getEyeLocation();
-                double distSq = eyeLoc.distanceSquared(targetEyeLoc);
 
-                if (distSq <= visionRadiusSq) {
-                    if (hasLineOfSight(eyeLoc, targetEyeLoc)) {
+                for (VisionSource source : visionSources) {
+                    Location sourceLoc = source.getLocation();
+                    double radiusSq = source.getVisionRadius() * source.getVisionRadius();
+
+                    if (sourceLoc.distanceSquared(targetEyeLoc) <= radiusSq && hasLineOfSight(sourceLoc, targetEyeLoc)) {
                         canSee = true;
+                        break;
                     }
                 }
             }
@@ -170,10 +189,12 @@ public class VisionManager implements Listener {
         int step = 3;
         int intRadius = (int) radius;
 
+        Location groundCenter = center.clone();
+
         for (int x = -intRadius; x <= intRadius; x += step) {
             for (int z = -intRadius; z <= intRadius; z += step) {
                 if ((x * x + z * z) <= (radius * radius)) {
-                    Location targetLoc = center.clone().add(x, 0, z);
+                    Location targetLoc = groundCenter.clone().add(x, 0, z);
 
                     Block surfaceBlock = getAirBlockAboveGround(targetLoc);
                     if (surfaceBlock != null) {
@@ -190,15 +211,25 @@ public class VisionManager implements Listener {
     }
 
     private Block getAirBlockAboveGround(Location loc) {
-        Block block = loc.getBlock();
+        World world = loc.getWorld();
+        if (world == null) return null;
 
-        for (int i = 0; i < 6; i++) {
-            if (block.getType().isAir() && !block.getRelative(0, -1, 0).getType().isAir()) {
-                return block;
+        Block baseBlock = loc.getBlock();
+
+        for (int yOffset = -5; yOffset <= 5; yOffset++) {
+            Block current = baseBlock.getRelative(0, yOffset, 0);
+            Block above = current.getRelative(0, 1, 0);
+
+            if (!current.getType().isAir() && current.getType().isSolid() && above.getType().isAir()) {
+                return above;
             }
-            block = (i % 2 == 0) ? block.getRelative(0, 1, 0) : block.getRelative(0, -2, 0);
         }
-        return loc.getBlock();
+
+        if (baseBlock.getType().isAir() && !baseBlock.getRelative(0, -1, 0).getType().isAir()) {
+            return baseBlock;
+        }
+
+        return null;
     }
 
     private boolean hasLineOfSight(Location from, Location to) {

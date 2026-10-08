@@ -612,6 +612,10 @@ public abstract class Hero {
 
     public double getProjectileSpeed() { return projectileSpeed; }
 
+    public String getTeam() {
+        return "radiant"; //temporary
+    }
+
     // Setters
 
     public void setBaseAttackTime(double baseAttackTime) {

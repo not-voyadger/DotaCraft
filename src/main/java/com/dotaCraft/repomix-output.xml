@@ -1,0 +1,4845 @@
+This file is a merged representation of the entire codebase, combined into a single document by Repomix.
+
+<file_summary>
+This section contains a summary of this file.
+
+<purpose>
+This file contains a packed representation of the entire repository's contents.
+It is designed to be easily consumable by AI systems for analysis, code review,
+or other automated processes.
+</purpose>
+
+<file_format>
+The content is organized as follows:
+1. This summary section
+2. Repository information
+3. Directory structure
+4. Repository files (if enabled)
+5. Multiple file entries, each consisting of:
+  - File path as an attribute
+  - Full contents of the file
+</file_format>
+
+<usage_guidelines>
+- This file should be treated as read-only. Any changes should be made to the
+  original repository files, not this packed version.
+- When processing this file, use the file path to distinguish
+  between different files in the repository.
+- Be aware that this file may contain sensitive information. Handle it with
+  the same level of security as you would the original repository.
+</usage_guidelines>
+
+<notes>
+- Some files may have been excluded based on .gitignore rules and Repomix's configuration
+- Binary files are not included in this packed representation. Please refer to the Repository Structure section for a complete list of file paths, including binary files
+- Files matching patterns in .gitignore are excluded
+- Files matching default ignore patterns are excluded
+- Files are sorted by Git change count (files with more changes are at the bottom)
+</notes>
+
+</file_summary>
+
+<directory_structure>
+Ability/
+  Ability.java
+Bind/
+  BindTrigger.java
+  PlayerBinds.java
+Command/
+  CommandDotaTest.java
+  CommandSpawnNeutral.java
+dotaCraft/
+  DotaCraft.java
+Hero/
+  impl/
+    crystal_maiden/
+      CrystalMaiden.java
+      CrystalNova.java
+      Frostbite.java
+    invoker/
+      ForgeSpirits.java
+      Invoker.java
+    lion/
+      EarthSpike.java
+      FingerOfDeath.java
+      Hex.java
+      Lion.java
+      ManaDrain.java
+    pudge/
+      FleshHeap.java
+      MeatHook.java
+      Pudge.java
+  Hero.java
+Item/
+  impl/
+    BladesOfAttack.java
+    BootsOfSpeed.java
+    Daedalus.java
+    EnchantedMango.java
+    IronBranch.java
+    MagicStick.java
+    ObserverWardItem.java
+    PhaseBoots.java
+    ScytheOfVyse.java
+  Item.java
+Listeners/
+  AbilityListener.java
+Manager/
+  sources/
+    VisionSource.java
+  AttackManager.java
+  DamageManager.java
+  HeroBarManager.java
+  HeroManager.java
+  HologramManager.java
+  ItemManager.java
+  NeutralManager.java
+  VisionManager.java
+  WardManager.java
+Objective/
+  Ward/
+    ObserverWard.java
+Units/
+  NeutralCreep.java
+Utils/
+  DotaUnits.java
+bugs.txt
+DotaCraft.java
+</directory_structure>
+
+<files>
+This section contains the contents of the repository's files.
+
+<file path="Ability/Ability.java">
+package com.dotaCraft.Ability;
+
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Utils.DotaUnits;
+
+import java.util.HashMap;
+import java.util.Map;
+
+public abstract class Ability {
+    public enum AbilityTypes { PASSIVE, UNIT_TARGET, POINT_TARGET, NO_TARGET, TOGGLE, AUTO_CAST }
+    public enum DamageTypes { PHYSICAL, MAGICAL, PURE, NONE }
+    public enum TargetTypes { ALLY, ENEMY, ALL, NONE }
+    public enum DispelTypes { NONE, BASIC, STRONG }
+
+    private final DamageTypes damageType;
+    private final AbilityTypes abilityType;
+    private final TargetTypes targetType;
+    private final DispelTypes dispelType;
+
+    private double[] damage;
+    private double[] manaCost;
+    private double[] healthCost;
+    private double[] coolDown;
+    private double[] castRange;
+    private double[] effectRadius;
+    private double[] duration;
+
+    private double castPoint; // time to cast in ticks/ms
+
+
+    private int abilityLevel;
+    private int abilityMaxLevel;
+    private int requiredHeroLevel;
+
+    private boolean isInnate;
+    private boolean hasScepterUpgrade;
+    private boolean hasShardUpgrade;
+
+    private final Map specialValues = new HashMap<>();
+
+    public Ability(DamageTypes damageType, AbilityTypes abilityType, TargetTypes targetType, DispelTypes dispelType,
+                   double[] damage, double[] manaCost, double[] healthCost, double[] coolDown, double[] castRange,
+                   double castPoint, double[] effectRadius, double[] duration, int abilityLevel, int abilityMaxLevel,
+                   int requiredHeroLevel, boolean isInnate, boolean hasScepterUpgrade, boolean hasShardUpgrade) {
+
+        this.damageType = damageType;
+        this.abilityType = abilityType;
+        this.targetType = targetType;
+        this.dispelType = dispelType;
+        this.damage = damage;
+        this.manaCost = manaCost;
+        this.healthCost = healthCost;
+        this.coolDown = coolDown;
+        this.castRange = castRange;
+        this.castPoint = castPoint;
+        this.effectRadius = effectRadius;
+        this.duration = duration;
+        this.abilityLevel = abilityLevel;
+        this.abilityMaxLevel = abilityMaxLevel;
+        this.requiredHeroLevel = requiredHeroLevel;
+        this.isInnate = isInnate;
+        this.hasScepterUpgrade = hasScepterUpgrade;
+        this.hasShardUpgrade = hasShardUpgrade;
+    }
+
+    public void onCast(Hero hero) {}
+
+    public double onTakeDamage(Hero hero, double incomingDamage) {
+        return incomingDamage;
+    }
+
+    public void onEnemyDeath(Hero hero, Hero victim, double radius) {}
+
+    public void onTick(Hero hero) {}
+
+    public abstract boolean cast(Hero hero);
+
+    // --- Getters ---
+
+    public int getAbilityLevel() {
+        return abilityLevel;
+    }
+
+    public void setAbilityLevel(int abilityLevel) {
+        this.abilityLevel = Math.min(abilityLevel, abilityMaxLevel);
+    }
+
+    public double getDamage(int level) {
+        return getArrayValueByLevel(damage, level);
+    }
+
+    public double getManaCost(int level) {
+        return getArrayValueByLevel(manaCost, level);
+    }
+
+    public double getHealthCost(int level) {
+        return getArrayValueByLevel(healthCost, level);
+    }
+
+    public double getCoolDown(int level) {
+        return getArrayValueByLevel(coolDown, level);
+    }
+
+    public double getCastRange(int level) {
+        return DotaUnits.toBlocks(getArrayValueByLevel(castRange, level));
+    }
+
+    public double getEffectRadius(int level) {
+        return DotaUnits.toBlocks(getArrayValueByLevel(effectRadius, level));
+    }
+
+    public double getDuration(int level) {
+        return getArrayValueByLevel(duration, level);
+    }
+
+    // Вспомогательный метод, чтобы не дублировать проверки массивов
+    private double getArrayValueByLevel(double[] array, int level) {
+        if (level <= 0 || array == null || array.length == 0) return 0;
+        int index = Math.min(level - 1, array.length - 1);
+        return array[index];
+    }
+
+    public DamageTypes getDamageType() { return damageType; }
+    public AbilityTypes getAbilityType() { return abilityType; }
+    public TargetTypes getTargetType() { return targetType; }
+    public DispelTypes getDispelType() { return dispelType; }
+    public double getCastPoint() { return castPoint; }
+    public int getAbilityMaxLevel() { return abilityMaxLevel; }
+    public int getRequiredHeroLevel() { return requiredHeroLevel; }
+    public boolean isInnate() { return isInnate; }
+    public boolean hasScepterUpgrade() { return hasScepterUpgrade; }
+    public boolean hasShardUpgrade() { return hasShardUpgrade; }
+}
+</file>
+
+<file path="Bind/BindTrigger.java">
+package com.dotaCraft.Bind;
+
+public enum BindTrigger {
+    // Ability Slots 0..5
+    SLOT_1(BindType.ABILITY, 0),
+    SLOT_2(BindType.ABILITY, 1),
+    SLOT_3(BindType.ABILITY, 2),
+    SLOT_4(BindType.ABILITY, 3),
+    PRESS_Q(BindType.ABILITY, 4),
+    PRESS_F(BindType.ABILITY, 5),
+
+    // Item Slots 0..5
+    SLOT_5(BindType.ITEM, 0),
+    SLOT_6(BindType.ITEM, 1),
+    SLOT_7(BindType.ITEM, 2),
+    SLOT_8(BindType.ITEM, 3),
+    PRESS_DOUBLE_W(BindType.ITEM, 4),
+    PRESS_SHIFT(BindType.ITEM, 5);
+
+    public enum BindType { ABILITY, ITEM }
+
+    private final BindType type;
+    private final int defaultSlot;
+
+    BindTrigger(BindType type, int defaultSlot) {
+        this.type = type;
+        this.defaultSlot = defaultSlot;
+    }
+
+    public BindType getType() { return type; }
+    public int getDefaultSlot() { return defaultSlot; }
+}
+</file>
+
+<file path="Bind/PlayerBinds.java">
+package com.dotaCraft.Bind;
+
+import java.util.EnumMap;
+import java.util.Map;
+
+public class PlayerBinds {
+
+    public static class BindTarget {
+        private final BindTrigger.BindType type;
+        private final int targetSlot;
+
+        public BindTarget(BindTrigger.BindType type, int targetSlot) {
+            this.type = type;
+            this.targetSlot = targetSlot;
+        }
+
+        public BindTrigger.BindType getType() { return type; }
+        public int getTargetSlot() { return targetSlot; }
+    }
+
+    private final Map castBinds = new EnumMap<>(BindTrigger.class);
+
+    public PlayerBinds() {
+        for (BindTrigger trigger : BindTrigger.values()) {
+            castBinds.put(trigger, new BindTarget(trigger.getType(), trigger.getDefaultSlot()));
+        }
+    }
+
+    public BindTarget getBindTarget(BindTrigger trigger) {
+        return (BindTarget) castBinds.get(trigger);
+    }
+
+    public boolean hasTrigger(BindTrigger trigger) {
+        return castBinds.containsKey(trigger);
+    }
+
+    public void setBind(BindTrigger trigger, BindTrigger.BindType type, int targetSlot) {
+        castBinds.put(trigger, new BindTarget(type, targetSlot));
+    }
+}
+</file>
+
+<file path="Command/CommandDotaTest.java">
+package com.dotaCraft.Command;
+
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Item.impl.*;
+import com.dotaCraft.Manager.HeroManager;
+import io.papermc.paper.command.brigadier.BasicCommand;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import org.bukkit.entity.Player;
+
+public class CommandDotaTest implements BasicCommand {
+
+    private final HeroManager heroManager;
+
+    public CommandDotaTest(HeroManager heroManager) {
+        this.heroManager = heroManager;
+    }
+
+    @Override
+    public void execute(CommandSourceStack stack, String[] args) {
+        if (!(stack.getSender() instanceof Player player)) {
+            stack.getSender().sendMessage("Command is for players only");
+            return;
+        }
+
+        if (args.length == 0) {
+            player.sendMessage("§eAvailable heroes: §f" + String.join(", ", HeroManager.getAvailableHeroIds()));
+            return;
+        }
+
+        String heroId = args[0].toLowerCase();
+        Hero hero = heroManager.createAndRegisterHero(heroId, player);
+
+        if (hero == null) {
+            player.sendMessage("§cHero '" + heroId + "' was not found.");
+            return;
+        }
+
+        if (heroId.equals("pudge")) {
+            hero.addItem(0, new ScytheOfVyse());
+            hero.addItem(1, new MagicStick());
+            hero.addItem(2, new PhaseBoots());
+            hero.addItem(3, new Daedalus());
+        }
+
+        if (heroId.equals("invoker")) {
+            hero.addItem(0, new ScytheOfVyse());
+            hero.addItem(1, new MagicStick());
+        }
+
+        if (heroId.equals("lion")) {
+            hero.addItem(1, new MagicStick());
+        }
+
+        if (heroId.equals("crystal_maiden")) {
+            hero.addItem(1, new ObserverWardItem());
+        }
+
+        player.sendMessage("§aYou've picked : " + hero.getHeroName());
+    }
+}
+</file>
+
+<file path="Command/CommandSpawnNeutral.java">
+package com.dotaCraft.Command;
+
+import com.dotaCraft.Manager.NeutralManager;
+import io.papermc.paper.command.brigadier.BasicCommand;
+import io.papermc.paper.command.brigadier.CommandSourceStack;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+
+public class CommandSpawnNeutral implements BasicCommand {
+
+    private final NeutralManager neutralManager;
+
+    public CommandSpawnNeutral(NeutralManager neutralManager) {
+        this.neutralManager = neutralManager;
+    }
+
+    @Override
+    public void execute(CommandSourceStack stack, String[] args) {
+        if (!(stack.getSender() instanceof Player player)) {
+            stack.getSender().sendMessage("§cThis command is for players only.");
+            return;
+        }
+
+        if (args.length == 0) {
+            player.sendMessage("§eДоступные нейтралы: §f" + String.join(", ", neutralManager.getRegisteredCreepIds()));
+            player.sendMessage("§7Использование: /spawnneutral ");
+            return;
+        }
+
+        String creepId = args[0].toLowerCase();
+        LivingEntity spawned = neutralManager.spawnCreepManual(creepId, player.getLocation());
+
+        if (spawned != null) {
+            player.sendMessage("§a[Neutral] Заспавнен нейтральный крип: §e" + creepId);
+        } else {
+            player.sendMessage("§c[Neutral] Крип с ID '" + creepId + "' не найден!");
+        }
+    }
+}
+</file>
+
+<file path="dotaCraft/DotaCraft.java">
+package com.dotaCraft.dotaCraft;
+
+import org.bukkit.plugin.java.JavaPlugin;
+
+public final class DotaCraft extends JavaPlugin {
+
+    @Override
+    public void onEnable() {
+        // Plugin startup logic
+    }
+
+    @Override
+    public void onDisable() {
+        // Plugin shutdown logic
+    }
+}
+</file>
+
+<file path="Hero/impl/crystal_maiden/CrystalMaiden.java">
+package com.dotaCraft.Hero.impl.crystal_maiden;
+
+import com.dotaCraft.DotaCraft;
+import com.dotaCraft.Hero.Hero;
+import org.bukkit.Location;
+import org.bukkit.Particle;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
+
+public class CrystalMaiden extends Hero {
+    public CrystalMaiden(Player player) {
+        super(
+                player,
+                "Crystal Maiden",
+                Attribute.INTELLECT,
+                17,
+                16,
+                20,
+                2.0,
+                1.0,
+                2.2,
+                1.8,
+                3.3,
+                1.7,
+                AttackType.RANGED,
+                600.0,
+                900.0,
+                48,
+                54,
+                280.0
+        );
+
+        addAbility(0, new CrystalNova());
+        addAbility(1, new Frostbite());
+    }
+
+    @Override
+    public void launchProjectile(Hero attacker, LivingEntity target, double damage) {
+        Player player = attacker.getPlayer();
+
+        new BukkitRunnable() {
+            private final Location currentLoc = player.getEyeLocation().clone().subtract(0, 0.2, 0);
+            private final double blocksPerTick = attacker.getProjectileSpeed() / 20.0;
+            private int maxTicks = 60;
+
+            @Override
+            public void run() {
+                maxTicks--;
+
+                if (target == null || !target.isValid() || target.isDead() || maxTicks <= 0) {
+                    cancel();
+                    return;
+                }
+
+                Location targetLoc = target.getLocation().clone().add(0, target.getHeight() / 2.0, 0);
+                Vector direction = targetLoc.toVector().subtract(currentLoc.toVector());
+
+                if (direction.length() <= blocksPerTick) {
+                    onProjectileHit(target, damage);
+                    cancel();
+                    return;
+                }
+
+                direction.normalize().multiply(blocksPerTick);
+                currentLoc.add(direction);
+
+                if (currentLoc.getWorld() != null) {
+                    currentLoc.getWorld().spawnParticle(Particle.SNOWFLAKE, currentLoc, 3, 0.03, 0.03, 0.03, 0.01);
+                    currentLoc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, currentLoc, 1, 0.03, 0.03, 0.03, 0.01);
+                }
+            }
+        }.runTaskTimer(DotaCraft.getInstance(), 1L, 1L);
+    }
+}
+</file>
+
+<file path="Hero/impl/crystal_maiden/CrystalNova.java">
+package com.dotaCraft.Hero.impl.crystal_maiden;
+
+import com.dotaCraft.Ability.Ability;
+import com.dotaCraft.DotaCraft;
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Manager.DamageManager;
+import com.dotaCraft.Utils.DotaUnits;
+import org.bukkit.Location;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
+import org.bukkit.World;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
+
+import java.util.HashSet;
+import java.util.Set;
+
+public class CrystalNova extends Ability {
+
+    public CrystalNova() {
+        super(
+                DamageTypes.MAGICAL,
+                AbilityTypes.POINT_TARGET,
+                TargetTypes.ENEMY,
+                DispelTypes.BASIC,
+                new double[] {110, 160, 210, 260},
+                new double[] {115, 135, 155, 175},
+                new double[] {0, 0, 0, 0},
+                new double[] {11, 10, 9, 8},
+                new double[] {700, 700, 700, 700},
+                0.3,
+                new double[] {425, 425, 425, 425},
+                new double[] {5, 5, 5, 5},
+                1, 4, 1,
+                false, false, false
+        );
+    }
+
+    @Override
+    public boolean cast(Hero hero) {
+        Player player = hero.getPlayer();
+        if (player == null || !player.isOnline()) return false;
+
+        int level = getAbilityLevel();
+        double castRange = getCastRange(level);
+        double radius = getEffectRadius(level);
+        double damage = getDamage(level);
+        double durationSeconds = getDuration(level);
+        int durationTicks = (int) (durationSeconds * 20);
+
+        Location targetLoc;
+        var targetBlock = player.getTargetBlockExact((int) castRange);
+        if (targetBlock != null) {
+            targetLoc = targetBlock.getLocation().add(0.5, 1.0, 0.5);
+        } else {
+            targetLoc = player.getEyeLocation().add(player.getEyeLocation().getDirection().multiply(castRange));
+        }
+
+        World world = targetLoc.getWorld();
+        if (world == null) return false;
+
+        world.playSound(targetLoc, Sound.ENTITY_PLAYER_HURT_SWEET_BERRY_BUSH, 1.5f, 1.5f);
+
+        drawNovaEffect(targetLoc, radius);
+
+        spawnTemporaryVision(targetLoc);
+
+        Set<LivingEntity> targets = new HashSet<>();
+        for (Entity entity : world.getNearbyEntities(targetLoc, radius, 3.0, radius)) {
+            if (entity instanceof LivingEntity victim
+                    && !(entity instanceof ArmorStand)
+                    && !entity.equals(player)) {
+
+                targets.add(victim);
+            }
+        }
+
+        for (LivingEntity victim : targets) {
+            DamageManager.dealDamageFromAbility(hero, victim, damage, getDamageType());
+
+            victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, durationTicks, 1, false, true));
+            victim.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, durationTicks, 1, false, true));
+        }
+
+        return true;
+    }
+
+    private void drawNovaEffect(Location center, double radius) {
+        World world = center.getWorld();
+        if (world == null) return;
+
+        world.spawnParticle(Particle.SNOWFLAKE, center, 120, radius / 2, 0.5, radius / 2, 0.15);
+        world.spawnParticle(Particle.ITEM_SNOWBALL, center, 80, radius / 2, 0.8, radius / 2, 0.1);
+        world.spawnParticle(Particle.INSTANT_EFFECT, center, 40, radius / 3, 0.3, radius / 3, 0.05);
+
+        int points = 36;
+        for (int i = 0; i < points; i++) {
+            double angle = 2 * Math.PI * i / points;
+            double x = Math.cos(angle) * radius;
+            double z = Math.sin(angle) * radius;
+
+            Location particleLoc = center.clone().add(x, 0.2, z);
+            world.spawnParticle(Particle.SNOWFLAKE, particleLoc, 2, 0.05, 0.1, 0.05, 0.01);
+            world.spawnParticle(Particle.FIREWORK, particleLoc, 1, 0.0, 0.0, 0.0, 0.01);
+        }
+    }
+
+    private void spawnTemporaryVision(Location loc) {
+        ArmorStand visionMarker = loc.getWorld().spawn(loc, ArmorStand.class, stand -> {
+            stand.setVisible(false);
+            stand.setGravity(false);
+            stand.setMarker(true);
+            stand.setInvulnerable(true);
+        });
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (visionMarker.isValid()) {
+                    visionMarker.remove();
+                }
+            }
+        }.runTaskLater(DotaCraft.getInstance(), 80L);
+    }
+}
+</file>
+
+<file path="Hero/impl/crystal_maiden/Frostbite.java">
+package com.dotaCraft.Hero.impl.crystal_maiden;
+
+import com.dotaCraft.Ability.Ability;
+import com.dotaCraft.DotaCraft;
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Manager.DamageManager;
+import com.dotaCraft.Manager.HologramManager;
+import com.dotaCraft.Units.NeutralCreep;
+import org.bukkit.Location;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
+
+public class Frostbite extends Ability {
+
+    public Frostbite() {
+        super(
+                DamageTypes.MAGICAL,
+                AbilityTypes.UNIT_TARGET,
+                TargetTypes.ENEMY,
+                DispelTypes.BASIC,
+                new double[] {100, 100, 100, 100}, // damage per second!!
+                new double[] {125, 135, 145, 155},
+                new double[] {0, 0, 0, 0},
+                new double[] {9, 8, 7, 6},
+                new double[] {600, 600, 600, 600},
+                0.3,
+                new double[] {0, 0, 0, 0},
+                new double[] {1.5, 2.0, 2.5, 3.0},
+                1,
+                4,
+                1,
+                false,
+                false,
+                false
+        );
+    }
+
+    @Override
+    public boolean cast(Hero hero) {
+        Player player = hero.getPlayer();
+
+        int level = getAbilityLevel();
+        double range = this.getCastRange(hero.getLevel());
+
+        org.bukkit.util.RayTraceResult result = player.getWorld().rayTraceEntities(
+                player.getEyeLocation(),
+                player.getEyeLocation().getDirection(),
+                range,
+                0.5,
+                entity -> entity instanceof LivingEntity && !entity.equals(player)
+        );
+
+        if (result == null || !(result.getHitEntity() instanceof LivingEntity targetEntity)) {
+            return false;
+        }
+
+        NeutralCreep neutralCreep = DotaCraft.getInstance().getNeutralManager().getActiveCreep(targetEntity.getUniqueId());
+        double baseDamage = this.getDamage(level) / 4;
+        final double damageForTick = (neutralCreep != null)
+                ? baseDamage * 4.0
+                : baseDamage;
+
+        double durationSeconds = this.getDuration(hero.getLevel());
+        int durationTicks = (int) (durationSeconds * 20);
+        boolean isFrozen = false;
+
+        player.getWorld().playSound(player.getLocation(), "dotacraft:crystal_maiden.crystal_maiden_frostbite_cast", 0.5f, 1.0f);
+
+        targetEntity.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, durationTicks, 255, false, false));
+        targetEntity.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, durationTicks, 255, false, false));
+
+        HologramManager.spawnRootedIndicator(targetEntity, durationSeconds);
+        spawnFrozenBlocks(targetEntity.getLocation(), targetEntity, player);
+
+        new BukkitRunnable() {
+            int ticksLived = 0;
+
+            @Override
+            public void run() {
+                if (!targetEntity.isValid() || targetEntity.isDead() || ticksLived >= durationTicks) {
+                    cancel();
+                    return;
+                }
+
+                if (ticksLived % 5 == 0) {
+                    DamageManager.dealDamageFromAbility(hero, targetEntity, damageForTick, getDamageType());
+                }
+
+                ticksLived++;
+            }
+        }.runTaskTimer(DotaCraft.getInstance(), 0L, 1L);
+        return true;
+    }
+
+    private void spawnFrozenBlocks(Location victimLocation, LivingEntity targetEntity, Player player) {
+
+        if (victimLocation.getWorld() == null) return;
+
+        victimLocation.getWorld().playSound(victimLocation, org.bukkit.Sound.BLOCK_GLASS_BREAK, 1.0f, 0.5f);
+        victimLocation.getWorld().playSound(victimLocation, org.bukkit.Sound.ENTITY_PLAYER_HURT_FREEZE, 1.0f, 0.8f);
+
+        int iceCount = 4;
+        int durationTicks = (int) (this.getDuration(getAbilityLevel()) * 20);
+
+        for (int i = 0; i < iceCount; i++) {
+            final int index = i;
+
+            double angle = index * (2 * Math.PI / iceCount);
+            double offsetX = 0.4 * Math.cos(angle);
+            double offsetZ = 0.4 * Math.sin(angle);
+
+            Location standLoc = victimLocation.clone().add(offsetX, -0.5, offsetZ);
+
+            ArmorStand stand = victimLocation.getWorld().spawn(standLoc, ArmorStand.class, armorStand -> {
+                armorStand.setVisible(false);
+                armorStand.setGravity(false);
+                armorStand.setSmall(true);
+                armorStand.setMarker(true);
+
+                org.bukkit.inventory.ItemStack iceItem = new org.bukkit.inventory.ItemStack(
+                        index % 2 == 0 ? org.bukkit.Material.ICE : org.bukkit.Material.BLUE_ICE
+                );
+                if (armorStand.getEquipment() != null) {
+                    armorStand.getEquipment().setHelmet(iceItem);
+                }
+            });
+
+            new BukkitRunnable() {
+                int ticksLived = 0;
+
+                @Override
+                public void run() {
+                    ticksLived++;
+
+                    if (targetEntity == null || !targetEntity.isValid() || targetEntity.isDead() || ticksLived >= durationTicks) {
+                        if (stand.isValid()) {
+                            stand.getWorld().spawnParticle(
+                                    org.bukkit.Particle.BLOCK,
+                                    stand.getLocation().add(0, 0.5, 0),
+                                    10, 0.1, 0.1, 0.1,
+                                    org.bukkit.Material.ICE.createBlockData()
+                            );
+                            //stand.getWorld().playSound(stand.getLocation(), org.bukkit.Sound.BLOCK_GLASS_BREAK, 0.5f, 1.5f);
+                            stand.remove();
+                            player.stopSound("dotacraft:crystal_maiden.crystal_maiden_frostbite_cast");
+                        }
+                        cancel();
+                    }
+                }
+            }.runTaskTimer(DotaCraft.getInstance(), 1L, 1L);
+        }
+
+        victimLocation.getWorld().spawnParticle(
+                org.bukkit.Particle.SNOWFLAKE,
+                victimLocation.clone().add(0, 1, 0),
+                40, 0.4, 0.8, 0.4, 0.05
+        );
+
+        victimLocation.getWorld().spawnParticle(
+                org.bukkit.Particle.BLOCK,
+                victimLocation.clone().add(0, 0.5, 0),
+                30, 0.3, 0.5, 0.3,
+                org.bukkit.Material.ICE.createBlockData()
+        );
+    }
+}
+</file>
+
+<file path="Hero/impl/invoker/ForgeSpirits.java">
+package com.dotaCraft.Hero.impl.invoker;
+
+import com.dotaCraft.Ability.Ability;
+import com.dotaCraft.Hero.Hero;
+import org.bukkit.Location;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
+import org.bukkit.entity.Blaze;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
+import org.bukkit.util.Vector;
+
+public class ForgeSpirits extends Ability {
+    public ForgeSpirits() {
+        super(
+                DamageTypes.NONE,
+                AbilityTypes.NO_TARGET,
+                TargetTypes.NONE,
+                DispelTypes.NONE,
+                new double[]{0, 0, 0, 0},
+                new double[]{75, 75, 75, 75},
+                new double[]{0, 0, 0, 0},
+                new double[]{27, 27, 27, 27},
+                new double[]{0, 0, 0, 0},
+                0,
+                new double[]{0, 0, 0, 0},
+                new double[]{10, 20, 30, 40, 50, 60, 70, 80, 90, 100},
+                1,
+                7,
+                2,
+                false,
+                false,
+                false
+        );
+    }
+
+    @Override
+    public boolean cast(Hero hero) {
+        Player player = hero.getPlayer();
+        Location startLoc = player.getEyeLocation();
+        Vector direction = startLoc.getDirection().normalize();
+
+        Location spawnLoc = startLoc.clone().subtract(0, 2.5, 0);
+
+        player.spawnParticle(Particle.FLAME, spawnLoc, 50, 0.5, 1.0, 0.5, 0.1);
+        player.spawnParticle(Particle.LAVA, spawnLoc, 20, 0.5, 1.0, 0.5);
+        player.getWorld().playSound(player.getLocation(), Sound.ENTITY_BLAZE_SHOOT, 1.0f, 1.0f);
+
+        direction.setY(0).normalize();
+        Vector leftVector = new Vector(-direction.getZ(), 0, direction.getX()).multiply(1.5);
+        Vector rightVector = new Vector(direction.getZ(), 0, -direction.getX()).multiply(1.5);
+
+        Location leftSpawn = spawnLoc.clone().add(leftVector);
+        Location rightSpawn = spawnLoc.clone().add(rightVector);
+
+        spawnForgeSpirit(player, leftSpawn);
+        spawnForgeSpirit(player, rightSpawn);
+        return true;
+    }
+
+    private void spawnForgeSpirit(Player owner, Location loc) {
+        Blaze spirit = (Blaze) loc.getWorld().spawnEntity(loc, EntityType.BLAZE);
+
+        spirit.setCustomName("§cForge Spirit");
+        spirit.setCustomNameVisible(true);
+
+        spirit.setRemoveWhenFarAway(false);
+    }
+}
+</file>
+
+<file path="Hero/impl/invoker/Invoker.java">
+package com.dotaCraft.Hero.impl.invoker;
+
+import com.dotaCraft.DotaCraft;
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Hero.impl.pudge.FleshHeap;
+import org.bukkit.Location;
+import org.bukkit.Particle;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
+
+public class Invoker extends Hero {
+    public Invoker(Player player) {
+        super(player, "Invoker", Attribute.INTELLECT, 19, 14, 22, 2.15, 1.1, 2.5, 2.0, 4.0, 1.7, AttackType.RANGED, 600.0, 900.0, 20, 26, 280);
+
+        this.addAbility(1, new ForgeSpirits());
+
+    }
+
+    @Override
+    public void launchProjectile(Hero attacker, LivingEntity target, double damage) {
+        Player player = attacker.getPlayer();
+
+        new BukkitRunnable() {
+            private final Location currentLoc = player.getEyeLocation().clone().subtract(0, 0.2, 0);
+            private final double blocksPerTick = attacker.getProjectileSpeed() / 20.0;
+            private int maxTicks = 60;
+
+            @Override
+            public void run() {
+                maxTicks--;
+
+                if (target == null || !target.isValid() || target.isDead() || maxTicks <= 0) {
+                    cancel();
+                    return;
+                }
+
+                Location targetLoc = target.getLocation().clone().add(0, target.getHeight() / 2.0, 0);
+                Vector direction = targetLoc.toVector().subtract(currentLoc.toVector());
+
+                if (direction.length() <= blocksPerTick) {
+                    onProjectileHit(target, damage);
+                    cancel();
+                    return;
+                }
+
+                direction.normalize().multiply(blocksPerTick);
+                currentLoc.add(direction);
+
+                if (currentLoc.getWorld() != null) {
+                    currentLoc.getWorld().spawnParticle(Particle.FLAME, currentLoc, 3, 0.03, 0.03, 0.03, 0.01);
+                    currentLoc.getWorld().spawnParticle(Particle.SOUL_FIRE_FLAME, currentLoc, 1, 0.03, 0.03, 0.03, 0.01);
+                    currentLoc.getWorld().spawnParticle(Particle.FIREWORK, currentLoc, 1, 0.01, 0.01, 0.01, 0.01);
+                }
+            }
+        }.runTaskTimer(DotaCraft.getInstance(), 1L, 1L);
+    }
+}
+</file>
+
+<file path="Hero/impl/lion/EarthSpike.java">
+package com.dotaCraft.Hero.impl.lion;
+
+import com.dotaCraft.Ability.Ability;
+import com.dotaCraft.DotaCraft;
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Manager.DamageManager;
+import com.dotaCraft.Manager.HologramManager;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Particle;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.BlockData;
+import org.bukkit.block.data.Directional;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
+
+import java.util.HashSet;
+import java.util.Set;
+
+public class EarthSpike extends Ability {
+
+    public EarthSpike() {
+        super(
+                DamageTypes.MAGICAL,
+                AbilityTypes.POINT_TARGET,
+                TargetTypes.ENEMY,
+                DispelTypes.STRONG,
+                new double[]{105, 170, 235, 300}, // damage
+                new double[]{90, 110, 130, 150},  // manaCost
+                new double[]{0, 0, 0, 0},         // healthCost
+                new double[]{14, 13, 12, 11},     // coolDown
+                new double[]{575, 650, 725, 800},     // castRange
+                0,
+                new double[]{125, 125, 125, 125}, // effectRadius
+                new double[]{1.3, 1.6, 1.9, 2.2}, // duration (stun)
+                1, 4, 1,
+                false, false, false
+        );
+    }
+
+    @Override
+    public boolean cast(Hero hero) {
+        Player player = hero.getPlayer();
+        if (player == null || !player.isOnline()) return false;
+
+        int level = getAbilityLevel();
+        double maxDistance = getCastRange(level);
+        double radius = getEffectRadius(level);
+        double damage = getDamage(level);
+        double stunDuration = getDuration(level);
+
+        Location startLoc = player.getLocation();
+        Vector direction = startLoc.getDirection().setY(0).normalize();
+        World world = player.getWorld();
+
+        world.playSound(startLoc, "dotacraft:lion.lion_earth_spike_cast", org.bukkit.SoundCategory.PLAYERS, 0.8f, 1.0f);
+
+        final Set hitEntityIds = new HashSet<>();
+
+        new BukkitRunnable() {
+            private double currentDistance = 0;
+            private final double step = 1.2;
+            private Location currentLoc = startLoc.clone();
+            private int stepIndex = 0;
+
+            @Override
+            public void run() {
+                if (!player.isOnline() || currentDistance >= maxDistance) {
+                    cancel();
+                    return;
+                }
+
+                stepIndex++;
+                currentLoc.add(direction.clone().multiply(step));
+                currentDistance += step;
+
+                Block targetBlock = getSurfaceBlock(currentLoc);
+                if (targetBlock == null) return;
+
+                Location spikeLoc = targetBlock.getLocation();
+
+                spawnSpikeBlock(targetBlock);
+
+                world.spawnParticle(Particle.BLOCK, spikeLoc.clone().add(0.5, 1, 0.5), 15, 0.3, 0.3, 0.3, targetBlock.getBlockData());
+
+                for (Entity entity : world.getNearbyEntities(spikeLoc, radius, 2.5, radius)) {
+                    if (entity instanceof LivingEntity victim
+                            && !(entity instanceof ArmorStand)
+                            && !entity.equals(player)
+                            && !hitEntityIds.contains(entity.getUniqueId())) {
+
+                        hitEntityIds.add(entity.getUniqueId());
+
+                        DamageManager.dealDamageFromAbility(hero, victim, damage, getDamageType());
+                        applyStun(victim, stunDuration);
+                        HologramManager.spawnStunIndicator(victim, stunDuration);
+
+                        Bukkit.getScheduler().runTaskLater(DotaCraft.getInstance(), () -> {
+                            if (victim.isValid() && !victim.isDead()) {
+                                Vector toss = new Vector(0, 0.65, 0).add(direction.clone().multiply(0.15));
+                                world.playSound(spikeLoc, "dotacraft:lion.lion_earth_spike_impact", org.bukkit.SoundCategory.PLAYERS, 0.8f, 1.0f);
+                                victim.setVelocity(toss);
+                            }
+                        }, 1L);
+                    }
+                }
+            }
+
+            private Block getSurfaceBlock(Location loc) {
+                Block b = loc.getBlock();
+                for (int i = 0; i < 4; i++) {
+                    if (!b.getType().isAir() && b.getRelative(0, 1, 0).getType().isAir()) {
+                        return b.getRelative(0, 1, 0);
+                    }
+                    b = b.getRelative(0, -1, 0);
+                }
+                return loc.getBlock();
+            }
+
+            private void spawnSpikeBlock(Block block) {
+                if (!block.getType().isAir()) return;
+
+                BlockData originalData = block.getBlockData();
+
+                block.setType(Material.POINTED_DRIPSTONE, false);
+
+                if (block.getBlockData() instanceof Directional directional) {
+                    directional.setFacing(BlockFace.UP);
+                    block.setBlockData(directional, false);
+                }
+
+                Location spawnLoc = block.getLocation().add(0.5, 0.5, 0.5);
+                World world = block.getWorld();
+
+                world.spawnParticle(Particle.LAVA, spawnLoc, 4, 0.2, 0.2, 0.2, 0.0);
+
+                world.spawnParticle(Particle.FLAME, spawnLoc, 8, 0.25, 0.25, 0.25, 0.05);
+
+                world.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, spawnLoc, 2, 0.1, 0.1, 0.1, 0.02);
+
+                new BukkitRunnable() {
+                    @Override
+                    public void run() {
+                        if (block.getType() == Material.POINTED_DRIPSTONE) {
+                            block.setBlockData(originalData, false);
+
+                            world.spawnParticle(Particle.SMOKE, spawnLoc, 5, 0.2, 0.2, 0.2, 0.02);
+                        }
+                    }
+                }.runTaskLater(DotaCraft.getInstance(), 18L);
+            }
+
+        }.runTaskTimer(DotaCraft.getInstance(), 0L, 1L);
+        return true;
+    }
+
+    private void applyStun(LivingEntity victim, double durationSeconds) {
+        int ticks = (int) (durationSeconds * 20);
+        victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, ticks, 10, false, false, true));
+        victim.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, ticks, 10, false, false, false));
+    }
+}
+</file>
+
+<file path="Hero/impl/lion/FingerOfDeath.java">
+package com.dotaCraft.Hero.impl.lion;
+
+import com.dotaCraft.Ability.Ability;
+import com.dotaCraft.DotaCraft;
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Item.Item;
+import com.dotaCraft.Manager.DamageManager;
+import com.dotaCraft.Manager.HologramManager;
+import com.dotaCraft.Utils.DotaUnits;
+import org.bukkit.Color;
+import org.bukkit.Location;
+import org.bukkit.Particle;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
+
+public class FingerOfDeath extends Ability {
+    private double[] additionalDamage = {20, 30, 40};
+    private int charges = 0;
+    private final double DAMAGE_PER_KILL = 25.0;
+
+    public FingerOfDeath() {
+        super(DamageTypes.MAGICAL, AbilityTypes.UNIT_TARGET, TargetTypes.ENEMY, DispelTypes.NONE, new double[]{600, 725, 850}, new double[]{200, 400, 600}, new double[]{0, 0, 0}, new double[]{140, 90, 40}, new double[]{900, 900, 900}, 0.3, new double[]{0, 0, 0}, new double[]{0, 0, 0}, 1, 3, 6, false, true, false);
+    }
+
+    private double additionalDamageBasedOnAbilityLevel(int currentLevel) {
+        if (currentLevel <= 0) return additionalDamage[0];
+
+        if (currentLevel >= additionalDamage.length) {
+            return 0;
+        }
+
+        return additionalDamage[currentLevel - 1];
+    }
+
+    @Override
+    public double getDamage(int level) {
+        return super.getDamage(level) + (charges * DAMAGE_PER_KILL);
+    }
+
+    public void addKill() {
+        this.charges++;
+    }
+
+    public int getCharges() {
+        return charges;
+    }
+
+    @Override
+    public boolean cast(Hero hero) {
+        hero.resetAttackCooldown();
+
+        int totalMeleeTicks = 400;
+        int level = this.getAbilityLevel();
+        double totalMeleeBonusDamage = additionalDamageBasedOnAbilityLevel(level) + (charges * DAMAGE_PER_KILL);
+
+        Player player = hero.getPlayer();
+
+        double range = this.getCastRange(hero.getLevel());
+
+        org.bukkit.util.RayTraceResult result = player.getWorld().rayTraceEntities(
+                player.getEyeLocation(),
+                player.getEyeLocation().getDirection(),
+                range,
+                0.5,
+                entity -> entity instanceof LivingEntity && !entity.equals(player)
+        );
+
+        if (result == null || !(result.getHitEntity() instanceof LivingEntity targetEntity)) {
+            return false;
+        }
+
+        // Sound and visual design
+        player.getWorld().playSound(player.getLocation(), "dotacraft:lion.lion_finger_of_death_cast", 0.8f, 1.0f);
+        targetEntity.getWorld().spawnParticle(Particle.EXPLOSION, targetEntity.getLocation().add(0, 1, 0), 10, 0.3, 0.3, 0.3);
+        drawFingerOfDeathBeam(player.getEyeLocation().subtract(0, 0.3, 0), targetEntity.getEyeLocation().subtract(0, 0.2, 0));
+
+        double spellDamage = this.getDamage(level);
+        DamageManager.dealDamageFromAbility(hero, targetEntity, spellDamage, getDamageType());
+
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (targetEntity.isDead() || targetEntity.getHealth() <= 0) {
+                    addKill();
+                    player.sendMessage("§a[Debug] Killed with finger of death. Current charges: " + charges);
+                }
+            }
+        }.runTaskLater(DotaCraft.getInstance(), 1L);
+
+        new BukkitRunnable() {
+            private int currentTick = 0;
+            private boolean damageSet = false;
+
+            @Override
+            public void run() {
+                if (!player.isOnline() || player.isDead() || currentTick >= totalMeleeTicks) {
+                    hero.setAttackType(Hero.AttackType.RANGED);
+                    hero.setAttackRange(DotaUnits.toBlocks(600.0));
+
+                    if (damageSet) {
+                        hero.setMainDamage(-totalMeleeBonusDamage);
+                        damageSet = false;
+                    }
+
+                    cancel();
+                    return;
+                }
+
+                hero.setAttackType(Hero.AttackType.MELEE);
+                hero.setAttackRange(DotaUnits.toBlocks(250));
+
+                if (!damageSet) {
+                    hero.setMainDamage(totalMeleeBonusDamage);
+                    damageSet = true;
+                }
+
+                currentTick++;
+            }
+
+        }.runTaskTimer(DotaCraft.getInstance(), 0L, 1L);
+        return true;
+    }
+
+    private void drawFingerOfDeathBeam(Location start, Location end) {
+        Vector direction = end.toVector().subtract(start.toVector());
+        double distance = direction.length();
+        direction.normalize();
+
+        double stepBlue = 0.35;
+        Location current = start.clone();
+
+        Particle.DustOptions yellowDust = new Particle.DustOptions(Color.fromRGB(255, 255, 0), 0.6f);
+
+        for (double d = 0; d < distance; d += stepBlue) {
+            current.add(direction.clone().multiply(stepBlue));
+            start.getWorld().spawnParticle(Particle.DUST, current, 1, 0.0, 0.0, 0.0, 0.0, yellowDust);
+            start.getWorld().spawnParticle(Particle.FLAME, current, 3, 0.03, 0.03, 0.03, 0.01);
+        }
+    }
+}
+</file>
+
+<file path="Hero/impl/lion/Hex.java">
+package com.dotaCraft.Hero.impl.lion;
+
+import com.dotaCraft.Ability.Ability;
+import com.dotaCraft.DotaCraft;
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Manager.HologramManager;
+import org.bukkit.Particle;
+import org.bukkit.entity.*;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
+
+public class Hex extends Ability {
+    public Hex() {
+        super(
+                DamageTypes.NONE,
+                AbilityTypes.UNIT_TARGET,
+                TargetTypes.ENEMY,
+                DispelTypes.STRONG,
+                new double []{0,0,0,0},
+                new double[]{110, 140, 170, 200},
+                new double []{0,0,0,0},
+                new double []{24,20,16,12},
+                new double[]{500, 525, 550, 575},
+                0,
+                new double []{0,0,0,0},
+                new double []{2,2.4,2.8,3.2},
+                1,
+                4,
+                1,
+                false,
+                false,
+                false);
+    }
+
+    @Override
+    public boolean cast(Hero hero) {
+
+        Player player = hero.getPlayer();
+
+        double range = this.getCastRange(hero.getLevel());
+
+        org.bukkit.util.RayTraceResult result = player.getWorld().rayTraceEntities(
+                player.getEyeLocation(),
+                player.getEyeLocation().getDirection(),
+                range,
+                0.5,
+                entity -> entity instanceof LivingEntity && !entity.equals(player)
+        );
+
+        if (result == null || !(result.getHitEntity() instanceof LivingEntity targetEntity)) {
+            return false;
+        }
+
+        double durationSeconds = this.getDuration(hero.getLevel());
+        int durationTicks = (int) (durationSeconds * 20);
+
+        player.getWorld().playSound(player.getLocation(), "dotacraft:lion.lion_hex_cast", 0.8f, 1.0f);
+
+        targetEntity.getWorld().spawnParticle(Particle.EXPLOSION, targetEntity.getLocation().add(0, 1, 0), 10, 0.3, 0.3, 0.3);
+
+        targetEntity.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, durationTicks, 0, false, false));
+        targetEntity.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, durationTicks, 3, false, false));
+        targetEntity.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, durationTicks, 255, false, false));
+
+        HologramManager.spawnHexIndicator(targetEntity, durationSeconds);
+
+        Frog frog = targetEntity.getWorld().spawn(targetEntity.getLocation(), Frog.class, f -> {
+            f.setVariant(Frog.Variant.COLD);
+            f.setBaby();
+            f.setInvulnerable(true);
+            f.setAI(false);
+            f.setGravity(false);
+            f.setSilent(true);
+        });
+
+        new BukkitRunnable() {
+            private int ticksLived = 0;
+
+            @Override
+            public void run() {
+                try {
+                    if (!targetEntity.isValid() || targetEntity.isDead() || ticksLived >= durationTicks) {
+                        cleanup();
+                        cancel();
+                        return;
+                    }
+
+                    frog.teleport(targetEntity.getLocation());
+
+                    if (ticksLived % 5 == 0) {
+                        targetEntity.getWorld().spawnParticle(
+                                Particle.WITCH,
+                                targetEntity.getLocation().add(0, 0.5, 0),
+                                3, 0.2, 0.2, 0.2
+                        );
+                    }
+                } finally {
+                    ticksLived++;
+                }
+            }
+
+            private void cleanup() {
+
+                if (frog != null && frog.isValid()) {
+                    frog.remove();
+                }
+
+                if (targetEntity.isValid()) {
+                    targetEntity.getWorld().spawnParticle(Particle.POOF, targetEntity.getLocation().add(0, 1, 0), 10, 0.2, 0.2, 0.2);
+                    targetEntity.removePotionEffect(PotionEffectType.INVISIBILITY);
+                    targetEntity.removePotionEffect(PotionEffectType.SLOWNESS);
+                    targetEntity.removePotionEffect(PotionEffectType.WEAKNESS);
+                }
+            }
+        }.runTaskTimer(DotaCraft.getInstance(), 0L, 1L);
+        return true;
+    }
+}
+</file>
+
+<file path="Hero/impl/lion/Lion.java">
+package com.dotaCraft.Hero.impl.lion;
+
+import com.dotaCraft.Ability.Ability;
+import com.dotaCraft.DotaCraft;
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Manager.DamageManager;
+import com.dotaCraft.Manager.HologramManager;
+import org.bukkit.*;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
+
+import java.util.concurrent.ThreadLocalRandom;
+
+public class Lion extends Hero {
+    public Lion(Player player) {
+        super(player, "Lion", Attribute.INTELLECT, 18, 15, 19, 2.3, 0.9, 2.4, 1.7, 3.5, 1.7, AttackType.RANGED, 600.0, 900.0, 29, 35, 290.0);
+
+        this.addAbility(0, new EarthSpike());
+        this.addAbility(1, new Hex());
+        this.addAbility(2, new ManaDrain());
+        this.addAbility(3, new FingerOfDeath());
+    }
+
+    @Override
+    public void launchProjectile(Hero attacker, LivingEntity target, double damage) {
+        Player player = attacker.getPlayer();
+
+        new BukkitRunnable() {
+            private final Location currentLoc = player.getEyeLocation().clone().subtract(0, 0.2, 0);
+            private final double blocksPerTick = attacker.getProjectileSpeed() / 20.0;
+            private int maxTicks = 60;
+
+            @Override
+            public void run() {
+                maxTicks--;
+
+                if (target == null || !target.isValid() || target.isDead() || maxTicks <= 0) {
+                    cancel();
+                    return;
+                }
+
+                Location targetLoc = target.getLocation().clone().add(0, target.getHeight() / 2.0, 0);
+                Vector direction = targetLoc.toVector().subtract(currentLoc.toVector());
+
+                if (direction.length() <= blocksPerTick) {
+                    onProjectileHit(target, damage);
+                    cancel();
+                    return;
+                }
+
+                direction.normalize().multiply(blocksPerTick);
+                currentLoc.add(direction);
+
+                if (currentLoc.getWorld() != null) {
+                    Particle.DustOptions goldenDust = new Particle.DustOptions(Color.fromRGB(255, 215, 0), 0.6f);
+
+                    currentLoc.getWorld().spawnParticle(Particle.FLAME, currentLoc, 3, 0.03, 0.03, 0.03, 0.01);
+                    currentLoc.getWorld().spawnParticle(Particle.DUST, currentLoc, 1, 0.0, 0.0, 0.0, 0.0, goldenDust);
+                    currentLoc.getWorld().spawnParticle(Particle.SMOKE, currentLoc, 1, 0.01, 0.01, 0.01, 0.01);
+                }
+            }
+        }.runTaskTimer(DotaCraft.getInstance(), 1L, 1L);
+    }
+}
+</file>
+
+<file path="Hero/impl/lion/ManaDrain.java">
+package com.dotaCraft.Hero.impl.lion;
+
+import com.dotaCraft.Ability.Ability;
+import com.dotaCraft.DotaCraft;
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Utils.DotaUnits;
+import org.bukkit.Color;
+import org.bukkit.Location;
+import org.bukkit.Particle;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.RayTraceResult;
+import org.bukkit.util.Vector;
+
+public class ManaDrain extends Ability {
+    private static final double[] MANA_DRAIN_PER_SECOND = {20.0, 40.0, 60.0, 120.0};
+
+    public ManaDrain() {
+        super(
+                DamageTypes.NONE,
+                AbilityTypes.UNIT_TARGET,
+                TargetTypes.ALL,
+                DispelTypes.NONE,
+                new double []{0,0,0,0},
+                new double []{0,0,0,0},
+                new double []{0,0,0,0},
+                new double []{15,12,9,6},
+                new double []{850,850,850,850},
+                0.5,
+                new double []{0,0,0,0},
+                new double []{5,5,5,5},
+                1,
+                4,
+                1,
+                false,
+                false,
+                true);
+    }
+
+    @Override
+    public boolean cast(Hero hero) {
+        Player player = hero.getPlayer();
+        if (player == null || !player.isOnline()) return false;
+
+        int level = getAbilityLevel();
+        double castRangeBlocks = getCastRange(level);
+        double maxBreakDistanceBlocks = castRangeBlocks + DotaUnits.toBlocks(400);
+        double durationSeconds = getDuration(level);
+        int totalTicks = (int) (durationSeconds * 20);
+
+        RayTraceResult result = player.getWorld().rayTraceEntities(
+                player.getEyeLocation(),
+                player.getEyeLocation().getDirection(),
+                castRangeBlocks,
+                0.8,
+                entity -> entity instanceof LivingEntity && !entity.equals(player)
+        );
+
+        if (result == null || !(result.getHitEntity() instanceof LivingEntity target)) {
+            player.sendMessage("§cNo target for Mana Drain!");
+            return false;
+        }
+
+        double manaPerSecond = MANA_DRAIN_PER_SECOND[Math.min(level - 1, MANA_DRAIN_PER_SECOND.length - 1)];
+        double manaPerTick = manaPerSecond / 20.0;
+
+        hero.setChanneling(true);
+
+        player.getWorld().playSound(player.getLocation(), "dotacraft:lion.lion_mana_drain_cast", 0.8f, 1.0f);
+
+        Location startCastLoc = player.getLocation().clone();
+
+        new BukkitRunnable() {
+            private int currentTick = 0;
+
+            @Override
+            public void run() {
+                if (!player.isOnline() || player.isDead() || target.isDead() || !target.isValid() || currentTick >= totalTicks) {
+                    player.stopSound("dotacraft:lion.lion_mana_drain_cast");
+                    stopChanneling();
+                    cancel();
+                    return;
+                }
+
+                if (hasMoved(startCastLoc, player.getLocation())) {
+                    player.stopSound("dotacraft:lion.lion_mana_drain_cast");
+                    stopChanneling();
+                    player.sendMessage("ManaDrain stopped.");
+                    cancel();
+                    return;
+                }
+
+                double currentDistance = player.getLocation().distance(target.getLocation());
+                if (currentDistance > maxBreakDistanceBlocks) {
+                    player.stopSound("dotacraft:lion.lion_mana_drain_cast");
+                    stopChanneling();
+                    player.sendMessage("ManaDrain stopped.");
+                    cancel();
+                    return;
+                }
+
+                hero.addMana(manaPerTick);
+
+                if (currentTick % 2 == 0) {
+                    drawDrainBeam(player.getEyeLocation().subtract(0, 0.3, 0), target.getEyeLocation().subtract(0, 0.2, 0));
+                }
+
+                currentTick++;
+            }
+
+            private void stopChanneling() {
+                hero.setChanneling(false);
+            }
+
+            private boolean hasMoved(Location from, Location to) {
+                return from.getX() != to.getX() || from.getY() != to.getY() || from.getZ() != to.getZ();
+            }
+
+        }.runTaskTimer(DotaCraft.getInstance(), 0L, 1L);
+        return true;
+    }
+
+    private void drawDrainBeam(Location start, Location end) {
+        Vector direction = end.toVector().subtract(start.toVector());
+        double distance = direction.length();
+        direction.normalize();
+
+        double stepBlue = 0.35;
+        Location current = start.clone();
+
+        Particle.DustOptions blueDust = new Particle.DustOptions(Color.fromRGB(0, 180, 255), 0.6f);
+        Particle.DustOptions purpleDust = new Particle.DustOptions(Color.fromRGB(128, 0, 255), 0.6f);
+
+        for (double d = 0; d < distance; d += stepBlue) {
+            current.add(direction.clone().multiply(stepBlue));
+            start.getWorld().spawnParticle(Particle.DUST, current, 1, 0.0, 0.0, 0.0, 0.0, blueDust);
+            start.getWorld().spawnParticle(Particle.DUST, current, 1, 0.0, 0.0, 0.0, 0.0, purpleDust);
+        }
+    }
+}
+</file>
+
+<file path="Hero/impl/pudge/FleshHeap.java">
+package com.dotaCraft.Hero.impl.pudge;
+
+import com.dotaCraft.Ability.Ability;
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Utils.DotaUnits;
+
+public class FleshHeap extends Ability {
+
+    private int stackCount = 0;
+
+    public FleshHeap() {
+        super(
+                DamageTypes.NONE,
+                AbilityTypes.PASSIVE,
+                TargetTypes.NONE,
+                DispelTypes.NONE,
+                new double[]{0,0,0,0},
+                new double[]{0,0,0,0},
+                new double[]{0,0,0,0},
+                new double[]{0,0,0,0},
+                new double[]{0,0,0,0},
+                0,
+                new double[]{0,0,0,0},
+                new double[]{0,0,0,0},
+                1,
+                1,
+                1,
+                true,  // isInnate = true
+                false, // hasScepterUpgrade
+                false  // hasShardUpgrade
+        );
+    }
+
+    @Override
+    public void onEnemyDeath(Hero Pudge, Hero victim, double radius) {
+        if (Pudge.equals(victim.getLastAttacker()) || radius <= DotaUnits.toBlocks(450.0)) {
+            stackCount++;
+            Pudge.addStrength(2);
+        }
+    }
+
+    public boolean cast(Hero hero) {
+        hero.getPlayer().sendMessage("FleshHeap.");
+        return false;
+    }
+}
+</file>
+
+<file path="Hero/impl/pudge/MeatHook.java">
+package com.dotaCraft.Hero.impl.pudge;
+
+import com.dotaCraft.Ability.Ability;
+import com.dotaCraft.DotaCraft;
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Manager.DamageManager;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.entity.*;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.entity.EntityUnleashEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
+
+public class MeatHook extends Ability implements org.bukkit.event.Listener {
+
+    public MeatHook() {
+        super(
+                DamageTypes.PURE,
+                AbilityTypes.POINT_TARGET,
+                TargetTypes.NONE,
+                DispelTypes.NONE,
+                new double[]{150, 220, 290, 360}, // damage
+                new double[]{120, 120, 120, 120}, // manaCost
+                new double[]{0, 0, 0, 0},         // healthCost
+                new double[]{18, 16, 14, 12},     // coolDown
+                new double[]{1300, 1300, 1300, 1300}, // castRange (units)
+                0,
+                new double[]{0, 0, 0, 0},
+                new double[]{2, 2, 2, 2},
+                1, 4, 1,
+                false, false, true
+        );
+        org.bukkit.Bukkit.getPluginManager().registerEvents(this, DotaCraft.getInstance());
+    }
+
+    @EventHandler
+    public void onLeashBreak(EntityUnleashEvent event) {
+        if (event.getReason() == EntityUnleashEvent.UnleashReason.DISTANCE) {
+            event.setCancelled(true);
+        }
+    }
+
+    @Override
+    public boolean cast(Hero hero) {
+        Player player = hero.getPlayer();
+
+        Location eyeLoc = player.getEyeLocation();
+        int level = getAbilityLevel();
+        double maxDistance = getCastRange(level);
+
+        Location targetPoint = eyeLoc.clone().add(eyeLoc.getDirection().multiply(maxDistance));
+        Location spawnLoc = eyeLoc.clone().subtract(0, 0.4, 0);
+
+        Vector direction = targetPoint.toVector().subtract(spawnLoc.toVector()).normalize();
+
+        spawnLoc.setDirection(direction);
+
+        double damage = getDamage(level);
+
+        ItemDisplay hookHead = player.getWorld().spawn(spawnLoc, ItemDisplay.class, display -> {
+            display.setItemStack(new ItemStack(Material.TRIPWIRE_HOOK));
+            display.setTeleportDuration(1);
+        });
+
+        Slime leashHolder = player.getWorld().spawn(spawnLoc, Slime.class, slime -> {
+            slime.setSize(0);
+            slime.setSilent(true);
+            slime.setGravity(false);
+            slime.setAI(false);
+            slime.setInvulnerable(true);
+            slime.addPotionEffect(new PotionEffect(
+                    PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 1, false, false
+            ));
+            slime.setLeashHolder(player);
+        });
+
+        player.getWorld().playSound(player.getLocation(), "dotacraft:pudge.hook_cast", 0.8f, 1.0f);
+
+        new BukkitRunnable() {
+            private double currentDistance = 0;
+            private boolean returning = false;
+            private LivingEntity hookedTarget = null;
+            private Location currentHookLoc = spawnLoc.clone();
+
+            @Override
+            public void run() {
+                if (!player.isOnline()) {
+                    removeEntities();
+                    cancel();
+                    return;
+                }
+
+                if (!returning) {
+                    currentDistance += 1.2;
+                    currentHookLoc = currentHookLoc.clone().add(direction.clone().multiply(1.2));
+
+                    hookHead.teleport(currentHookLoc);
+
+                    Location leashLoc = currentHookLoc.clone().add(direction.clone().multiply(-5));
+                    leashLoc.add(0, 0.1, 0);
+
+                    leashHolder.teleport(leashLoc.subtract(0, 0.5, 0));
+
+                    for (Entity entity : currentHookLoc.getWorld().getNearbyEntities(currentHookLoc, 1.2, 1.2, 1.2)) {
+                        if (entity instanceof LivingEntity target
+                                && !entity.equals(player)
+                                && !entity.equals(hookHead)
+                                && !entity.equals(leashHolder)
+                                && !(entity instanceof ArmorStand)) {
+
+                            hookedTarget = target;
+                            returning = true;
+
+                            player.stopSound("dotacraft:pudge.hook_cast");
+                            player.playSound(player.getLocation(), "dotacraft:pudge.hook_impact", 0.5f, 1.0f);
+                            player.getWorld().playSound(player.getLocation(), "dotacraft:pudge.hook_cast", 0.8f, 1.0f);
+
+                            DamageManager.dealDamageFromAbility(hero, hookedTarget, damage, getDamageType());
+                            break;
+                        }
+                    }
+
+                    if (currentDistance >= maxDistance) {
+                        returning = true;
+                    }
+
+                } else {
+                    Location pLoc = player.getEyeLocation().subtract(0, 0.4, 0);
+                    Vector toPlayer = pLoc.toVector().subtract(currentHookLoc.toVector());
+
+                    if (toPlayer.length() < 1.2) {
+                        removeEntities();
+                        cancel();
+                        return;
+                    }
+
+                    Vector returnDir = toPlayer.normalize().multiply(1.2);
+                    currentHookLoc = currentHookLoc.clone().add(returnDir);
+
+                    hookHead.teleport(currentHookLoc);
+                    leashHolder.teleport(currentHookLoc.clone().subtract(0, 0.5, 0));
+
+                    if (hookedTarget != null && !hookedTarget.isDead()) {
+                        hookedTarget.teleport(currentHookLoc.clone().add(0, 0.2, 0));
+                        hookedTarget.setFallDistance(0);
+                    }
+                }
+            }
+
+            private void removeEntities() {
+                player.stopSound("dotacraft:pudge.hook_cast");
+
+                if (leashHolder != null && leashHolder.isValid()) {
+                    leashHolder.setLeashHolder(null);
+                    Location loc = leashHolder.getLocation();
+                    leashHolder.remove();
+
+                    for (Entity entity : loc.getWorld().getNearbyEntities(loc, 2, 2, 2)) {
+                        if (entity instanceof Item item && item.getItemStack().getType() == Material.LEAD) {
+                            item.remove();
+                        }
+                    }
+                }
+                if (hookHead != null && hookHead.isValid()) {
+                    hookHead.remove();
+                }
+            }
+        }.runTaskTimer(DotaCraft.getInstance(), 0L, 1L);
+
+        return true;
+    }
+}
+</file>
+
+<file path="Hero/impl/pudge/Pudge.java">
+package com.dotaCraft.Hero.impl.pudge;
+
+import com.dotaCraft.Hero.Hero;
+import com.ticxo.modelengine.api.ModelEngineAPI;
+import com.ticxo.modelengine.api.model.ActiveModel;
+import com.ticxo.modelengine.api.model.ModeledEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+
+public class Pudge extends Hero {
+
+    private ModeledEntity modeledEntity;
+    private ActiveModel activeModel;
+
+    public Pudge(Player player) {
+        super(player, "Pudge", Attribute.STRENGTH, 25, 14, 16, 5.0, 0.8, 3.0, 1.4, 1.8, 1.7, AttackType.MELEE, 175.0, 0.0, 42, 48, 280);
+
+        this.addAbility(0, new MeatHook());
+
+        //applyPudgeModel();
+    }
+
+    private void applyPudgeModel() {
+        Player player = getPlayer();
+
+        player.addPotionEffect(new PotionEffect(
+                PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 1, false, false
+        ));
+
+        modeledEntity = ModelEngineAPI.createModeledEntity(player);
+
+        activeModel = ModelEngineAPI.createActiveModel("pudge");
+
+        if (activeModel != null && modeledEntity != null) {
+            modeledEntity.addModel(activeModel, true);
+        }
+    }
+
+    public void removePudgeModel() {
+        Player player = getPlayer();
+
+        if (modeledEntity != null && activeModel != null) {
+            modeledEntity.removeModel("pudge");
+        }
+
+        if (player.isOnline()) {
+            player.removePotionEffect(PotionEffectType.INVISIBILITY);
+        }
+    }
+}
+</file>
+
+<file path="Hero/Hero.java">
+package com.dotaCraft.Hero;
+
+import com.dotaCraft.Ability.Ability;
+import com.dotaCraft.Item.Item;
+import com.dotaCraft.Manager.DamageManager;
+import com.dotaCraft.Manager.HologramManager;
+import com.dotaCraft.Manager.ItemManager;
+import com.dotaCraft.Utils.DotaUnits;
+import org.bukkit.Location;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.NavigableMap;
+import java.util.TreeMap;
+import java.util.concurrent.ThreadLocalRandom;
+
+public abstract class Hero {
+    public enum AttackType { MELEE, RANGED }
+    public enum Attribute { STRENGTH, AGILITY, INTELLECT, UNIVERSAL }
+
+    private final Player player;
+    private final String heroName;
+    private final Attribute primaryAttribute;
+
+    private int baseStrength;
+    private int baseAgility;
+    private int baseIntellect;
+
+    private double strengthGain;
+    private double agilityGain;
+    private double intellectGain;
+    private double baseHealthRegen;
+    private double baseManaRegen;
+
+    private double currentHealth;
+    private double currentMana;
+    private double baseAttackTime = 1.7;
+
+    private long lastAttackTime = 0;
+
+    private double currentGold = 600.0;
+
+    private boolean isHeroDead = false;
+    private int level = 1;
+
+    private AttackType attackType;
+    private double attackRange = 3.5;
+    private double projectileSpeed = 20.0;
+
+    private Hero lastAttacker;
+    private long lastAttackTimestamp;
+    private static final long DAMAGE_TIMEOUT_MS = 15_000;
+
+    private int baseDamageMin;
+    private int baseDamageMax;
+
+    private boolean isChanneling = false;
+
+    private int currentXp = 0;
+
+    private double baseMoveSpeed = 300.0;
+
+    private double baseHeroDayVision = 1800.0;
+    private double baseHeroNightVision = 800.0;
+
+    private final Map abilitiesBySlot = new HashMap<>();
+    private final Map<Integer, Item> itemsBySlot = new HashMap<>();
+
+    private static final int[] XP_VALUES = {
+            240, 400, 520, 600, 680, 760, 800, 900, 1000, 1100,
+            1200, 1300, 1400, 1500, 1600, 1700, 1800, 1900, 2000, 2200,
+            2400, 2600, 2800, 3000, 4000, 5000, 6000, 7000, 8000, 0
+    };
+
+    public Hero(Player player, String heroName, Attribute primaryAttribute,
+                int baseStrength, int baseAgility, int baseIntellect, double baseHealthRegen, double baseManaRegen,
+                double strengthGain, double agilityGain, double intellectGain, double baseAttackTime,
+                AttackType attackType, double attackRange, double projectileSpeed, int baseDamageMin, int baseDamageMax, double baseMoveSpeed) {
+        this.player = player;
+        this.heroName = heroName;
+        this.primaryAttribute = primaryAttribute;
+        this.baseStrength = baseStrength;
+        this.baseAgility = baseAgility;
+        this.baseIntellect = baseIntellect;
+        this.baseHealthRegen = baseHealthRegen;
+        this.baseManaRegen = baseManaRegen;
+        this.strengthGain = strengthGain;
+        this.agilityGain = agilityGain;
+        this.intellectGain = intellectGain;
+        this.baseAttackTime = baseAttackTime;
+
+        this.attackType = attackType;
+        this.attackRange = attackRange;
+        this.projectileSpeed = projectileSpeed;
+
+        this.baseDamageMin = baseDamageMin;
+        this.baseDamageMax = baseDamageMax;
+
+        this.currentHealth = getMaxHealth();
+        this.currentMana = getMaxMana();
+
+        this.baseMoveSpeed = baseMoveSpeed;
+
+        this.attackRange = DotaUnits.toBlocks(attackRange);
+        this.projectileSpeed = DotaUnits.toBlocks(projectileSpeed);
+    }
+
+    public Hero(Player player, String heroName, Attribute primaryAttribute,
+                int baseStrength, int baseAgility, int baseIntellect,
+                double baseHealthRegen, double baseManaRegen,
+                double strengthGain, double agilityGain, double intellectGain,
+                double baseAttackTime, int baseDamageMin, int baseDamageMax, double baseMoveSpeed) {
+        this(player, heroName, primaryAttribute,
+                baseStrength, baseAgility, baseIntellect,
+                baseHealthRegen, baseManaRegen,
+                strengthGain, agilityGain, intellectGain,
+                baseAttackTime,
+                AttackType.MELEE, 3.5, 0.0, baseDamageMin, baseDamageMax, baseMoveSpeed);
+    }
+
+    public void onTick() {
+        if (player != null && player.isOnline()) {
+            double hpRegen = (baseHealthRegen + (getStrength() * 0.1)) / 20.0;
+            double manaRegen = (baseManaRegen + (getIntellect() * 0.05)) / 20.0;
+            double goldPerTick = 90.0 / 1200.0;
+
+            addHealth(hpRegen);
+            addMana(manaRegen);
+
+            updateSpeedAttribute();
+            addGold(goldPerTick);
+            //player.sendMessage("Current gold: " + (int) this.currentGold);
+        }
+    }
+
+    public int getRequiredXpToNextLevel(int currentLevel) {
+        if (currentLevel <= 0) return XP_VALUES[0];
+
+        if (currentLevel >= XP_VALUES.length) {
+            return 0;
+        }
+
+        return XP_VALUES[currentLevel - 1];
+    }
+
+    public void addXp(int amount) {
+        if (amount < 0) {
+            return;
+        }
+
+        this.currentXp += amount;
+        if (currentXp >= (getRequiredXpToNextLevel(this.level))) {
+            currentXp -= getRequiredXpToNextLevel(this.level);
+            levelUp();
+        }
+    }
+
+    public void addGold(double amount) {
+        if (amount < 0) {
+            return;
+        }
+
+        this.currentGold += amount;
+    }
+
+    public void spendGold(double amount) {
+        if (amount < 0) {
+            return;
+        }
+
+        this.currentGold -= amount;
+    }
+
+    public void buyItem(Item item) {
+        int cost = item.getCost();
+
+        if (cost < 0) {
+            return;
+        }
+
+        spendGold(cost);
+    }
+
+    public void levelUp() {
+        this.level++;
+        this.player.sendMessage("Current level: " + this.level);
+
+        player.playSound(player.getLocation(),Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.0f);
+
+        //Add stats
+        int currentMaxStrength = getStrength();
+        int currentMaxAgility = getAgility();
+        int currentMaxIntellect = getIntellect();
+
+        currentMaxStrength += this.strengthGain;
+        currentMaxAgility += this.agilityGain;
+        currentMaxIntellect += this.intellectGain;
+    }
+
+    public boolean useMana(double amount) {
+        if (currentMana >= amount) {
+            currentMana -= amount;
+            return true;
+        }
+        return false;
+    }
+
+    public boolean castAbility(int slot) {
+        Ability ability = (Ability) abilitiesBySlot.get(slot);
+
+        if (ability == null) {
+            player.sendMessage("§cAbility in slot " + slot + " does not exist.");
+            return false;
+        }
+
+        if (ability.getAbilityLevel() <= 0) {
+            player.sendMessage("§cAbility is not leveled up!");
+            return false;
+        }
+
+        double manaCost = ability.getManaCost(ability.getAbilityLevel());
+        if (currentMana < manaCost) {
+            player.sendMessage("§bNot enough mana! Needs: " + manaCost + ", Current: " + currentMana);
+            player.getWorld().playSound(player.getLocation(), "dotacraft:ui.ui_deny_mana", 0.8f, 1.0f);
+            return false;
+        }
+
+        boolean castSuccess = ability.cast(this);
+
+        if (castSuccess) {
+            useMana(manaCost);
+            return true;
+        }
+
+        return false;
+    }
+
+    public void launchProjectile(Hero attacker, LivingEntity target, double damage) {
+        // Default behavior for Melee heroes.
+    }
+
+    protected void onProjectileHit(LivingEntity target, double damage) {
+        boolean isLowGround = target.getLocation().getY() - player.getLocation().getY() > 0.5;
+        boolean isMiss = isLowGround && ThreadLocalRandom.current().nextInt(100) < 25;
+
+        if (isMiss) {
+            target.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0f, 1.5f);
+            HologramManager.spawnMissIndicator(target);
+        } else {
+            target.setNoDamageTicks(0);
+            DamageManager.dealDamage(this, target, damage, Ability.DamageTypes.PHYSICAL);
+            HologramManager.spawnDamageIndicator(target, damage, Ability.DamageTypes.PHYSICAL);
+            target.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, target.getLocation(), 10, 0.2, 0.2, 0.2, 0.1);
+            target.getWorld().playSound(target.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_HIT, 1.0f, 1.2f);
+        }
+    }
+
+    public void useItem(int slot) {
+        useItem(slot, null);
+    }
+
+    public void useItem(int slot, Entity manualTarget) {
+        Item item = (Item) itemsBySlot.get(slot);
+        if (item == null) {
+            player.sendMessage("§cNo item in slot " + slot);
+            return;
+        }
+
+        if (!item.canCast(player)) {
+            if (item.isOnCooldown()) {
+                player.getWorld().playSound(player.getLocation(), "dotacraft:ui.ui_deny_cooldown", 0.5f, 1.0f);
+            } else if (currentMana < item.getManaCost()) {
+                player.sendMessage("§bNot enough mana!");
+            }
+            return;
+        }
+
+        switch (item.getTargetType()) {
+            case NO_TARGET -> {
+                useMana(item.getManaCost());
+                item.startCooldown();
+                item.onUseNoTarget(this.player);
+            }
+            case UNIT_TARGET -> {
+                Entity target = manualTarget;
+                if (target == null) {
+                    target = getTargetEntity(item.getCastRange());
+                }
+
+                if (target instanceof LivingEntity livingTarget) {
+                    useMana(item.getManaCost());
+                    item.startCooldown();
+                    item.onUseUnitTarget(this.player, livingTarget);
+                } else {
+                    player.sendMessage("§cNo valid target for item!");
+                }
+            }
+            case POINT_TARGET -> {
+                Location targetLoc = player.getTargetBlockExact((int) item.getCastRange()) != null
+                        ? player.getTargetBlockExact((int) item.getCastRange()).getLocation()
+                        : player.getLocation();
+
+                useMana(item.getManaCost());
+                item.startCooldown();
+                item.onUsePointTarget(this.player, targetLoc);
+            }
+            default -> {}
+        }
+    }
+
+    public void removeItemFromSlot(int slot) {
+        this.itemsBySlot.remove(slot);
+    }
+
+    public int getSlotOfItem(Item item) {
+        if (item == null) return -1;
+
+        for (Map.Entry entry : itemsBySlot.entrySet()) {
+            if (entry.getValue().equals(item)) {
+                return (int) entry.getKey();
+            }
+        }
+        return -1;
+    }
+
+    private Entity getTargetEntity(double range) {
+        var result = player.getWorld().rayTraceEntities(
+                player.getEyeLocation(),
+                player.getEyeLocation().getDirection(),
+                range,
+                entity -> !entity.equals(player) && entity instanceof LivingEntity
+        );
+        return result != null ? result.getHitEntity() : null;
+    }
+
+    public boolean isChanneling() {
+        return isChanneling;
+    }
+
+    public void setChanneling(boolean channeling) {
+        this.isChanneling = channeling;
+    }
+
+    public void setCurrentHealth(int currentHealth) {
+        this.currentHealth = Math.min(currentHealth, getMaxHealth());
+    }
+
+    public void setCurrentMana(int currentMana) {
+        this.currentMana = Math.min(currentMana, getMaxMana());
+    }
+
+    public Hero getLastAttacker() {
+        if (lastAttacker == null) {
+            return null;
+        }
+
+        // Если прошло больше 15 секунд с последнего удара, считать, что бой завершился
+        if (System.currentTimeMillis() - lastAttackTimestamp > DAMAGE_TIMEOUT_MS) {
+            this.lastAttacker = null;
+            return null;
+        }
+
+        return lastAttacker;
+    }
+
+    public void addAbility(int slot, Ability ability) {
+        this.abilitiesBySlot.put(slot, ability);
+    }
+
+    public void addItem(int slot, Item item) {
+        if (item != null) {
+            this.itemsBySlot.put(slot, item);
+            item.onEquip(this);
+
+            ItemManager.tryCraftItems(this);
+        }
+    }
+
+    public void addHealth(double amount) {
+        this.currentHealth = Math.min(this.currentHealth + amount, getMaxHealth());
+    }
+
+    public void addMana(double amount) {
+        this.currentMana = Math.min(this.currentMana + amount, getMaxMana());
+    }
+
+    public void addStrength(int amount) { baseStrength += amount; }
+    public void addAgility(int amount) { baseAgility += amount; }
+    public void addIntellect(int amount) { baseIntellect += amount; }
+
+    // Getters
+    public Player getPlayer() { return player; }
+    public String getHeroName() { return heroName; }
+
+    public int getBaseStrength() { return (int) (baseStrength + (strengthGain * (level - 1))); }
+    public int getBaseAgility() { return (int) (baseAgility + (agilityGain * (level - 1))); }
+    public int getBaseIntellect() { return (int) (baseIntellect + (intellectGain * (level - 1))); }
+
+    public double getBaseAttackTime() {
+        return baseAttackTime;
+    }
+
+    public double getAttackSpeed() {
+        double speedFromItems = 0;
+        for (Object obj : itemsBySlot.values()) {
+            if (obj instanceof Item item) {
+                speedFromItems += item.getStatBonus(Item.StatType.ATTACK_SPEED);
+            }
+        }
+        return 100.0 + getAgility() + speedFromItems;
+    }
+
+    public long getAttackIntervalMillis() {
+        double attacksPerSecond = (getAttackSpeed() / 100.0) / getBaseAttackTime();
+        return (long) (1000.0 / attacksPerSecond);
+    }
+
+    public boolean canAttack() {
+        return (System.currentTimeMillis() - lastAttackTime) >= getAttackIntervalMillis();
+    }
+
+    public void resetAttackCooldown() {
+        this.lastAttackTime = System.currentTimeMillis();
+    }
+
+    public int getBonusStrength() {
+        int bonus = 0;
+        for (Object obj : itemsBySlot.values()) {
+            if (obj instanceof Item item) {
+                bonus += (int) item.getStatBonus(Item.StatType.STRENGTH);
+            }
+        }
+        return bonus;
+    }
+
+    public int getBonusAgility() {
+        int bonus = 0;
+        for (Object obj : itemsBySlot.values()) {
+            if (obj instanceof Item item) {
+                bonus += (int) item.getStatBonus(Item.StatType.AGILITY);
+            }
+        }
+        return bonus;
+    }
+
+    public int getBonusIntellect() {
+        int bonus = 0;
+        for (Object obj : itemsBySlot.values()) {
+            if (obj instanceof Item item) {
+                bonus += (int) item.getStatBonus(Item.StatType.INTELLECT);
+            }
+        }
+        return bonus;
+    }
+
+    public double getMainDamage() {
+        int primaryAttrValue = switch (primaryAttribute) {
+            case Attribute.STRENGTH -> getStrength();
+            case Attribute.AGILITY -> getAgility();
+            case Attribute.INTELLECT -> getIntellect();
+            case Attribute.UNIVERSAL -> (int) ((getStrength() + getAgility() + getIntellect()) * 0.7);
+        };
+
+        double bonusDamage = 0;
+        for (Object obj : itemsBySlot.values()) {
+            if (obj instanceof Item item) {
+                bonusDamage += item.getStatBonus(Item.StatType.DAMAGE);
+            }
+        }
+
+        int randomBase = ThreadLocalRandom.current().nextInt(baseDamageMin, baseDamageMax + 1);
+        return randomBase + primaryAttrValue + bonusDamage;
+    }
+
+    public void setMainDamage(double bonusBaseDamage) {
+        this.baseDamageMin += bonusBaseDamage;
+        this.baseDamageMax += bonusBaseDamage;
+    }
+
+    public boolean hasCleave() {
+        for (Object obj : itemsBySlot.values()) {
+            if (obj instanceof Item item && item.getId().equalsIgnoreCase("battle_fury")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public double getArmor() {
+        double armorFromAgility = getAgility() * 0.166;
+        double armorFromItems = 0;
+        for (Object obj : itemsBySlot.values()) {
+            if (obj instanceof Item item) {
+                armorFromItems += item.getStatBonus(Item.StatType.ARMOR);
+            }
+        }
+        return armorFromAgility + armorFromItems;
+    }
+
+    public int getCurrentXp() {
+        return currentXp;
+    }
+
+    public int getCurrentGold() {
+        return (int) currentGold;
+    }
+
+    public double getMagicResist() {
+        double baseResist = 0.25;
+        double intBonus = (getIntellect() * 0.1) / 100.0; // +0.1% for intellect
+        return Math.min(0.9, baseResist + intBonus);
+    }
+
+    public void setLastAttacker(Hero attacker) {
+        if (attacker == null || attacker.equals(this)) return;
+        this.lastAttacker = attacker;
+        this.lastAttackTimestamp = System.currentTimeMillis();
+    }
+
+    public double getBonusMoveSpeed() {
+        double bonus = 0;
+        for (Object obj : itemsBySlot.values()) {
+            if (obj instanceof Item item) {
+                bonus += item.getStatBonus(Item.StatType.MOVEMENT_SPEED);
+            }
+        }
+        return bonus;
+    }
+
+    public double getMoveSpeed() {
+        return baseMoveSpeed + getBonusMoveSpeed();
+    }
+
+    public void updateSpeedAttribute() {
+        if (player == null || !player.isOnline()) return;
+
+        double mcSpeed = (getMoveSpeed() / 300.0) * 0.1;
+
+        var attribute = player.getAttribute(org.bukkit.attribute.Attribute.MOVEMENT_SPEED);
+        if (attribute != null) {
+            attribute.setBaseValue(mcSpeed);
+        }
+    }
+
+    public double getCritChance() {
+        double highestChance = 0;
+        for (Object obj : itemsBySlot.values()) {
+            if (obj instanceof Item item) {
+                highestChance = Math.max(highestChance, item.getStatBonus(Item.StatType.CRIT_CHANCE));
+            }
+        }
+        return highestChance;
+    }
+
+    public double getCritMultiplier() {
+        double highestMultiplier = 1.0;
+        for (Object obj : itemsBySlot.values()) {
+            if (obj instanceof Item item) {
+                if (item.getStatBonus(Item.StatType.CRIT_CHANCE) > 0) {
+                    highestMultiplier = Math.max(highestMultiplier, item.getStatBonus(Item.StatType.CRIT_MULTIPLIER));
+                }
+            }
+        }
+        return highestMultiplier;
+    }
+
+    public double getDayVision() {
+        return DotaUnits.toBlocks(baseHeroDayVision);
+    }
+
+    public double getNightVision() {
+        return DotaUnits.toBlocks(baseHeroNightVision);
+    }
+
+    public double getCurrentVisionRadius() {
+        if (player == null || player.getWorld() == null) return getDayVision();
+
+        long time = player.getWorld().getTime();
+
+        boolean isDay = time < 12300 || time > 23850;
+        return isDay ? getDayVision() : getNightVision();
+    }
+
+    public boolean isInUnexploredArea() {
+        if (player == null || player.getWorld() == null) return false;
+
+        return true;
+    }
+
+    public int getStrength() { return getBaseStrength() + getBonusStrength(); }
+    public int getAgility() { return getBaseAgility() + getBonusAgility(); }
+    public int getIntellect() { return getBaseIntellect() + getBonusIntellect(); }
+
+    public int getMaxHealth() { return 120 + (getStrength() * 22); }
+    public int getCurrentHealth() { return (int) currentHealth; }
+    public int getMaxMana() { return 75 + (getIntellect() * 12); }
+    public int getCurrentMana() { return (int) currentMana; }
+    public Ability getAbilityInSlot(int slot) { return (Ability) abilitiesBySlot.get(slot); }
+    public Item getItemInSlot(int slot) { return (Item) itemsBySlot.get(slot); }
+    public int getLevel() { return level; }
+
+    public AttackType getAttackType() { return attackType; }
+    public boolean isRanged() { return attackType == AttackType.RANGED; }
+
+    public double getAttackRange() { return attackRange; }
+
+    public double getProjectileSpeed() { return projectileSpeed; }
+
+    // Setters
+
+    public void setBaseAttackTime(double baseAttackTime) {
+        this.baseAttackTime = baseAttackTime;
+    }
+    public void setAttackType(AttackType attackType) { this.attackType = attackType; }
+    public void setAttackRange(double attackRange) { this.attackRange = attackRange; }
+    public void setProjectileSpeed(double projectileSpeed) { this.projectileSpeed = projectileSpeed; }
+
+}
+</file>
+
+<file path="Item/impl/BladesOfAttack.java">
+package com.dotaCraft.Item.impl;
+
+import com.dotaCraft.Item.Item;
+
+public class BladesOfAttack extends Item {
+    public BladesOfAttack() {
+        super("blades_of_attack", TargetTypes.NO_TARGET, 450, 0, 0, 0, 0, false);
+
+        addStatBonus(StatType.DAMAGE, 9.0);
+    }
+}
+</file>
+
+<file path="Item/impl/BootsOfSpeed.java">
+package com.dotaCraft.Item.impl;
+
+import com.dotaCraft.Item.Item;
+
+public class BootsOfSpeed extends Item {
+    public BootsOfSpeed() {
+        super("boots_of_speed", TargetTypes.NO_TARGET, 500, 0, 0, 0, 0, false);
+
+        addStatBonus(StatType.MOVEMENT_SPEED, 45);
+    }
+}
+</file>
+
+<file path="Item/impl/Daedalus.java">
+package com.dotaCraft.Item.impl;
+
+import com.dotaCraft.Item.Item;
+
+import java.util.List;
+
+public class Daedalus extends Item {
+    public Daedalus() {
+        super("daedalus", TargetTypes.NO_TARGET, 0, 0, 0, 0, 0, false);
+
+        addStatBonus(StatType.DAMAGE, 88.0);
+        addStatBonus(StatType.CRIT_CHANCE, 30.0);
+        addStatBonus(StatType.CRIT_MULTIPLIER, 2.25);
+
+        setRecipeComponents(List.of("demon_edge", "crystalys", "recipe_daedalus"));
+    }
+
+
+}
+</file>
+
+<file path="Item/impl/EnchantedMango.java">
+package com.dotaCraft.Item.impl;
+
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Item.Item;
+import com.dotaCraft.Manager.HeroManager;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
+
+public class EnchantedMango extends Item {
+    public EnchantedMango() {
+        super("enchanted_mango", TargetTypes.NO_TARGET, 65, 0, 0, 400.0, 0, true);
+
+        addStatBonus(StatType.MANA_REGEN, 0.4);
+    }
+
+    @Override
+    public void onUseNoTarget(Player player) {
+        Hero hero = HeroManager.getHero(player);
+        if (hero == null) return;
+
+        int slot = hero.getSlotOfItem(this);
+        if (slot == -1) return;
+
+        hero.addMana(100);
+
+        //player.getWorld().playSound(player.getLocation(), "dotacraft:items.enchanted_mango_consume", 1.0f, 1.2f);
+
+        hero.removeItemFromSlot(slot);
+    }
+
+    @Override
+    public void onUseUnitTarget(Player player, Entity target) {
+        //TO DO: player can feed mango to his teammate with Ctrl+slot bind
+    }
+}
+</file>
+
+<file path="Item/impl/IronBranch.java">
+package com.dotaCraft.Item.impl;
+
+import com.dotaCraft.Item.Item;
+
+public class IronBranch extends Item {
+
+    public IronBranch() {
+        super("iron_branch", TargetTypes.POINT_TARGET, 50, 0.0, 0.0, 200.0, 0, true);
+
+        // Adding stats
+        addStatBonus(StatType.STRENGTH, 1.0);
+        addStatBonus(StatType.AGILITY, 1.0);
+        addStatBonus(StatType.INTELLECT, 1.0);
+    }
+
+    @Override
+    public void onUsePointTarget(org.bukkit.entity.Player player, org.bukkit.Location targetLocation) {
+        // TO DO: tree creation logic
+    }
+}
+</file>
+
+<file path="Item/impl/MagicStick.java">
+package com.dotaCraft.Item.impl;
+
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Item.Item;
+import com.dotaCraft.Manager.HeroManager;
+import org.bukkit.entity.Player;
+
+public class MagicStick extends Item {
+
+    public MagicStick() {
+        // id, targetType, cost, cooldown, manaCost, castRange, maxCharges, isConsumable
+        super("magic_stick", TargetTypes.NO_TARGET, 200, 13.0, 0.0, 0.0, 10, false);
+    }
+
+    @Override
+    public void onUseNoTarget(Player player) {
+        Hero hero = HeroManager.getHero(player);
+        if (hero == null) return;
+
+        int currentCharges = getCurrentCharges();
+
+        if (currentCharges > 0) {
+            double manaToAdd = currentCharges * 15.0;
+            double healthToAdd = currentCharges * 15.0;
+
+            // adding mana/health
+            hero.addMana(manaToAdd);
+            hero.addHealth(healthToAdd);
+
+            currentCharges = 0;
+        } else {
+            // TO DO: logic to refuse adding mana/health, sound effect
+            player.sendMessage("§cNo charges!");
+        }
+    }
+}
+</file>
+
+<file path="Item/impl/ObserverWardItem.java">
+package com.dotaCraft.Item.impl;
+
+import com.dotaCraft.DotaCraft;
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Item.Item;
+import org.bukkit.Location;
+import org.bukkit.Sound;
+import org.bukkit.entity.Player;
+
+public class ObserverWardItem extends Item {
+
+    public ObserverWardItem() {
+        // id, targetType, cost, cooldown, manaCost, castRange, maxCharges, isConsumable
+        super("observer_ward", TargetTypes.POINT_TARGET, 0, 1.0, 0.0, 500.0, 4, true);
+    }
+
+    @Override
+    public void onUsePointTarget(Player player, Location targetLocation) {
+        Hero hero = com.dotaCraft.Manager.HeroManager.getHero(player);
+        if (hero == null) return;
+
+        int slot = hero.getSlotOfItem(this);
+        if (slot == -1) return;
+
+        DotaCraft.getInstance().getWardManager().placeObserverWard(hero, targetLocation);
+
+        player.getWorld().playSound(targetLocation, Sound.BLOCK_WOOD_PLACE, 1.0f, 1.2f);
+        //player.getWorld().playSound(targetLocation, "dotacraft:items.ward_place", 0.8f, 1.0f);
+
+        hero.removeItemFromSlot(slot);
+    }
+}
+</file>
+
+<file path="Item/impl/PhaseBoots.java">
+package com.dotaCraft.Item.impl;
+
+import com.dotaCraft.DotaCraft;
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Item.Item;
+import com.dotaCraft.Manager.HeroManager;
+import org.bukkit.Bukkit;
+import org.bukkit.Color;
+import org.bukkit.Location;
+import org.bukkit.Particle;
+import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
+
+import java.util.List;
+
+public class PhaseBoots extends Item {
+    private final int activeDuration = 3;
+
+    public PhaseBoots() {
+        super(
+                "phase_boots",
+                TargetTypes.NO_TARGET,
+                0,
+                8.0,
+                0,
+                0,
+                0,
+                false
+        );
+
+        addStatBonus(StatType.MOVEMENT_SPEED, 50.0);
+        addStatBonus(StatType.ARMOR, 4.0);
+
+        setRecipeComponents(List.of("boots_of_speed", "chainmail", "blades_of_attack"));
+    }
+
+    @Override
+    public void onEquip(Hero hero) {
+        if (hero.isRanged()) {
+            addStatBonus(StatType.DAMAGE, 12.0);
+        } else {
+            addStatBonus(StatType.DAMAGE, 18.0);
+        }
+    }
+
+    @Override
+    public void onUseNoTarget(Player player) {
+        Hero hero = HeroManager.getHero(player);
+        if (hero == null) return;
+
+        double speedMultiplier = hero.isRanged() ? 0.10 : 0.20;
+        double speedBonus = hero.getMoveSpeed() * speedMultiplier;
+
+        addStatBonus(StatType.MOVEMENT_SPEED, getStatBonus(StatType.MOVEMENT_SPEED) + speedBonus);
+        hero.updateSpeedAttribute();
+
+        player.getWorld().playSound(player.getLocation(), "dotacraft:items.phase_boots", 0.2f, 1.0f);
+
+        int activeDurationTicks = activeDuration * 20;
+
+        BukkitTask trailTask = new BukkitRunnable() {
+            @Override
+            public void run() {
+                if (!player.isOnline() || player.isDead()) {
+                    cancel();
+                    return;
+                }
+
+                Location loc = player.getLocation().add(0, 0.2, 0);
+
+                player.getWorld().spawnParticle(
+                        Particle.CLOUD,
+                        loc,
+                        2, 0.2, 0.1, 0.2, 0.02
+                );
+
+                Particle.DustOptions purpleDust = new Particle.DustOptions(Color.fromRGB(128, 0, 255), 0.6f);
+                player.getWorld().spawnParticle(Particle.DUST, loc, 7, 0.2, 0.2, 0.2, 0.1, purpleDust);
+
+                player.getWorld().spawnParticle(
+                        Particle.CRIT,
+                        loc,
+                        3, 0.3, 0.3, 0.3, 0.1
+                );
+            }
+        }.runTaskTimer(DotaCraft.getInstance(), 0L, 2L);
+
+        Bukkit.getScheduler().runTaskLater(DotaCraft.getInstance(), () -> {
+            trailTask.cancel();
+
+            addStatBonus(StatType.MOVEMENT_SPEED, getStatBonus(StatType.MOVEMENT_SPEED) - speedBonus);
+            if (player.isOnline()) {
+                hero.updateSpeedAttribute();
+            }
+        }, activeDurationTicks);
+    }
+}
+</file>
+
+<file path="Item/impl/ScytheOfVyse.java">
+package com.dotaCraft.Item.impl;
+
+import com.dotaCraft.DotaCraft;
+import com.dotaCraft.Item.Item;
+import com.dotaCraft.Manager.HologramManager;
+import org.bukkit.Particle;
+import org.bukkit.Sound;
+import org.bukkit.entity.*;
+import org.bukkit.potion.PotionEffect;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
+
+import java.util.List;
+
+public class ScytheOfVyse extends Item {
+
+    private static final double HEX_DURATION_SECONDS = 3.5;
+    private static final int MANA_COST = 250;
+
+    public ScytheOfVyse() {
+        super("scythe_of_vyse", TargetTypes.UNIT_TARGET, 700, 20.0, MANA_COST, 800.0, 0, false);
+
+        addStatBonus(StatType.INTELLECT, 30.0);
+        addStatBonus(StatType.MANA_REGEN, 8.5);
+
+        setRecipeComponents(List.of("mystic_stuff", "tiara_of_selemene", "recipe_scythe_of_vyse"));
+    }
+
+    @Override
+    public void onUseUnitTarget(Player player, Entity target) {
+        if (!(target instanceof LivingEntity targetEntity) || targetEntity.isDead()) {
+            return;
+        }
+
+        int durationTicks = (int) (HEX_DURATION_SECONDS * 20);
+
+        player.getWorld().playSound(player.getLocation(), "dotacraft:scythe_of_vyse.scythe_of_vyse_cast", 0.8f, 1.0f);
+        /*player.getWorld().playSound(targetEntity.getLocation(), Sound.ENTITY_PIG_BIG_HURT, 1.0f, 1.0f);
+        player.getWorld().playSound(targetEntity.getLocation(), Sound.ENTITY_PIG_MINI_HURT, 1.0f, 1.0f);
+        player.getWorld().playSound(targetEntity.getLocation(), Sound.ENTITY_PIG_AMBIENT, 1.0f, 1.0f);*/
+
+        targetEntity.getWorld().spawnParticle(Particle.EXPLOSION, targetEntity.getLocation().add(0, 1, 0), 10, 0.3, 0.3, 0.3);
+
+        targetEntity.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, durationTicks, 0, false, false));
+        targetEntity.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, durationTicks, 3, false, false));
+        targetEntity.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, durationTicks, 255, false, false));
+
+        Pig pig = targetEntity.getWorld().spawn(targetEntity.getLocation(), Pig.class, p -> {
+            p.setBaby();
+            p.setInvulnerable(true);
+            p.setAI(false);
+            p.setGravity(false);
+            p.setSilent(true);
+        });
+
+        HologramManager.spawnHexIndicator(targetEntity, HEX_DURATION_SECONDS);
+
+        new BukkitRunnable() {
+            private int ticksLived = 0;
+
+            @Override
+            public void run() {
+                try {
+                    if (!targetEntity.isValid() || targetEntity.isDead() || ticksLived >= durationTicks) {
+                        cleanup();
+                        cancel();
+                        return;
+                    }
+
+                    pig.teleport(targetEntity.getLocation());
+
+                    if (ticksLived % 5 == 0) {
+                        targetEntity.getWorld().spawnParticle(
+                                Particle.WITCH,
+                                targetEntity.getLocation().add(0, 0.5, 0),
+                                3, 0.2, 0.2, 0.2
+                        );
+                    }
+                } finally {
+                    ticksLived++;
+                }
+            }
+
+            private void cleanup() {
+
+                player.getWorld().playSound(player.getLocation(), "dotacraft:scythe_of_vyse.scythe_of_vyse_return", 0.8f, 1.0f);
+
+                if (pig != null && pig.isValid()) {
+                    pig.remove();
+                }
+
+                if (targetEntity.isValid()) {
+                    targetEntity.getWorld().spawnParticle(Particle.POOF, targetEntity.getLocation().add(0, 1, 0), 10, 0.2, 0.2, 0.2);
+                    targetEntity.removePotionEffect(PotionEffectType.INVISIBILITY);
+                    targetEntity.removePotionEffect(PotionEffectType.SLOWNESS);
+                    targetEntity.removePotionEffect(PotionEffectType.WEAKNESS);
+                }
+            }
+        }.runTaskTimer(DotaCraft.getInstance(), 0L, 1L);
+    }
+}
+</file>
+
+<file path="Item/Item.java">
+package com.dotaCraft.Item;
+
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Manager.HeroManager;
+import com.dotaCraft.Utils.DotaUnits;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
+import org.bukkit.Location;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+public abstract class Item {
+    public enum TargetTypes { NO_TARGET, UNIT_TARGET, POINT_TARGET, PASSIVE, TOGGLE }
+
+    private final String id;
+    private final TargetTypes targetType;
+    private final int baseCost; // cost of the base item or recipe scroll
+
+    private final double coolDown;
+    private final double manaCost;
+    private final double castRange;
+
+    private final int maxCharges;
+    private int currentCharges;
+
+    private final boolean isSellable;
+    private final boolean isRecipe;
+    private final boolean isConsumable;
+    private final boolean isDropable;
+    private final boolean isShareable;
+
+    private long lastUsedTime = 0;
+
+    protected Map<StatType, Double> statBonuses = new HashMap<>();
+    private List recipeComponents = new ArrayList<>();
+
+    public enum StatType {
+        STRENGTH, AGILITY, INTELLECT, DAMAGE, ARMOR, HEALTH_REGEN, MANA_REGEN, ATTACK_SPEED, MOVEMENT_SPEED, CRIT_CHANCE, CRIT_MULTIPLIER
+    }
+
+    public Item(String id, TargetTypes targetType, int baseCost,
+                double coolDown, double manaCost, double castRange,
+                int maxCharges, boolean isConsumable) {
+        this.id = id;
+        this.targetType = targetType;
+        this.baseCost = baseCost;
+        this.coolDown = coolDown;
+        this.manaCost = manaCost;
+        this.castRange = castRange;
+        this.maxCharges = maxCharges;
+        this.currentCharges = 0; // start with 0
+
+        this.isConsumable = isConsumable;
+        this.isSellable = true;
+        this.isRecipe = false;
+        this.isDropable = true;
+        this.isShareable = false;
+    }
+
+    // Helper to add statbonuses
+    protected void addStatBonus(StatType stat, double val) {
+        statBonuses.put(stat, val);
+    }
+
+    public double getStatBonus(StatType stat) {
+        return (double) statBonuses.getOrDefault(stat, 0.0);
+    }
+
+    public void onEquip(Hero hero) {}
+
+    public boolean canCast(Player player) {
+        Hero hero = HeroManager.getHero(player);
+        if (hero == null) return false;
+
+        boolean hasMana = hero.getCurrentMana() >= manaCost;
+        boolean notOnCooldown = !isOnCooldown();
+
+        return hasMana && notOnCooldown;
+    }
+
+    public boolean isOnCooldown() {
+        if (coolDown <= 0) return false;
+        return (System.currentTimeMillis() - lastUsedTime) < (long) (coolDown * 1000);
+    }
+
+    public void startCooldown() {
+        this.lastUsedTime = System.currentTimeMillis();
+    }
+
+    public void onUseNoTarget(Player player) { }
+    public void onUseUnitTarget(Player player, Entity target) { }
+    public void onUsePointTarget(Player player, Location targetLocation) { }
+    public void onToggle(Player player, boolean active) { }
+
+    public int getCost() {
+        if (isRecipeItem()) {
+            int totalCost = baseCost;
+            for (Object componentId : getRecipeComponents()) {
+                Item component = com.dotaCraft.Manager.ItemManager.createItem(componentId.toString());
+                if (component != null) {
+                    totalCost += component.getCost();
+                }
+            }
+            return totalCost;
+        }
+
+        return baseCost;
+    }
+
+    public boolean isRecipeItem() {
+        return recipeComponents != null && !recipeComponents.isEmpty();
+    }
+
+    public List getRecipeComponents() {
+        return recipeComponents;
+    }
+
+    public void setRecipeComponents(List components) {
+        this.recipeComponents = components;
+    }
+
+    // Getters
+    public String getId() { return id; }
+    public TargetTypes getTargetType() { return targetType; }
+    public double getCoolDown() { return coolDown; }
+    public double getManaCost() { return manaCost; }
+    public double getCastRange() { return DotaUnits.toBlocks(castRange); }
+    public int getCurrentCharges() { return currentCharges; }
+    public int getMaxCharges() { return maxCharges; }
+}
+</file>
+
+<file path="Listeners/AbilityListener.java">
+package com.dotaCraft.Listeners;
+
+import com.dotaCraft.Bind.BindTrigger;
+import com.dotaCraft.Bind.PlayerBinds;
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Manager.HeroManager;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerDropItemEvent;
+import org.bukkit.event.player.PlayerItemHeldEvent;
+import org.bukkit.event.player.PlayerSwapHandItemsEvent;
+import org.bukkit.event.player.PlayerToggleSneakEvent;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+public class AbilityListener implements Listener {
+
+    private final HeroManager heroManager;
+    private final Map playerBindsMap = new HashMap<>();
+
+    public AbilityListener(HeroManager heroManager) {
+        this.heroManager = heroManager;
+    }
+
+    private PlayerBinds getBinds(Player player) {
+        return (PlayerBinds) playerBindsMap.computeIfAbsent(player.getUniqueId(), k -> new PlayerBinds());
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onSlotChange(PlayerItemHeldEvent event) {
+        Player player = event.getPlayer();
+        Hero hero = HeroManager.getHero(player);
+        if (hero == null) return;
+
+        BindTrigger trigger = switch (event.getNewSlot()) {
+            case 0 -> BindTrigger.SLOT_1;
+            case 1 -> BindTrigger.SLOT_2;
+            case 2 -> BindTrigger.SLOT_3;
+            case 3 -> BindTrigger.SLOT_4;
+            case 4 -> BindTrigger.SLOT_5;
+            case 5 -> BindTrigger.SLOT_6;
+            case 6 -> BindTrigger.SLOT_7;
+            case 7 -> BindTrigger.SLOT_8;
+            case 8 -> BindTrigger.PRESS_DOUBLE_W;
+            default -> null;
+        };
+
+        if (trigger != null) {
+            PlayerBinds binds = getBinds(player);
+            if (binds.hasTrigger(trigger)) {
+                event.setCancelled(true);
+                handleTrigger(hero, binds.getBindTarget(trigger));
+            }
+        }
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onDrop(PlayerDropItemEvent event) {
+        Player player = event.getPlayer();
+        Hero hero = HeroManager.getHero(player);
+        if (hero == null) return;
+
+        event.setCancelled(true);
+        PlayerBinds binds = getBinds(player);
+        handleTrigger(hero, binds.getBindTarget(BindTrigger.PRESS_Q));
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onSwap(PlayerSwapHandItemsEvent event) {
+        Player player = event.getPlayer();
+        Hero hero = HeroManager.getHero(player);
+        if (hero == null) return;
+
+        event.setCancelled(true);
+        PlayerBinds binds = getBinds(player);
+        handleTrigger(hero, binds.getBindTarget(BindTrigger.PRESS_F));
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onSneak(PlayerToggleSneakEvent event) {
+        if (!event.isSneaking()) return;
+
+        Player player = event.getPlayer();
+        Hero hero = HeroManager.getHero(player);
+        if (hero == null) return;
+
+        PlayerBinds binds = getBinds(player);
+        handleTrigger(hero, binds.getBindTarget(BindTrigger.PRESS_SHIFT));
+    }
+
+    private void handleTrigger(Hero hero, PlayerBinds.BindTarget bindTarget) {
+        if (bindTarget == null) {
+            return;
+        }
+
+        org.bukkit.Bukkit.getScheduler().runTask(com.dotaCraft.DotaCraft.getInstance(), () -> {
+            if (bindTarget.getType() == BindTrigger.BindType.ABILITY) {
+                hero.castAbility(bindTarget.getTargetSlot());
+            } else if (bindTarget.getType() == BindTrigger.BindType.ITEM) {
+                hero.useItem(bindTarget.getTargetSlot());
+            }
+
+            hero.getPlayer().getInventory().setHeldItemSlot(8);
+        });
+    }
+}
+</file>
+
+<file path="Manager/sources/VisionSource.java">
+package com.dotaCraft.Manager.sources;
+
+import org.bukkit.Location;
+
+public interface VisionSource {
+    Location getLocation();
+    double getVisionRadius();
+    String getTeam();
+    boolean isValid();
+}
+</file>
+
+<file path="Manager/AttackManager.java">
+package com.dotaCraft.Manager;
+
+import com.dotaCraft.Ability.Ability;
+import com.dotaCraft.DotaCraft;
+import com.dotaCraft.Hero.Hero;
+import org.bukkit.*;
+import org.bukkit.entity.*;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.Listener;
+import org.bukkit.event.block.Action;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.player.PlayerInteractEvent;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.Vector;
+
+import java.util.*;
+import java.util.concurrent.ThreadLocalRandom;
+
+public class AttackManager implements Listener {
+
+    private final Map lastInputTime = new HashMap<>();
+    private final Set activeAttackingPlayers = new HashSet<>();
+
+    public AttackManager() {
+        startAttackLoop();
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onLeftClick(PlayerInteractEvent event) {
+        if (event.getAction() != Action.LEFT_CLICK_AIR && event.getAction() != Action.LEFT_CLICK_BLOCK) {
+            return;
+        }
+
+        Player player = event.getPlayer();
+        registerPlayerInput(player);
+    }
+
+    @EventHandler(priority = EventPriority.HIGH)
+    public void onEntityDamage(EntityDamageByEntityEvent event) {
+        if (!(event.getDamager() instanceof Player player)) return;
+
+        event.setCancelled(true);
+
+        registerPlayerInput(player);
+    }
+
+    private void registerPlayerInput(Player player) {
+        Hero hero = HeroManager.getHero(player);
+        if (hero == null) return;
+
+        lastInputTime.put(player.getUniqueId(), System.currentTimeMillis());
+        activeAttackingPlayers.add(player.getUniqueId());
+
+        tryExecuteAttack(hero);
+    }
+
+    private void startAttackLoop() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                long now = System.currentTimeMillis();
+                Iterator iterator = activeAttackingPlayers.iterator();
+
+                while (iterator.hasNext()) {
+                    UUID uuid = (UUID) iterator.next();
+                    Player player = Bukkit.getPlayer(uuid);
+
+                    if (player == null || !player.isOnline()) {
+                        iterator.remove();
+                        lastInputTime.remove(uuid);
+                        continue;
+                    }
+
+                    Hero hero = HeroManager.getHero(player);
+                    if (hero == null) {
+                        iterator.remove();
+                        lastInputTime.remove(uuid);
+                        continue;
+                    }
+
+                    double range = hero.getAttackRange();
+                    LivingEntity currentTarget = findPrimaryTarget(player, range);
+
+                    if (currentTarget != null) {
+                        lastInputTime.put(uuid, now);
+                    }
+
+                    Long lastInput = (Long) lastInputTime.get(uuid);
+
+                    if (lastInput == null || (now - lastInput) > 350) {
+                        iterator.remove();
+                        lastInputTime.remove(uuid);
+                        continue;
+                    }
+
+                    tryExecuteAttack(hero);
+                }
+            }
+        }.runTaskTimer(DotaCraft.getInstance(), 1L, 1L);
+    }
+
+    private void tryExecuteAttack(Hero hero) {
+        Player player = hero.getPlayer();
+
+        if (hero.isChanneling()) {
+            return;
+        }
+
+        if (!hero.canAttack()) {
+            return;
+        }
+
+        hero.resetAttackCooldown();
+        performAttack(hero);
+    }
+
+    private void performAttack(Hero attackerHero) {
+        Player player = attackerHero.getPlayer();
+        player.swingMainHand();
+
+        double range = attackerHero.getAttackRange();
+        LivingEntity primaryTarget = findPrimaryTarget(player, range);
+
+        if (primaryTarget == null) return;
+
+        double damage = attackerHero.getMainDamage();
+
+        if (attackerHero.isRanged()) {
+            attackerHero.launchProjectile(attackerHero , primaryTarget, damage);
+        } else {
+            DamageManager.dealDamage(attackerHero, primaryTarget, damage, Ability.DamageTypes.PHYSICAL);
+        }
+    }
+
+    private LivingEntity findPrimaryTarget(Player player, double range) {
+        Location eyeLoc = player.getEyeLocation();
+        Vector dir = eyeLoc.getDirection();
+
+        var rayTrace = player.getWorld().rayTraceEntities(
+                eyeLoc,
+                dir,
+                range,
+                0.25,
+                entity -> entity instanceof LivingEntity && !entity.equals(player)
+        );
+
+        if (rayTrace != null && rayTrace.getHitEntity() instanceof LivingEntity target) {
+            return target;
+        }
+
+        LivingEntity bestTarget = null;
+        double closestAngle = Math.toRadians(8);
+
+        for (Entity entity : player.getNearbyEntities(range, range, range)) {
+            if (!(entity instanceof LivingEntity target) || entity.equals(player)) {
+                continue;
+            }
+
+            Location targetCenter = target.getLocation().add(0, target.getHeight() / 2.0, 0);
+            Vector toTarget = targetCenter.subtract(eyeLoc).toVector();
+
+            double distance = toTarget.length();
+            if (distance > range) continue;
+
+            double angle = dir.angle(toTarget);
+
+            if (angle < closestAngle) {
+                closestAngle = angle;
+                bestTarget = target;
+            }
+        }
+
+        return bestTarget;
+    }
+
+    private void launchProjectile(Hero attacker, LivingEntity target, double damage) {
+        Player player = attacker.getPlayer();
+
+        boolean isLowground = target.getLocation().getY() - player.getLocation().getY() > 0.5;
+
+        new BukkitRunnable() {
+            private final Location currentLoc = player.getEyeLocation().clone().subtract(0, 0.2, 0);
+            private final double blocksPerTick = attacker.getProjectileSpeed() / 20.0;
+            private int maxTicks = 60;
+
+            @Override
+            public void run() {
+                maxTicks--;
+
+                if (target == null || !target.isValid() || target.isDead() || maxTicks <= 0) {
+                    cancel();
+                    return;
+                }
+
+                Location targetLoc = target.getLocation().clone().add(0, target.getHeight() / 2.0, 0);
+                Vector direction = targetLoc.toVector().subtract(currentLoc.toVector());
+                double distance = direction.length();
+
+                if (distance <= blocksPerTick) {
+
+                    boolean isMiss = isLowground && ThreadLocalRandom.current().nextInt(100) < 25; // 25% шанс
+
+                    if (isMiss) {
+                        target.getWorld().playSound(targetLoc, Sound.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0f, 1.5f);
+
+                        // MISS
+                        ArmorStand hologram = target.getWorld().spawn(target.getLocation().clone().add(0, 1, 0), ArmorStand.class, armorStand -> {
+                            armorStand.setVisible(false);
+                            armorStand.setGravity(false);
+                            armorStand.setMarker(true);
+                            armorStand.setInvulnerable(true);
+                            armorStand.setCustomName("§c§lMISS");
+                            armorStand.setCustomNameVisible(true);
+                        });
+
+                        Bukkit.getScheduler().runTaskLater(DotaCraft.getInstance(), hologram::remove, 12L);
+                        player.sendMessage("§c[Debug Attack] §7Промах по " + target.getName() + " (Lowground)");
+
+                    } else {
+                        target.setNoDamageTicks(0);
+                        DamageManager.dealDamage(attacker, target, damage, Ability.DamageTypes.PHYSICAL);
+
+                        HologramManager.spawnDamageIndicator(target, damage, Ability.DamageTypes.PHYSICAL);
+
+                        target.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, targetLoc, 10, 0.2, 0.2, 0.2, 0.1);
+                        target.getWorld().playSound(targetLoc, Sound.BLOCK_AMETHYST_BLOCK_HIT, 1.0f, 1.2f);
+                    }
+
+                    cancel();
+                    return;
+                }
+
+                direction.normalize().multiply(blocksPerTick);
+                currentLoc.add(direction);
+
+                currentLoc.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, currentLoc, 2, 0.05, 0.05, 0.05, 0.01);
+                currentLoc.getWorld().spawnParticle(Particle.FIREWORK, currentLoc, 1, 0, 0, 0, 0);
+            }
+        }.runTaskTimer(DotaCraft.getInstance(), 1L, 1L);
+    }
+
+    /*private void applyCleave(Hero attackerHero, LivingEntity primaryTarget, double cleaveDamage, double radius, double maxAngle) {
+        Player attacker = attackerHero.getPlayer();
+        Location center = attacker.getLocation();
+        Vector direction = center.getDirection().setY(0).normalize();
+
+        Collection nearby = attacker.getWorld().getNearbyEntities(center, radius, radius, radius);
+
+        for (Entity entity : nearby) {
+            if (!(entity instanceof LivingEntity target) || entity.equals(attacker) || entity.equals(primaryTarget)) {
+                continue;
+            }
+
+            Vector toTarget = target.getLocation().toVector().subtract(center.toVector()).setY(0).normalize();
+            double angle = Math.toDegrees(direction.angle(toTarget));
+
+            if (angle <= maxAngle / 2.0) {
+                target.setNoDamageTicks(0);
+                target.damage(cleaveDamage, attacker);
+                target.getWorld().spawnParticle(Particle.SWEEP_ATTACK, target.getLocation().add(0, 1, 0), 1);
+            }
+        }
+    }*/
+}
+</file>
+
+<file path="Manager/DamageManager.java">
+package com.dotaCraft.Manager;
+
+import com.dotaCraft.Ability.Ability;
+import com.dotaCraft.DotaCraft;
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Units.NeutralCreep;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+
+import java.util.concurrent.ThreadLocalRandom;
+
+public class DamageManager {
+
+    public static double dealDamage(Hero attacker, LivingEntity target, double rawDamage, Ability.DamageTypes damageType) {
+        if (target == null || target.isDead()) return 0;
+
+        Hero targetHero = (target instanceof Player playerTarget) ? HeroManager.getHero(playerTarget) : null;
+
+        NeutralCreep neutralCreep = DotaCraft.getInstance().getNeutralManager().getActiveCreep(target.getUniqueId());
+
+        double finalDamage = rawDamage;
+        boolean isCrit = false;
+
+        if (damageType == Ability.DamageTypes.PHYSICAL && attacker != null) {
+            double critChance = attacker.getCritChance();
+
+            if (critChance > 0 && ThreadLocalRandom.current().nextDouble(100.0) < critChance) {
+                double critMultiplier = attacker.getCritMultiplier();
+                finalDamage *= critMultiplier;
+                isCrit = true;
+            }
+        }
+
+        if (damageType == Ability.DamageTypes.PHYSICAL) {
+            double armor = targetHero != null ? targetHero.getArmor() : 0.0;
+            double reduction = calculateArmorReduction(armor);
+            finalDamage *= (1.0 - reduction);
+        } else if (damageType == Ability.DamageTypes.MAGICAL) {
+            double magicResist = targetHero != null ? targetHero.getMagicResist() : 0.25;
+            finalDamage *= (1.0 - magicResist);
+        } else if (damageType == Ability.DamageTypes.PURE) {
+            // Pure damage
+        }
+
+        // Passives
+        if (targetHero != null) {
+            for (int i = 0; i < 6; i++) {
+                Ability ability = targetHero.getAbilityInSlot(i);
+                if (ability != null && ability.getAbilityLevel() > 0) {
+                    finalDamage = ability.onTakeDamage(targetHero, finalDamage);
+                }
+            }
+        }
+
+        if (finalDamage <= 0) return 0;
+
+        if (targetHero != null) {
+            targetHero.setCurrentHealth((int) Math.max(0, targetHero.getCurrentHealth() - finalDamage));
+            targetHero.setLastAttacker(attacker);
+
+            if (targetHero.getCurrentHealth() <= 0) {
+                onHeroDeath(attacker, targetHero);
+            }
+        } else if (neutralCreep != null) {
+            neutralCreep.takeDamage(finalDamage, attacker);
+
+            if (neutralCreep.isDead()) {
+                DotaCraft.getInstance().getNeutralManager().removeActiveCreep(target.getUniqueId());
+            }
+        } else {
+            target.setNoDamageTicks(0);
+            target.damage(finalDamage, attacker != null ? attacker.getPlayer() : null);
+        }
+
+        if (isCrit) {
+            HologramManager.spawnCritIndicator(target, finalDamage);
+        } else {
+            HologramManager.spawnDamageIndicator(target, finalDamage, damageType);
+        }
+
+        return finalDamage;
+    }
+
+    public static double dealDamageFromAbility(Hero attacker, LivingEntity target, double rawDamage, Ability.DamageTypes damageType) {
+        if (target == null || target.isDead()) return 0;
+
+        double finalDamage = rawDamage;
+
+        // if (attacker != null) {
+        //     finalDamage *= (1.0 + attacker.getSpellAmp());
+        // }
+
+        return processAndApplyDamage(attacker, target, finalDamage, damageType, false);
+    }
+
+    public static double dealDamageFromAbility(Hero attacker, LivingEntity target, double rawDamage, Ability ability) {
+        return dealDamageFromAbility(attacker, target, rawDamage, ability.getDamageType());
+    }
+
+    private static double processAndApplyDamage(Hero attacker, LivingEntity target, double rawDamage, Ability.DamageTypes damageType, boolean isCrit) {
+        Hero targetHero = (target instanceof Player playerTarget) ? HeroManager.getHero(playerTarget) : null;
+        NeutralCreep neutralCreep = DotaCraft.getInstance().getNeutralManager().getActiveCreep(target.getUniqueId());
+
+        double finalDamage = rawDamage;
+
+        if (damageType == Ability.DamageTypes.PHYSICAL) {
+            double armor = targetHero != null ? targetHero.getArmor() : 0.0;
+            double reduction = calculateArmorReduction(armor);
+            finalDamage *= (1.0 - reduction);
+
+        } else if (damageType == Ability.DamageTypes.MAGICAL) {
+            double magicResist = targetHero != null ? targetHero.getMagicResist() : 0.25;
+            finalDamage *= (1.0 - magicResist);
+
+        } else if (damageType == Ability.DamageTypes.PURE) {
+            // Pure is not reduced.
+        }
+
+        if (targetHero != null) {
+            for (int i = 0; i < 6; i++) {
+                Ability ability = targetHero.getAbilityInSlot(i);
+                if (ability != null && ability.getAbilityLevel() > 0) {
+                    finalDamage = ability.onTakeDamage(targetHero, finalDamage);
+                }
+            }
+        }
+
+        if (finalDamage <= 0) return 0;
+
+        if (targetHero != null) {
+            targetHero.setCurrentHealth((int) Math.max(0, targetHero.getCurrentHealth() - finalDamage));
+            targetHero.setLastAttacker(attacker);
+
+            if (targetHero.getCurrentHealth() <= 0) {
+                onHeroDeath(attacker, targetHero);
+            }
+        } else if (neutralCreep != null) {
+            neutralCreep.takeDamage(finalDamage, attacker);
+
+            if (neutralCreep.isDead()) {
+                DotaCraft.getInstance().getNeutralManager().removeActiveCreep(target.getUniqueId());
+            }
+        } else {
+            target.setNoDamageTicks(0);
+            double newHealth = Math.max(0, target.getHealth() - finalDamage);
+            target.setHealth(newHealth);
+        }
+
+        if (isCrit) {
+            HologramManager.spawnCritIndicator(target, finalDamage);
+        } else {
+            HologramManager.spawnDamageIndicator(target, finalDamage, damageType);
+        }
+
+        return finalDamage;
+    }
+
+    private static double calculateArmorReduction(double armor) {
+        if (armor >= 0) {
+            return (0.06 * armor) / (1 + 0.06 * armor);
+        } else {
+            return -((0.06 * Math.abs(armor)) / (1 + 0.06 * Math.abs(armor)));
+        }
+    }
+
+    private static void onHeroDeath(Hero killer, Hero victim) {
+        if (killer != null) {
+            killer.getPlayer().sendMessage("§a[Kills] You've killed " + victim.getHeroName() + "!");
+        }
+        victim.getPlayer().sendMessage("§c[Death] You died!");
+    }
+}
+</file>
+
+<file path="Manager/HeroBarManager.java">
+package com.dotaCraft.Manager;
+
+import com.dotaCraft.Hero.Hero;
+import org.bukkit.Bukkit;
+import org.bukkit.boss.BarColor;
+import org.bukkit.boss.BarStyle;
+import org.bukkit.boss.BossBar;
+import org.bukkit.entity.Player;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.UUID;
+
+public class HeroBarManager {
+
+    private static class HeroBars {
+        private final BossBar healthBar;
+        private final BossBar manaBar;
+
+        public HeroBars(BossBar healthBar, BossBar manaBar) {
+            this.healthBar = healthBar;
+            this.manaBar = manaBar;
+        }
+    }
+
+    private final Map<UUID, HeroBars> playerBars = new HashMap<>();
+
+    public void createBars(Player player, Hero hero) {
+        removeBars(player); // Clean old stuff
+
+        // Healthbar
+        BossBar healthBar = Bukkit.createBossBar(
+                getHealthTitle(hero),
+                BarColor.RED,
+                BarStyle.SOLID
+        );
+
+        // Manabar
+        BossBar manaBar = Bukkit.createBossBar(
+                getManaTitle(hero),
+                BarColor.BLUE,
+                BarStyle.SOLID
+        );
+
+        healthBar.addPlayer(player);
+        manaBar.addPlayer(player);
+
+        healthBar.setVisible(true);
+        manaBar.setVisible(true);
+
+        playerBars.put(player.getUniqueId(), new HeroBars(healthBar, manaBar));
+        updateBars(player, hero);
+    }
+
+    public void updateBars(Player player, Hero hero) {
+        HeroBars bars = (HeroBars) playerBars.get(player.getUniqueId());
+        if (bars == null) return;
+
+        // Health progress
+        double healthProgress = Math.max(0.0, Math.min(1.0, (double) hero.getCurrentHealth() / hero.getMaxHealth()));
+        bars.healthBar.setProgress(healthProgress);
+        bars.healthBar.setTitle(getHealthTitle(hero));
+
+        // Mana progress
+        double manaProgress = Math.max(0.0, Math.min(1.0, (double) hero.getCurrentMana() / hero.getMaxMana()));
+        bars.manaBar.setProgress(manaProgress);
+        bars.manaBar.setTitle(getManaTitle(hero));
+    }
+
+    public void removeBars(Player player) {
+        HeroBars bars = (HeroBars) playerBars.remove(player.getUniqueId());
+        if (bars != null) {
+            bars.healthBar.removeAll();
+            bars.manaBar.removeAll();
+        }
+    }
+
+    public void clearAll() {
+        for (HeroBars bars : playerBars.values()) {
+            bars.healthBar.removeAll();
+            bars.manaBar.removeAll();
+        }
+        playerBars.clear();
+    }
+
+    private String getHealthTitle(Hero hero) {
+        return String.format("§c§lHP: §f%d / %d", hero.getCurrentHealth(), hero.getMaxHealth());
+    }
+
+    private String getManaTitle(Hero hero) {
+        return String.format("§b§lMANA: §f%d / %d", hero.getCurrentMana(), hero.getMaxMana());
+    }
+}
+</file>
+
+<file path="Manager/HeroManager.java">
+package com.dotaCraft.Manager;
+
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Hero.impl.crystal_maiden.CrystalMaiden;
+import com.dotaCraft.Hero.impl.invoker.Invoker;
+import com.dotaCraft.Hero.impl.lion.Lion;
+import com.dotaCraft.Hero.impl.pudge.Pudge;
+import org.bukkit.entity.Player;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+import java.util.UUID;
+import java.util.function.Function;
+
+public class HeroManager {
+
+    public HeroManager(HeroBarManager heroBarManager) {
+        this.heroBarManager = heroBarManager;
+    }
+
+    private static final Map activeHeroes = new HashMap<>();
+
+    private static final Map heroFactories = new HashMap<>();
+
+    private HeroBarManager heroBarManager;
+
+    static {
+        registerHeroType("pudge", player -> new Pudge((Player) player));
+        registerHeroType("invoker", player -> new Invoker((Player) player));
+        registerHeroType("lion", player -> new Lion((Player) player));
+        registerHeroType("crystal_maiden", player -> new CrystalMaiden((Player) player));
+    }
+
+    public static void registerHeroType(String id, Function factory) {
+        heroFactories.put(id.toLowerCase(), factory);
+    }
+
+    public Hero createAndRegisterHero(String heroId, Player player) {
+        Function factory = (Function) heroFactories.get(heroId.toLowerCase());
+        if (factory == null) return null;
+
+        unregisterHero(player);
+
+        Hero hero = (Hero) factory.apply(player);
+        registerHero(player, hero);
+
+        hero.updateSpeedAttribute();
+
+        if (heroBarManager != null) {
+            heroBarManager.createBars(player, hero);
+        }
+        return hero;
+    }
+
+    public void registerHero(Player player, Hero hero) {
+        activeHeroes.put(player.getUniqueId(), hero);
+    }
+
+    public void unregisterHero(Player player) {
+        activeHeroes.remove(player.getUniqueId());
+    }
+
+    public static Hero getHero(Player player) {
+        if (player == null) return null;
+        return (Hero) activeHeroes.get(player.getUniqueId());
+    }
+
+    public boolean hasHero(Player player) {
+        return activeHeroes.containsKey(player.getUniqueId());
+    }
+
+    public static Set getAvailableHeroIds() {
+        return heroFactories.keySet();
+    }
+
+    public void clear() {
+        activeHeroes.clear();
+    }
+}
+</file>
+
+<file path="Manager/HologramManager.java">
+package com.dotaCraft.Manager;
+
+import com.dotaCraft.Ability.Ability;
+import com.dotaCraft.DotaCraft;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Sound;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.scheduler.BukkitRunnable;
+
+import java.util.concurrent.ThreadLocalRandom;
+
+public class HologramManager {
+
+    public HologramManager() {}
+
+    public static void spawnDamageIndicator(LivingEntity target, double damage, Ability.DamageTypes damageType) {
+        if (target == null || !target.isValid()) return;
+
+        double offsetX = (ThreadLocalRandom.current().nextDouble() - 0.5) * 0.8;
+        double offsetZ = (ThreadLocalRandom.current().nextDouble() - 0.5) * 0.8;
+
+        ArmorStand hologram = target.getWorld().spawn(target.getLocation().add(offsetX, 0.5, offsetZ), ArmorStand.class, armorStand -> {
+            armorStand.setVisible(false);
+            armorStand.setGravity(false);
+            armorStand.setMarker(true);
+            armorStand.setInvulnerable(true);
+            armorStand.setCustomName("§f§l " + (int) damage);
+            armorStand.setCustomNameVisible(true);
+        });
+
+        Bukkit.getScheduler().runTaskLater(com.dotaCraft.DotaCraft.getInstance(), hologram::remove, 15L);
+
+        target.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 0.7f, 1.0f);
+    }
+
+    public static void spawnMissIndicator(LivingEntity target) {
+        Location targetLoc = target.getLocation().clone().add(0, target.getHeight() / 2.0, 0);
+
+        target.getWorld().playSound(targetLoc, Sound.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0f, 1.5f);
+
+        // MISS
+        ArmorStand hologram = target.getWorld().spawn(target.getLocation().clone().add(0, 1, 0), ArmorStand.class, armorStand -> {
+            armorStand.setVisible(false);
+            armorStand.setGravity(false);
+            armorStand.setMarker(true);
+            armorStand.setInvulnerable(true);
+            armorStand.setCustomName("§c§lMISS");
+            armorStand.setCustomNameVisible(true);
+        });
+
+        Bukkit.getScheduler().runTaskLater(DotaCraft.getInstance(), hologram::remove, 12L);
+    }
+
+    public static void spawnCritIndicator(LivingEntity target, double damage) {
+        ArmorStand hologram = target.getWorld().spawn(target.getLocation().add(0, 0.8, 0), ArmorStand.class, armorStand -> {
+            armorStand.setVisible(false);
+            armorStand.setGravity(false);
+            armorStand.setMarker(true);
+            armorStand.setInvulnerable(true);
+            armorStand.setCustomName("§c§l " + (int) damage + "!");
+            armorStand.setCustomNameVisible(true);
+        });
+
+        Bukkit.getScheduler().runTaskLater(DotaCraft.getInstance(), hologram::remove, 20L);
+
+        target.getWorld().playSound(target.getLocation(), "dotacraft:ui.ui_critical_strike", 0.2f, 1.0f);
+        target.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1.0f, 1.0f);
+    }
+
+    public static void spawnGoldIndicator(LivingEntity target, int amount) {
+        ArmorStand hologram = target.getWorld().spawn(target.getLocation().add(1, 1.4, 0), ArmorStand.class, armorStand -> {
+            armorStand.setVisible(false);
+            armorStand.setGravity(false);
+            armorStand.setMarker(true);
+            armorStand.setInvulnerable(true);
+            armorStand.setCustomName("§e + " + amount);
+            armorStand.setCustomNameVisible(true);
+        });
+
+        Bukkit.getScheduler().runTaskLater(DotaCraft.getInstance(), hologram::remove, 20L);
+        target.getWorld().playSound(target.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
+    }
+
+    public static void spawnStunIndicator(LivingEntity target, double stunLength) {
+        createEntityProgressBar(target, "STUNNED", stunLength, "§f");
+    }
+
+    public static void spawnHexIndicator(LivingEntity target, double hexLength) {
+        createEntityProgressBar(target, "HEXED", hexLength, "§f");
+    }
+
+    public static void spawnRootedIndicator(LivingEntity target, double rootLength) {
+        createEntityProgressBar(target, "ROOTED", rootLength, "§f");
+    }
+
+    public static void createEntityProgressBar(LivingEntity target, String title, double durationSeconds, String colorCode) {
+        if (target == null || target.isDead()) return;
+
+        long totalTicks = (long) (durationSeconds * 20);
+        int barLength = 10;
+
+        double baseOffset = target.getHeight() + 0.3;
+        double lineSpacing = 0.3;
+
+        ArmorStand barHologram = target.getWorld().spawn(target.getLocation().add(0, baseOffset, 0), ArmorStand.class, armorStand -> {
+            armorStand.setVisible(false);
+            armorStand.setGravity(false);
+            armorStand.setMarker(true);
+            armorStand.setInvulnerable(true);
+            armorStand.setCustomNameVisible(true);
+        });
+
+        ArmorStand titleHologram = target.getWorld().spawn(target.getLocation().add(0, baseOffset + lineSpacing, 0), ArmorStand.class, armorStand -> {
+            armorStand.setVisible(false);
+            armorStand.setGravity(false);
+            armorStand.setMarker(true);
+            armorStand.setInvulnerable(true);
+            armorStand.setCustomName(colorCode + "§l" + title);
+            armorStand.setCustomNameVisible(true);
+        });
+
+        new BukkitRunnable() {
+            long currentTick = totalTicks;
+
+            @Override
+            public void run() {
+                if (target.isDead() || !target.isValid() || currentTick <= 0) {
+                    barHologram.remove();
+                    titleHologram.remove();
+                    this.cancel();
+                    return;
+                }
+
+                barHologram.teleport(target.getLocation().add(0, baseOffset, 0));
+                titleHologram.teleport(target.getLocation().add(0, baseOffset + lineSpacing, 0));
+
+                double progress = (double) currentTick / totalTicks;
+                int filledBars = (int) Math.round(progress * barLength);
+
+                StringBuilder barBuilder = new StringBuilder();
+                barBuilder.append(colorCode);
+
+                for (int i = 0; i < barLength; i++) {
+                    if (i < filledBars) {
+                        barBuilder.append("█");
+                    } else {
+                        barBuilder.append("§7▒");
+                    }
+                }
+
+                barHologram.setCustomName(barBuilder.toString());
+                currentTick--;
+            }
+        }.runTaskTimer(DotaCraft.getInstance(), 0L, 1L);
+    }
+}
+</file>
+
+<file path="Manager/ItemManager.java">
+package com.dotaCraft.Manager;
+
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Item.Item;
+import org.bukkit.Sound;
+
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.function.Supplier;
+
+public class ItemManager {
+
+    private static final Map<String, Supplier<Item>> itemRegistry = new HashMap<>();
+
+    public static void registerItem(String id, Supplier<Item> supplier) {
+        itemRegistry.put(id.toLowerCase(), supplier);
+    }
+
+    public static Item createItem(String id) {
+        Supplier<Item> supplier = itemRegistry.get(id.toLowerCase());
+        return supplier != null ? supplier.get() : null;
+    }
+
+    public static boolean tryCraftItems(Hero hero) {
+        for (Map.Entry<String, Supplier<Item>> entry : itemRegistry.entrySet()) {
+            Item sampleItem = entry.getValue().get();
+
+            if (!sampleItem.isRecipeItem()) {
+                continue;
+            }
+
+            List<String> requiredComponents =
+                    new ArrayList<>(sampleItem.getRecipeComponents());
+
+            Map<Integer, Item> foundSlots = new HashMap<>();
+
+            for (int slot = 0; slot < 6; slot++) {
+                Item itemInSlot = hero.getItemInSlot(slot);
+
+                if (itemInSlot == null) {
+                    continue;
+                }
+
+                String itemId = itemInSlot.getId().toLowerCase();
+
+                if (requiredComponents.contains(itemId)) {
+                    requiredComponents.remove(itemId);
+                    foundSlots.put(slot, itemInSlot);
+                }
+
+                if (requiredComponents.isEmpty()) {
+                    assembleRecipe(hero, foundSlots, entry.getKey());
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    private static void assembleRecipe(
+            Hero hero,
+            Map<Integer, Item> usedSlots,
+            String resultItemId
+    ) {
+        int firstSlot = -1;
+
+        for (int slot : usedSlots.keySet()) {
+            if (firstSlot == -1) {
+                firstSlot = slot;
+            }
+
+            hero.removeItemFromSlot(slot);
+        }
+
+        Item resultItem = createItem(resultItemId);
+
+        if (resultItem != null && firstSlot != -1) {
+            hero.addItem(firstSlot, resultItem);
+
+            if (hero.getPlayer() != null) {
+                hero.getPlayer().playSound(
+                        hero.getPlayer().getLocation(),
+                        Sound.BLOCK_ANVIL_USE,
+                        1.0f,
+                        1.2f
+                );
+
+                hero.getPlayer().sendMessage(
+                        "§a[Shop] §fВы собрали предмет: §e"
+                                + resultItem.getId()
+                                + "§f!"
+                );
+            }
+        }
+    }
+}
+</file>
+
+<file path="Manager/NeutralManager.java">
+package com.dotaCraft.Manager;
+
+import com.dotaCraft.Units.NeutralCreep;
+import com.dotaCraft.DotaCraft;
+import org.bukkit.Location;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.scheduler.BukkitRunnable;
+
+import java.util.*;
+
+public class NeutralManager {
+
+    private final Map creepRegistry = new HashMap<>();
+    private final Map activeCreepsMap = new HashMap<>();
+    private final List camps = new ArrayList<>();
+
+    public NeutralManager() {
+        registerDefaultCreeps();
+        //startMinuteSpawnTimer();
+    }
+
+    private void registerDefaultCreeps() {
+        registerCreep(new NeutralCreep("kobold", "Kobold Taskmaster", EntityType.ZOMBIE, 240, 12, 18, 25));
+        registerCreep(new NeutralCreep("centaur", "Centaur Conqueror", EntityType.POLAR_BEAR, 1100, 55, 60, 95));
+        registerCreep(new NeutralCreep("satyr", "Satyr Tormenter", EntityType.WITHER_SKELETON, 1100, 50, 62, 95));
+    }
+
+    public void registerCreep(NeutralCreep creep) {
+        creepRegistry.put(creep.getId().toLowerCase(), creep);
+    }
+
+    public NeutralCreep getCreepTemplate(String id) {
+        return (NeutralCreep) creepRegistry.get(id.toLowerCase());
+    }
+
+    public NeutralCreep getActiveCreep(UUID entityUuid) {
+        return (NeutralCreep) activeCreepsMap.get(entityUuid);
+    }
+
+    public void removeActiveCreep(UUID entityUuid) {
+        activeCreepsMap.remove(entityUuid);
+    }
+
+    public LivingEntity spawnCreepManual(String creepId, Location location) {
+        NeutralCreep template = getCreepTemplate(creepId);
+        if (template == null) return null;
+
+        NeutralCreep creep = new NeutralCreep(
+                template.getId(),
+                template.getName(),
+                template.getEntityType(),
+                template.getMaxHealth(),
+                template.getDamage(),
+                template.getGoldReward(),
+                template.getXpReward()
+        );
+        LivingEntity entity = creep.spawn(location);
+        if (entity != null) {
+            activeCreepsMap.put(entity.getUniqueId(), creep);
+        }
+        return entity;
+    }
+
+//    private void startMinuteSpawnTimer() {
+//        new BukkitRunnable() {
+//            @Override
+//            public void run() {
+//                for (NeutralCamp camp : camps) {
+//                    List wave = List.of(getCreepTemplate("kobold"));
+//                    camp.trySpawnWave(wave);
+//                }
+//            }
+//        }.runTaskTimer(DotaCraft.getInstance(), 1200L, 1200L);
+//    }
+
+    public Set getRegisteredCreepIds() {
+        return creepRegistry.keySet();
+    }
+}
+</file>
+
+<file path="Manager/VisionManager.java">
+package com.dotaCraft.Manager;
+
+import com.dotaCraft.DotaCraft;
+import com.dotaCraft.Hero.Hero;
+import org.bukkit.Bukkit;
+import org.bukkit.FluidCollisionMode;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
+import org.bukkit.block.Block;
+import org.bukkit.block.data.type.Light;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.Listener;
+import org.bukkit.event.player.PlayerQuitEvent;
+import org.bukkit.potion.PotionEffectType;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.RayTraceResult;
+import org.bukkit.util.Vector;
+
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+
+public class VisionManager implements Listener {
+
+    private static class VisionSource {
+        private final Location location;
+        private final double visionRadius;
+
+        public VisionSource(Location location, double visionRadius) {
+            this.location = location;
+            this.visionRadius = visionRadius;
+        }
+
+        public Location getLocation() { return location; }
+        public double getVisionRadius() { return visionRadius; }
+    }
+
+    private final Map<UUID, Set<UUID>> hiddenEntities = new ConcurrentHashMap<>();
+    private final Map<UUID, Set<Location>> playerLightBlocks = new ConcurrentHashMap<>();
+
+    public VisionManager() {
+        startVisionTask();
+    }
+
+    @EventHandler
+    public void onQuit(PlayerQuitEvent event) {
+        clearPlayer(event.getPlayer());
+    }
+
+    private void startVisionTask() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                for (Player viewer : Bukkit.getOnlinePlayers()) {
+                    Hero viewerHero = HeroManager.getHero(viewer);
+                    if (viewerHero == null || !viewer.isOnline() || viewer.isDead()) continue;
+
+                    processPlayerVision(viewer, viewerHero);
+                }
+            }
+        }.runTaskTimer(DotaCraft.getInstance(), 1L, 3L);
+    }
+
+    private void processPlayerVision(Player viewer, Hero viewerHero) {
+        Location currentLoc = viewer.getLocation();
+        long worldTime = viewer.getWorld().getTime();
+        boolean isDay = worldTime < 12300 || worldTime > 23850;
+
+        Location eyeLoc = viewer.getEyeLocation();
+        World world = viewer.getWorld();
+
+        List<VisionSource> visionSources = new ArrayList<>();
+
+        visionSources.add(new VisionSource(eyeLoc, viewerHero.getCurrentVisionRadius()));
+
+        for (WardManager.Ward ward : DotaCraft.getInstance().getWardManager().getActiveWards()) {
+            visionSources.add(new VisionSource(ward.getLocation().clone().add(0, 1.8, 0), ward.getVisionRadius()));
+        }
+
+        double visionRadius = viewerHero.getCurrentVisionRadius();
+        int lightLevel = isDay ? 15 : 10;
+
+        Set<Location> activeLights = playerLightBlocks.computeIfAbsent(viewer.getUniqueId(), k -> new HashSet<>());
+        Set<Location> newLights = calculateDynamicLightGrid(eyeLoc, currentLoc, visionRadius);
+
+        if (viewer.hasPotionEffect(PotionEffectType.DARKNESS)) {
+            viewer.removePotionEffect(PotionEffectType.DARKNESS);
+        }
+        if (viewer.hasPotionEffect(PotionEffectType.NIGHT_VISION)) {
+            viewer.removePotionEffect(PotionEffectType.NIGHT_VISION);
+        }
+
+        long clientTime = isDay ? 12800L : 18000L;
+        viewer.setPlayerTime(clientTime, false);
+
+        Light lightData = (Light) Material.LIGHT.createBlockData();
+        lightData.setLevel(lightLevel);
+
+        for (Location oldLoc : activeLights) {
+            if (!newLights.contains(oldLoc)) {
+                viewer.sendBlockChange(oldLoc, oldLoc.getBlock().getBlockData());
+            }
+        }
+
+        for (Location newLoc : newLights) {
+            if (!activeLights.contains(newLoc)) {
+                viewer.sendBlockChange(newLoc, lightData);
+            }
+        }
+        playerLightBlocks.put(viewer.getUniqueId(), newLights);
+
+        Set<UUID> currentlyHidden = hiddenEntities.computeIfAbsent(viewer.getUniqueId(), k -> new HashSet<>());
+        Set<UUID> toShow = new HashSet<>();
+        Set<UUID> toHide = new HashSet<>();
+
+        double checkRadius = visionRadius + 25.0;
+
+        for (Entity target : world.getNearbyEntities(eyeLoc, checkRadius, checkRadius, checkRadius)) {
+            if (!(target instanceof LivingEntity livingTarget) || target.equals(viewer)) {
+                continue;
+            }
+
+            if (target instanceof ArmorStand || target.hasMetadata("no_vision_check")) {
+                continue;
+            }
+
+            UUID targetId = target.getUniqueId();
+            boolean canSee = false;
+
+            if (isAlly(viewer, target)) {
+                canSee = true;
+            } else {
+                Location targetEyeLoc = livingTarget.getEyeLocation();
+
+                for (VisionSource source : visionSources) {
+                    Location sourceLoc = source.getLocation();
+                    double radiusSq = source.getVisionRadius() * source.getVisionRadius();
+
+                    if (sourceLoc.distanceSquared(targetEyeLoc) <= radiusSq && hasLineOfSight(sourceLoc, targetEyeLoc)) {
+                        canSee = true;
+                        break;
+                    }
+                }
+            }
+
+            if (canSee) {
+                if (currentlyHidden.contains(targetId)) {
+                    toShow.add(targetId);
+                }
+            } else {
+                if (!currentlyHidden.contains(targetId)) {
+                    toHide.add(targetId);
+                }
+            }
+        }
+
+        for (UUID id : toShow) {
+            Entity e = Bukkit.getEntity(id);
+            if (e != null) {
+                viewer.showEntity(DotaCraft.getInstance(), e);
+                currentlyHidden.remove(id);
+
+                if (e instanceof LivingEntity living) {
+                    living.setSilent(false);
+                }
+            }
+        }
+
+        for (UUID id : toHide) {
+            Entity e = Bukkit.getEntity(id);
+            if (e != null) {
+                viewer.hideEntity(DotaCraft.getInstance(), e);
+                currentlyHidden.add(id);
+
+                if (e instanceof LivingEntity living) {
+                    living.setSilent(true);
+                }
+            }
+        }
+    }
+
+    private Set<Location> calculateDynamicLightGrid(Location eyeLoc, Location center, double radius) {
+        Set<Location> newLights = new HashSet<>();
+        int step = 3;
+        int intRadius = (int) radius;
+
+        for (int x = -intRadius; x <= intRadius; x += step) {
+            for (int z = -intRadius; z <= intRadius; z += step) {
+                if ((x * x + z * z) <= (radius * radius)) {
+                    Location targetLoc = center.clone().add(x, 0, z);
+
+                    Block surfaceBlock = getAirBlockAboveGround(targetLoc);
+                    if (surfaceBlock != null) {
+                        Location lightBlockLoc = surfaceBlock.getLocation().add(0.5, 0.5, 0.5);
+
+                        if (hasLineOfSight(eyeLoc, lightBlockLoc)) {
+                            newLights.add(surfaceBlock.getLocation());
+                        }
+                    }
+                }
+            }
+        }
+        return newLights;
+    }
+
+    private Block getAirBlockAboveGround(Location loc) {
+        Block block = loc.getBlock();
+
+        for (int i = 0; i < 6; i++) {
+            if (block.getType().isAir() && !block.getRelative(0, -1, 0).getType().isAir()) {
+                return block;
+            }
+            block = (i % 2 == 0) ? block.getRelative(0, 1, 0) : block.getRelative(0, -2, 0);
+        }
+        return loc.getBlock();
+    }
+
+    private boolean hasLineOfSight(Location from, Location to) {
+        Vector direction = to.toVector().subtract(from.toVector());
+        double distance = from.distance(to);
+
+        if (distance <= 0.001) return true;
+
+        RayTraceResult rayTrace = from.getWorld().rayTraceBlocks(
+                from,
+                direction.normalize(),
+                distance,
+                FluidCollisionMode.NEVER,
+                true
+        );
+
+        return rayTrace == null || rayTrace.getHitBlock() == null;
+    }
+
+    private boolean isAlly(Player viewer, Entity target) {
+        return false;
+    }
+
+    public void clearPlayer(Player player) {
+        UUID uuid = player.getUniqueId();
+        hiddenEntities.remove(uuid);
+
+        Set<Location> lights = playerLightBlocks.remove(uuid);
+        if (lights != null) {
+            for (Location loc : lights) {
+                player.sendBlockChange(loc, loc.getBlock().getBlockData());
+            }
+        }
+
+        player.removePotionEffect(PotionEffectType.DARKNESS);
+        player.removePotionEffect(PotionEffectType.NIGHT_VISION);
+        player.resetPlayerTime();
+    }
+}
+</file>
+
+<file path="Manager/WardManager.java">
+package com.dotaCraft.Manager;
+
+import com.dotaCraft.DotaCraft;
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Objective.Ward.ObserverWard;
+import com.dotaCraft.Utils.DotaUnits;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.scheduler.BukkitRunnable;
+
+import java.util.*;
+
+public class WardManager {
+
+    public static class Ward {
+        private final UUID wardId;
+        private final Location location;
+        private final double visionRadius;
+        private final long expireTimestamp;
+        private final String team;
+        private ArmorStand entity;
+        private boolean active = true;
+
+        public Ward(Location location, double visionRadius, int durationSeconds, String team) {
+            this.wardId = UUID.randomUUID();
+            this.location = location;
+            this.visionRadius = visionRadius;
+            this.expireTimestamp = System.currentTimeMillis() + (durationSeconds * 1000L);
+            this.team = team;
+        }
+
+        public void spawn() {
+            if (location.getWorld() == null) return;
+
+            this.entity = location.getWorld().spawn(location, ArmorStand.class, stand -> {
+                stand.setVisible(false);
+                stand.setGravity(false);
+                stand.setMarker(true);
+                stand.setCustomName("§bObserver Ward");
+                stand.setCustomNameVisible(true);
+
+                stand.setMetadata("no_vision_check", new org.bukkit.metadata.FixedMetadataValue(DotaCraft.getInstance(), true));
+
+                if (stand.getEquipment() != null) {
+                    stand.getEquipment().setHelmet(new ItemStack(Material.ENDER_EYE));
+                }
+            });
+
+            location.getWorld().playSound(location, Sound.BLOCK_WOOD_PLACE, 1.0f, 1.2f);
+        }
+
+        public void remove() {
+            if (!active) return;
+            this.active = false;
+
+            if (entity != null && entity.isValid()) {
+                entity.remove();
+            }
+        }
+
+        public UUID getWardId() { return wardId; }
+        public Location getLocation() { return location; }
+        public double getVisionRadius() { return visionRadius; }
+        public String getTeam() { return team; }
+        public boolean isActive() { return active; }
+        public boolean isExpired() { return System.currentTimeMillis() >= expireTimestamp; }
+    }
+
+    private final List<Ward> activeWards = new ArrayList<>();
+
+    public WardManager() {
+        startWardCleanupTask();
+    }
+
+    public Ward placeObserverWard(Hero hero, Location location) {
+        double visionRadius = DotaUnits.toBlocks(1600.0);
+        int durationSeconds = 360;
+
+        String team = "radiant"; // temp
+
+        Ward ward = new Ward(location, visionRadius, durationSeconds, team);
+        ward.spawn();
+
+        activeWards.add(ward);
+        return ward;
+    }
+
+    public void unregisterWard(ObserverWard ward) {
+        activeWards.remove(ward);
+    }
+
+    private void startWardCleanupTask() {
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                Iterator<Ward> iterator = activeWards.iterator();
+                while (iterator.hasNext()) {
+                    Ward ward = iterator.next();
+                    if (ward.isExpired() || !ward.isActive()) {
+                        ward.remove();
+                        iterator.remove();
+                    }
+                }
+            }
+        }.runTaskTimer(DotaCraft.getInstance(), 20L, 20L);
+    }
+
+    public List<Ward> getActiveWards() {
+        return Collections.unmodifiableList(activeWards);
+    }
+
+    public void clearAll() {
+        for (Ward ward : activeWards) {
+            ward.remove();
+        }
+        activeWards.clear();
+    }
+}
+</file>
+
+<file path="Objective/Ward/ObserverWard.java">
+package com.dotaCraft.Objective.Ward;
+
+import com.dotaCraft.DotaCraft;
+import com.dotaCraft.Utils.DotaUnits;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.entity.ArmorStand;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.metadata.FixedMetadataValue;
+import org.bukkit.scheduler.BukkitRunnable;
+
+public class ObserverWard {
+
+    private final Location location;
+    private final double visionRadius;
+    private final long expireTimestamp;
+    private final String team;
+    private ArmorStand entity;
+    private boolean active = true;
+
+    public ObserverWard(Location location, String team) {
+        this.location = location;
+        this.visionRadius = DotaUnits.toBlocks(1600.0);
+        int durationSeconds = 360;
+        this.expireTimestamp = System.currentTimeMillis() + (durationSeconds * 1000L);
+        this.team = team;
+    }
+
+    public ObserverWard(Location location) {
+        this(location, "radiant");
+    }
+
+    public void spawn() {
+        if (location.getWorld() == null) return;
+
+        this.entity = location.getWorld().spawn(location, ArmorStand.class, stand -> {
+            stand.setVisible(false);
+            stand.setGravity(false);
+            stand.setMarker(true);
+            stand.setCustomName("§bObserver Ward");
+            stand.setCustomNameVisible(true);
+
+            stand.setMetadata("no_vision_check", new FixedMetadataValue(DotaCraft.getInstance(), true));
+
+            if (stand.getEquipment() != null) {
+                stand.getEquipment().setHelmet(new ItemStack(Material.ENDER_EYE));
+            }
+        });
+
+        location.getWorld().playSound(location, Sound.BLOCK_WOOD_PLACE, 1.0f, 1.2f);
+
+        long delayTicks = (expireTimestamp - System.currentTimeMillis()) / 50L;
+        new BukkitRunnable() {
+            @Override
+            public void run() {
+                remove();
+            }
+        }.runTaskLater(DotaCraft.getInstance(), Math.max(1L, delayTicks));
+    }
+
+    public void remove() {
+        if (!active) return;
+        this.active = false;
+
+        if (entity != null && entity.isValid()) {
+            entity.remove();
+        }
+
+        DotaCraft.getInstance().getWardManager().unregisterWard(this);
+    }
+
+    public Location getLocation() { return location; }
+    public double getVisionRadius() { return visionRadius; }
+    public String getTeam() { return team; }
+    public boolean isActive() { return active; }
+    public boolean isExpired() { return System.currentTimeMillis() >= expireTimestamp; }
+}
+</file>
+
+<file path="Units/NeutralCreep.java">
+package com.dotaCraft.Units;
+
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Manager.HologramManager;
+import org.bukkit.EntityEffect;
+import org.bukkit.Location;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Mob;
+
+public class NeutralCreep {
+
+    private final String id;
+    private final String name;
+    private final EntityType entityType;
+    private final double maxHealth;
+    private double currentHealth;
+    private final double damage;
+    private final int goldReward;
+    private final int xpReward;
+
+    private LivingEntity entity;
+
+    public NeutralCreep(String id, String name, EntityType entityType, double maxHealth, double damage, int goldReward, int xpReward) {
+        this.id = id;
+        this.name = name;
+        this.entityType = entityType;
+        this.maxHealth = maxHealth;
+        this.currentHealth = maxHealth;
+        this.damage = damage;
+        this.goldReward = goldReward;
+        this.xpReward = xpReward;
+    }
+
+    public LivingEntity spawn(Location location) {
+        if (location.getWorld() == null) return null;
+
+        this.entity = (LivingEntity) location.getWorld().spawnEntity(location, entityType);
+
+        if (this.entity instanceof Mob mob) {
+            mob.setRemoveWhenFarAway(false);
+        }
+
+        AttributeInstance maxHealthAttribute = this.entity.getAttribute(Attribute.MAX_HEALTH);
+        if (maxHealthAttribute != null) {
+            maxHealthAttribute.setBaseValue(Math.max(20.0, maxHealth));
+            this.entity.setHealth(maxHealthAttribute.getValue());
+        }
+
+        this.currentHealth = maxHealth;
+        updateNameTag();
+
+        return this.entity;
+    }
+
+    public void takeDamage(double amount, Hero attacker) {
+        if (isDead()) return;
+
+        this.currentHealth = Math.max(0, this.currentHealth - amount);
+
+        if (entity != null && entity.isValid()) {
+            entity.playEffect(EntityEffect.HIT);
+            entity.setHealth(Math.max(0.1, this.currentHealth));
+        }
+
+        updateNameTag();
+
+        if (this.currentHealth <= 0) {
+            die(attacker);
+        }
+    }
+
+    private void updateNameTag() {
+        if (entity == null || !entity.isValid()) return;
+
+        String healthBarColor = currentHealth > (maxHealth * 0.5) ? "§a" : (currentHealth > (maxHealth * 0.2) ? "§e" : "§c");
+
+        entity.setCustomName(String.format("§e%s %s[%d/%d HP]", name, healthBarColor, (int) currentHealth, (int) maxHealth));
+        entity.setCustomNameVisible(true);
+    }
+
+    public void die(Hero killer) {
+        if (entity != null && entity.isValid()) {
+
+            if (killer != null) {
+                killer.addXp(xpReward);
+                killer.addGold(goldReward);
+                HologramManager.spawnGoldIndicator(entity, goldReward);
+                killer.getPlayer().sendMessage("[Debug] Current xp:" + killer.getCurrentXp());
+            }
+
+            org.bukkit.Bukkit.getScheduler().runTask(com.dotaCraft.DotaCraft.getInstance(), () -> {
+                if (entity.isValid()) {
+                    entity.setHealth(0);
+                }
+            });
+        }
+    }
+
+    public boolean isDead() {
+        return currentHealth <= 0 || entity == null || !entity.isValid() || entity.isDead();
+    }
+
+    public String getId() { return id; }
+    public String getName() { return name; }
+    public EntityType getEntityType() { return entityType; }
+    public double getMaxHealth() { return maxHealth; }
+    public double getCurrentHealth() { return currentHealth; }
+    public double getDamage() { return damage; }
+    public int getGoldReward() { return goldReward; }
+    public int getXpReward() { return xpReward; }
+}
+</file>
+
+<file path="Utils/DotaUnits.java">
+package com.dotaCraft.Utils;
+
+public class DotaUnits {
+    public static final double MULTIPLIER = 0.015;
+
+    // Convert dota units to blocks.
+    public static double toBlocks(double dotaUnits) {
+        return dotaUnits * MULTIPLIER;
+    }
+
+    // Convert units massives to blocks
+    public static double[] toBlocks(double[] dotaUnitsArray) {
+        if (dotaUnitsArray == null) return new double[0];
+        double[] blocks = new double[dotaUnitsArray.length];
+        for (int i = 0; i < dotaUnitsArray.length; i++) {
+            blocks[i] = dotaUnitsArray[i] * MULTIPLIER;
+        }
+        return blocks;
+    }
+}
+</file>
+
+<file path="bugs.txt">
+Kill from Fist of Death does not add stack to ability.
+Strange view of MeatHook.
+</file>
+
+<file path="DotaCraft.java">
+package com.dotaCraft;
+
+import com.dotaCraft.Command.CommandDotaTest;
+import com.dotaCraft.Command.CommandSpawnNeutral;
+import com.dotaCraft.Listeners.AbilityListener;
+import com.dotaCraft.Manager.*;
+import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Player;
+import org.bukkit.event.Listener;
+import org.bukkit.plugin.java.JavaPlugin;
+
+public final class DotaCraft extends JavaPlugin {
+
+    private static DotaCraft instance;
+    private HeroManager heroManager;
+    private HeroBarManager heroBarManager;
+    private NeutralManager neutralManager;
+    private VisionManager visionManager;
+    private WardManager wardManager;
+
+    @Override
+    public void onEnable() {
+        instance = this;
+
+        this.heroBarManager = new HeroBarManager();
+        this.heroManager = new HeroManager(this.heroBarManager);
+        this.neutralManager = new NeutralManager();
+        this.visionManager = new VisionManager();
+        this.wardManager = new WardManager();
+
+        getServer().getPluginManager().registerEvents(new AbilityListener(heroManager), this);
+        getServer().getPluginManager().registerEvents(new AttackManager(), this);
+        getServer().getPluginManager().registerEvents(this.visionManager, this);
+
+        this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
+            event.registrar().register("dotatest", "Test command", new CommandDotaTest(heroManager));
+            event.registrar().register("spawnneutral", "Spawn neutral creep command", new CommandSpawnNeutral(neutralManager));
+        });
+
+        Bukkit.getScheduler().runTaskTimer(this, () -> {
+            for (Player player : Bukkit.getOnlinePlayers()) {
+                var hero = HeroManager.getHero(player);
+                if (hero != null) {
+                    hero.onTick();
+                    heroBarManager.updateBars(player, hero);
+                }
+            }
+        }, 0L, 1L);
+
+        getLogger().info("DotaCraft successfully enabled!");
+    }
+
+    @Override
+    public void onDisable() {
+        if (heroManager != null) {
+            heroManager.clear();
+        }
+
+        getLogger().info("DotaCraft disabled.");
+    }
+
+    public static DotaCraft getInstance() {
+        return instance;
+    }
+
+    public HeroManager getHeroManager() {
+        return heroManager;
+    }
+
+    public NeutralManager getNeutralManager() {
+        return neutralManager;
+    }
+
+    public WardManager getWardManager() { return wardManager; }
+}
+</file>
+
+</files>
