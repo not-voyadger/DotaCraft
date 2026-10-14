@@ -66,7 +66,8 @@ public class AbilityListener implements Listener {
 
         event.setCancelled(true);
         PlayerBinds binds = getBinds(player);
-        handleTrigger(hero, binds.getBindTarget(BindTrigger.PRESS_Q));
+        //handleTrigger(hero, binds.getBindTarget(BindTrigger.PRESS_Q));
+        com.dotaCraft.UI.GoldFrameGUI.openCourierMenu(player);
     }
 
     @EventHandler(priority = EventPriority.HIGH)

@@ -1,20 +1,41 @@
-/target/
-/build/
-/out/
-*.class
-*.jar
-*.log
+# Gradle build & cache
+.gradle/
+build/
+target/
+out/
 
+# IDE files
 .idea/
 *.iml
 *.iws
 *.ipr
-out/
-
 .settings/
 .classpath
 .project
 .vscode/
 
-/run/
-/server/
+# Server runtime files & folders
+.paper/
+config/
+logs/
+plugins/
+world/
+world_nether/
+world_the_end/
+run/
+server/
+
+# Server root config files
+banned-ips.json
+banned-players.json
+bukkit.yml
+commands.yml
+eula.txt
+ops.json
+server.properties
+spigot.yml
+usercache.json
+whitelist.json
+*.log
+*.jar
+*.class

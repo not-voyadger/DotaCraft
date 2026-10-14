@@ -1,10 +1,12 @@
 package com.dotaCraft.Hero;
 
 import com.dotaCraft.Ability.Ability;
+import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Item.Item;
 import com.dotaCraft.Manager.DamageManager;
 import com.dotaCraft.Manager.HologramManager;
 import com.dotaCraft.Manager.ItemManager;
+import com.dotaCraft.UI.MainHUD;
 import com.dotaCraft.Utils.DotaUnits;
 import org.bukkit.Location;
 import org.bukkit.Particle;
@@ -255,7 +257,6 @@ public abstract class Hero {
         } else {
             target.setNoDamageTicks(0);
             DamageManager.dealDamage(this, target, damage, Ability.DamageTypes.PHYSICAL);
-            HologramManager.spawnDamageIndicator(target, damage, Ability.DamageTypes.PHYSICAL);
             target.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, target.getLocation(), 10, 0.2, 0.2, 0.2, 0.1);
             target.getWorld().playSound(target.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_HIT, 1.0f, 1.2f);
         }
@@ -275,8 +276,13 @@ public abstract class Hero {
         if (!item.canCast(player)) {
             if (item.isOnCooldown()) {
                 player.getWorld().playSound(player.getLocation(), "dotacraft:ui.ui_deny_cooldown", 0.5f, 1.0f);
+
+                // UI sign with remaining time
+                double remainingSeconds = item.getRemainingCooldownInSeconds();
+                DotaCraft.getInstance().getMainHUD().showCoolDownIcon(this.player, remainingSeconds);
+
             } else if (currentMana < item.getManaCost()) {
-                player.sendMessage("§bNot enough mana!");
+                player.getWorld().playSound(player.getLocation(), "dotacraft:ui.ui_deny_mana", 0.8f, 1.0f);
             }
             return;
         }

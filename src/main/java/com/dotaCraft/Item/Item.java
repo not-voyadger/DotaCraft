@@ -86,6 +86,17 @@ public abstract class Item {
         return (System.currentTimeMillis() - lastUsedTime) < (long) (coolDown * 1000);
     }
 
+    public double getRemainingCooldownInSeconds() {
+        if (!isOnCooldown()) return 0.0;
+        long elapsed = System.currentTimeMillis() - lastUsedTime;
+        double remaining = coolDown - (elapsed / 1000.0);
+        return Math.max(0.0, remaining);
+    }
+
+    public double getRemainingCoolDownInTicks() {
+        return getRemainingCooldownInSeconds() * 20.0;
+    }
+
     public void startCooldown() {
         this.lastUsedTime = System.currentTimeMillis();
     }

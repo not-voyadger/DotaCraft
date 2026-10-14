@@ -67,7 +67,7 @@ public class VisionManager implements Listener {
         long worldTime = viewer.getWorld().getTime();
         boolean isDay = worldTime < 12300 || worldTime > 23850;
 
-        Location eyeLoc = viewer.getEyeLocation();
+        Location eyeLoc = viewer.getEyeLocation().subtract(0,1.5,0);
         World world = viewer.getWorld();
 
         List<VisionSource> visionSources = new ArrayList<>();
