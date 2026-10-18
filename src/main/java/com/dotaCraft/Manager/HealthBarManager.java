@@ -27,7 +27,6 @@ public class HealthBarManager {
     private final Map<UUID, TextDisplay> activeBars = new ConcurrentHashMap<>();
 
     /**
-     *
      * @param target
      * @param spawnLoc
      * @param name
@@ -49,15 +48,18 @@ public class HealthBarManager {
                 text.setSeeThrough(false);
                 text.setShadowed(false);
 
-                if (scaleMultiplier != 1.0f) {
-                    org.bukkit.util.Transformation currentTransform = text.getTransformation();
-                    text.setTransformation(new org.bukkit.util.Transformation(
-                            currentTransform.getTranslation(),
-                            currentTransform.getLeftRotation(),
-                            new org.joml.Vector3f(scaleMultiplier, scaleMultiplier, scaleMultiplier),
-                            currentTransform.getRightRotation()
-                    ));
-                }
+                float yOffset = (target != null) ? (float) (target.getHeight()) : 0.0f;
+
+                org.joml.Vector3f translation = new org.joml.Vector3f(0.0f, yOffset, 0.0f);
+                org.joml.Vector3f scale = new org.joml.Vector3f(scaleMultiplier, scaleMultiplier, scaleMultiplier);
+
+                org.bukkit.util.Transformation currentTransform = text.getTransformation();
+                text.setTransformation(new org.bukkit.util.Transformation(
+                        translation,
+                        currentTransform.getLeftRotation(),
+                        scale,
+                        currentTransform.getRightRotation()
+                ));
             });
 
             if (target != null) {

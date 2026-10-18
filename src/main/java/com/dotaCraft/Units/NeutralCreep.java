@@ -76,7 +76,9 @@ public class NeutralCreep {
     private void updateNameTag() {
         if (entity == null || !entity.isValid()) return;
 
-        Location barLoc = entity.getLocation().add(0, entity.getHeight() + 0.3, 0);
+        double yOffset = entity.getHeight() - 1.6;
+
+        Location barLoc = entity.getLocation().clone().add(0, yOffset, 0);
 
         DotaCraft.getInstance().getHealthBarManager().updateOrCreateBar(
                 entity,
@@ -87,6 +89,7 @@ public class NeutralCreep {
                 1.0f
         );
     }
+
     public void die(Hero killer) {
         if (entity != null && entity.isValid()) {
 
