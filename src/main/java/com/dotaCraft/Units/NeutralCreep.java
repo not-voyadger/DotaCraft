@@ -1,5 +1,6 @@
 package com.dotaCraft.Units;
 
+import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Manager.HologramManager;
 import org.bukkit.EntityEffect;
@@ -75,12 +76,17 @@ public class NeutralCreep {
     private void updateNameTag() {
         if (entity == null || !entity.isValid()) return;
 
-        String healthBarColor = currentHealth > (maxHealth * 0.5) ? "§a" : (currentHealth > (maxHealth * 0.2) ? "§e" : "§c");
+        Location barLoc = entity.getLocation().add(0, entity.getHeight() + 0.3, 0);
 
-        entity.setCustomName(String.format("§e%s %s[%d/%d HP]", name, healthBarColor, (int) currentHealth, (int) maxHealth));
-        entity.setCustomNameVisible(true);
+        DotaCraft.getInstance().getHealthBarManager().updateOrCreateBar(
+                entity,
+                barLoc,
+                name,
+                currentHealth,
+                maxHealth,
+                1.0f
+        );
     }
-
     public void die(Hero killer) {
         if (entity != null && entity.isValid()) {
 
@@ -88,6 +94,7 @@ public class NeutralCreep {
                 killer.addXp(xpReward);
                 killer.addGold(goldReward);
                 HologramManager.spawnGoldIndicator(entity, goldReward);
+                DotaCraft.getInstance().getHealthBarManager().removeBar(entity);
                 killer.getPlayer().sendMessage("[Debug] Current xp:" + killer.getCurrentXp());
             }
 

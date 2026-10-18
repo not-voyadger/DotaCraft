@@ -81,7 +81,7 @@ public class AttackManager implements Listener {
                     }
 
                     double range = hero.getAttackRange();
-                    LivingEntity currentTarget = findPrimaryTarget(player, range);
+                    Entity currentTarget = findPrimaryTarget(player, range);
 
                     if (currentTarget != null) {
                         lastInputTime.put(uuid, now);
@@ -121,7 +121,7 @@ public class AttackManager implements Listener {
         player.swingMainHand();
 
         double range = attackerHero.getAttackRange();
-        LivingEntity primaryTarget = findPrimaryTarget(player, range);
+        Entity primaryTarget = findPrimaryTarget(player, range);
 
         if (primaryTarget == null) return;
 
@@ -134,7 +134,7 @@ public class AttackManager implements Listener {
         }
     }
 
-    private LivingEntity findPrimaryTarget(Player player, double range) {
+    private Entity findPrimaryTarget(Player player, double range) {
         Location eyeLoc = player.getEyeLocation();
         Vector dir = eyeLoc.getDirection();
 
@@ -143,22 +143,22 @@ public class AttackManager implements Listener {
                 dir,
                 range,
                 0.25,
-                entity -> entity instanceof LivingEntity && !entity.equals(player)
+                entity -> (entity instanceof LivingEntity || entity instanceof Interaction) && !entity.equals(player)
         );
 
-        if (rayTrace != null && rayTrace.getHitEntity() instanceof LivingEntity target) {
-            return target;
+        if (rayTrace != null && rayTrace.getHitEntity() != null) {
+            return rayTrace.getHitEntity();
         }
 
-        LivingEntity bestTarget = null;
+        Entity bestTarget = null;
         double closestAngle = Math.toRadians(8);
 
         for (Entity entity : player.getNearbyEntities(range, range, range)) {
-            if (!(entity instanceof LivingEntity target) || entity.equals(player)) {
+            if ((!(entity instanceof LivingEntity) && !(entity instanceof Interaction)) || entity.equals(player)) {
                 continue;
             }
 
-            Location targetCenter = target.getLocation().add(0, target.getHeight() / 2.0, 0);
+            Location targetCenter = entity.getLocation().add(0, entity.getHeight() / 2.0, 0);
             Vector toTarget = targetCenter.subtract(eyeLoc).toVector();
 
             double distance = toTarget.length();
@@ -168,17 +168,18 @@ public class AttackManager implements Listener {
 
             if (angle < closestAngle) {
                 closestAngle = angle;
-                bestTarget = target;
+                bestTarget = entity;
             }
         }
 
         return bestTarget;
     }
 
-    private void launchProjectile(Hero attacker, LivingEntity target, double damage) {
+    private void launchProjectile(Hero attacker, Entity target, double damage) {
         Player player = attacker.getPlayer();
 
-        boolean isLowground = target.getLocation().getY() - player.getLocation().getY() > 0.5;
+        boolean isLowground = !(target instanceof Interaction)
+                && (target.getLocation().getY() - player.getLocation().getY() > 0.5);
 
         new BukkitRunnable() {
             private final Location currentLoc = player.getEyeLocation().clone().subtract(0, 0.2, 0);
@@ -219,7 +220,9 @@ public class AttackManager implements Listener {
                         player.sendMessage("§c[Debug Attack] §7Промах по " + target.getName() + " (Lowground)");
 
                     } else {
-                        target.setNoDamageTicks(0);
+                        if (target instanceof LivingEntity living) {
+                            living.setNoDamageTicks(0);
+                        }
                         DamageManager.dealDamage(attacker, target, damage, Ability.DamageTypes.PHYSICAL);
 
                         HologramManager.spawnDamageIndicator(target, damage, Ability.DamageTypes.PHYSICAL);

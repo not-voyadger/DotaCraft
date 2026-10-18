@@ -6,6 +6,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.scheduler.BukkitRunnable;
 
@@ -15,7 +16,7 @@ public class HologramManager {
 
     public HologramManager() {}
 
-    public static void spawnDamageIndicator(LivingEntity target, double damage, Ability.DamageTypes damageType) {
+    public static void spawnDamageIndicator(Entity target, double damage, Ability.DamageTypes damageType) {
         if (target == null || !target.isValid()) return;
 
         double offsetX = (ThreadLocalRandom.current().nextDouble() - 0.5) * 0.8;
@@ -35,7 +36,7 @@ public class HologramManager {
         target.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 0.7f, 1.0f);
     }
 
-    public static void spawnMissIndicator(LivingEntity target) {
+    public static void spawnMissIndicator(Entity target) {
         Location targetLoc = target.getLocation().clone().add(0, target.getHeight() / 2.0, 0);
 
         target.getWorld().playSound(targetLoc, Sound.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0f, 1.5f);
@@ -53,7 +54,7 @@ public class HologramManager {
         Bukkit.getScheduler().runTaskLater(DotaCraft.getInstance(), hologram::remove, 12L);
     }
 
-    public static void spawnCritIndicator(LivingEntity target, double damage) {
+    public static void spawnCritIndicator(Entity target, double damage) {
         ArmorStand hologram = target.getWorld().spawn(target.getLocation().add(0, 0.8, 0), ArmorStand.class, armorStand -> {
             armorStand.setVisible(false);
             armorStand.setGravity(false);
@@ -69,7 +70,7 @@ public class HologramManager {
         target.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 1.0f, 1.0f);
     }
 
-    public static void spawnGoldIndicator(LivingEntity target, int amount) {
+    public static void spawnGoldIndicator(Entity target, int amount) {
         ArmorStand hologram = target.getWorld().spawn(target.getLocation().add(1, 1.4, 0), ArmorStand.class, armorStand -> {
             armorStand.setVisible(false);
             armorStand.setGravity(false);
@@ -83,19 +84,19 @@ public class HologramManager {
         target.getWorld().playSound(target.getLocation(), Sound.ENTITY_EXPERIENCE_ORB_PICKUP, 1.0f, 1.0f);
     }
 
-    public static void spawnStunIndicator(LivingEntity target, double stunLength) {
+    public static void spawnStunIndicator(Entity target, double stunLength) {
         createEntityProgressBar(target, "STUNNED", stunLength, "§f");
     }
 
-    public static void spawnHexIndicator(LivingEntity target, double hexLength) {
+    public static void spawnHexIndicator(Entity target, double hexLength) {
         createEntityProgressBar(target, "HEXED", hexLength, "§f");
     }
 
-    public static void spawnRootedIndicator(LivingEntity target, double rootLength) {
+    public static void spawnRootedIndicator(Entity target, double rootLength) {
         createEntityProgressBar(target, "ROOTED", rootLength, "§f");
     }
 
-    public static void createEntityProgressBar(LivingEntity target, String title, double durationSeconds, String colorCode) {
+    public static void createEntityProgressBar(Entity target, String title, double durationSeconds, String colorCode) {
         if (target == null || target.isDead()) return;
 
         long totalTicks = (long) (durationSeconds * 20);

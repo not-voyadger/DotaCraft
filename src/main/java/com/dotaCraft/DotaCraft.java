@@ -2,6 +2,7 @@ package com.dotaCraft;
 
 import com.dotaCraft.Command.CommandDotaTest;
 import com.dotaCraft.Command.CommandSpawnNeutral;
+import com.dotaCraft.Command.CommandStartGame;
 import com.dotaCraft.Listeners.AbilityListener;
 import com.dotaCraft.Listeners.CourierListener;
 import com.dotaCraft.Manager.*;
@@ -23,6 +24,8 @@ public final class DotaCraft extends JavaPlugin {
     private WardManager wardManager;
     private MainHUD mainHUD;
     private TreeManager treeManager;
+    private ObjectiveManager objectiveManager;
+    private HealthBarManager healthBarManager;
 
     @Override
     public void onEnable() {
@@ -35,6 +38,8 @@ public final class DotaCraft extends JavaPlugin {
         this.wardManager = new WardManager();
         this.mainHUD = new MainHUD(this.heroManager);
         this.treeManager = new TreeManager();
+        this.objectiveManager = new ObjectiveManager();
+        this.healthBarManager = new HealthBarManager();
 
         getServer().getPluginManager().registerEvents(new AbilityListener(heroManager), this);
         getServer().getPluginManager().registerEvents(new AttackManager(), this);
@@ -45,9 +50,14 @@ public final class DotaCraft extends JavaPlugin {
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             event.registrar().register("dotatest", "Test command", new CommandDotaTest(heroManager));
             event.registrar().register("spawnneutral", "Spawn neutral creep command", new CommandSpawnNeutral(neutralManager));
+            event.registrar().register("startgame", "Start dota match and setup map", new CommandStartGame(this));
         });
 
         Bukkit.getScheduler().runTaskTimer(this, () -> {
+            if (objectiveManager != null) {
+                objectiveManager.onTick();
+            }
+
             for (Player player : Bukkit.getOnlinePlayers()) {
                 var hero = HeroManager.getHero(player);
                 if (hero != null) {
@@ -65,6 +75,14 @@ public final class DotaCraft extends JavaPlugin {
     public void onDisable() {
         if (heroManager != null) {
             heroManager.clear();
+        }
+
+        if (objectiveManager != null) {
+            objectiveManager.clearAll();
+        }
+
+        if (healthBarManager != null) {
+            healthBarManager.clearAll();
         }
 
         getLogger().info("DotaCraft disabled.");
@@ -87,4 +105,8 @@ public final class DotaCraft extends JavaPlugin {
     public MainHUD getMainHUD() { return mainHUD; }
 
     public TreeManager getTreeManager() { return treeManager; }
+
+    public ObjectiveManager getObjectiveManager() { return objectiveManager; }
+
+    public HealthBarManager getHealthBarManager() { return healthBarManager; }
 }

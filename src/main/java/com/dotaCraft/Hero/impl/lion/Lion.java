@@ -7,6 +7,7 @@ import com.dotaCraft.Manager.DamageManager;
 import com.dotaCraft.Manager.HologramManager;
 import org.bukkit.*;
 import org.bukkit.entity.ArmorStand;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -25,7 +26,7 @@ public class Lion extends Hero {
     }
 
     @Override
-    public void launchProjectile(Hero attacker, LivingEntity target, double damage) {
+    public void launchProjectile(Hero attacker, Entity target, double damage) {
         Player player = attacker.getPlayer();
 
         new BukkitRunnable() {

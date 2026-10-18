@@ -2,6 +2,7 @@ package com.dotaCraft.Manager;
 
 import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Objective.Objective;
 import org.bukkit.Bukkit;
 import org.bukkit.FluidCollisionMode;
 import org.bukkit.Location;
@@ -77,6 +78,12 @@ public class VisionManager implements Listener {
         for (WardManager.Ward ward : DotaCraft.getInstance().getWardManager().getActiveWards()) {
             if (ward.getTeam() != null && ward.getTeam().equalsIgnoreCase(viewerHero.getTeam())) {
                 visionSources.add(new VisionSource(ward.getLocation().clone().add(0, 1.8, 0), ward.getVisionRadius()));
+            }
+        }
+
+        for (Objective obj : DotaCraft.getInstance().getObjectiveManager().getActiveObjectives()) {
+            if (obj.isAlive() && obj.getTeam().equalsIgnoreCase(viewerHero.getTeam())) {
+                visionSources.add(new VisionSource(obj.getLocation().clone().add(0, 3.0, 0), obj.getVisionRadius()));
             }
         }
 

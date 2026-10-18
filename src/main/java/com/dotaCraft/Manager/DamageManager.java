@@ -3,7 +3,11 @@ package com.dotaCraft.Manager;
 import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Objective.Objective;
+import com.dotaCraft.Objective.Tower;
 import com.dotaCraft.Units.NeutralCreep;
+import org.bukkit.Bukkit;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -11,7 +15,7 @@ import java.util.concurrent.ThreadLocalRandom;
 
 public class DamageManager {
 
-    public static double dealDamage(Hero attacker, LivingEntity target, double rawDamage, Ability.DamageTypes damageType) {
+    public static double dealDamage(Hero attacker, Entity target, double rawDamage, Ability.DamageTypes damageType) {
         if (target == null || target.isDead()) return 0;
 
         Hero targetHero = (target instanceof Player playerTarget) ? HeroManager.getHero(playerTarget) : null;
@@ -52,7 +56,39 @@ public class DamageManager {
             }
         }
 
+        Objective targetObjective = null;
+        for (Objective obj : DotaCraft.getInstance().getObjectiveManager().getActiveObjectives()) {
+            if (!obj.isAlive()) continue;
+
+            if (obj.getEntity() != null && obj.getEntity().getUniqueId().equals(target.getUniqueId())) {
+                targetObjective = obj;
+                break;
+            }
+
+            if (obj instanceof Tower tower && tower.getNameHologram() != null) {
+                if (tower.getNameHologram().getUniqueId().equals(target.getUniqueId())) {
+                    targetObjective = obj;
+                    break;
+                }
+            }
+
+            if (obj.getLocation() != null && target.getLocation() != null
+                    && obj.getLocation().getWorld().equals(target.getWorld())) {
+
+                double dx = obj.getLocation().getX() - target.getLocation().getX();
+                double dz = obj.getLocation().getZ() - target.getLocation().getZ();
+                double dy = obj.getLocation().getY() - target.getLocation().getY();
+
+                if ((dx * dx + dz * dz) <= 2.25 && Math.abs(dy) <= 5.0) {
+                    targetObjective = obj;
+                    break;
+                }
+            }
+        }
+
         if (finalDamage <= 0) return 0;
+
+        Bukkit.getLogger().info("Target entity type: " + target.getType());
 
         if (targetHero != null) {
             targetHero.setCurrentHealth((int) Math.max(0, targetHero.getCurrentHealth() - finalDamage));
@@ -61,15 +97,20 @@ public class DamageManager {
             if (targetHero.getCurrentHealth() <= 0) {
                 onHeroDeath(attacker, targetHero);
             }
-        } else if (neutralCreep != null) {
+        }
+        else if (targetObjective != null) {
+            targetObjective.takeDamage(attacker, finalDamage);
+            target.playEffect(org.bukkit.EntityEffect.HIT);
+        }
+        else if (neutralCreep != null) {
             neutralCreep.takeDamage(finalDamage, attacker);
 
             if (neutralCreep.isDead()) {
                 DotaCraft.getInstance().getNeutralManager().removeActiveCreep(target.getUniqueId());
             }
-        } else {
-            target.setNoDamageTicks(0);
-            target.damage(finalDamage, attacker != null ? attacker.getPlayer() : null);
+        } else if (target instanceof LivingEntity living) {
+            living.setNoDamageTicks(0);
+            living.damage(finalDamage, attacker != null ? attacker.getPlayer() : null);
         }
 
         if (isCrit) {

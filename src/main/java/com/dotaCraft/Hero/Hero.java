@@ -13,6 +13,7 @@ import org.bukkit.Particle;
 import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Interaction;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
@@ -243,23 +244,36 @@ public abstract class Hero {
         return false;
     }
 
-    public void launchProjectile(Hero attacker, LivingEntity target, double damage) {
+    public void launchProjectile(Hero attacker, Entity target, double damage) {
         // Default behavior for Melee heroes.
     }
 
-    protected void onProjectileHit(LivingEntity target, double damage) {
-        boolean isLowGround = target.getLocation().getY() - player.getLocation().getY() > 0.5;
+    protected void onProjectileHit(Entity target, double damage) {
+        boolean isObjective = target instanceof Interaction || isTargetObjective(target);
+        boolean isLowGround = !isObjective && (target.getLocation().getY() - player.getLocation().getY() > 0.5);
         boolean isMiss = isLowGround && ThreadLocalRandom.current().nextInt(100) < 25;
 
         if (isMiss) {
             target.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0f, 1.5f);
             HologramManager.spawnMissIndicator(target);
         } else {
-            target.setNoDamageTicks(0);
+            if (target instanceof LivingEntity living) {
+                living.setNoDamageTicks(0);
+            }
             DamageManager.dealDamage(this, target, damage, Ability.DamageTypes.PHYSICAL);
             target.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, target.getLocation(), 10, 0.2, 0.2, 0.2, 0.1);
             target.getWorld().playSound(target.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_HIT, 1.0f, 1.2f);
         }
+    }
+
+    private boolean isTargetObjective(Entity target) {
+        if (target == null) return false;
+        for (var obj : DotaCraft.getInstance().getObjectiveManager().getActiveObjectives()) {
+            if (obj.isAlive() && obj.getEntity() != null && obj.getEntity().getUniqueId().equals(target.getUniqueId())) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void useItem(int slot) {
@@ -619,7 +633,7 @@ public abstract class Hero {
     public double getProjectileSpeed() { return projectileSpeed; }
 
     public String getTeam() {
-        return "radiant"; //temporary
+        return "dire"; //temporary
     }
 
     // Setters

@@ -5,6 +5,7 @@ import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Hero.impl.pudge.FleshHeap;
 import org.bukkit.Location;
 import org.bukkit.Particle;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
@@ -19,7 +20,7 @@ public class Invoker extends Hero {
     }
 
     @Override
-    public void launchProjectile(Hero attacker, LivingEntity target, double damage) {
+    public void launchProjectile(Hero attacker, Entity target, double damage) {
         Player player = attacker.getPlayer();
 
         new BukkitRunnable() {
