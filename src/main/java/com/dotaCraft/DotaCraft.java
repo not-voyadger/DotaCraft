@@ -6,6 +6,8 @@ import com.dotaCraft.Command.CommandStartGame;
 import com.dotaCraft.Listeners.AbilityListener;
 import com.dotaCraft.Listeners.CourierListener;
 import com.dotaCraft.Manager.*;
+import com.dotaCraft.Objective.Objective;
+import com.dotaCraft.Objective.Tower;
 import com.dotaCraft.UI.MainHUD;
 import com.sun.source.tree.Tree;
 import io.papermc.paper.plugin.lifecycle.event.types.LifecycleEvents;
@@ -64,6 +66,21 @@ public final class DotaCraft extends JavaPlugin {
                     hero.onTick();
                     heroBarManager.updateBars(player, hero);
                     mainHUD.updateHUD(player);
+
+                    for (Objective obj : objectiveManager.getActiveObjectives()) {
+                        if (obj instanceof Tower tower && tower.isAlive()) {
+                            healthBarManager.updateOrCreateBar(
+                                    tower.getEntity(),
+                                    tower.getLocation().clone().add(0, 7, 0),
+                                    tower.getName(),
+                                    tower.getCurrentHealth(),
+                                    tower.getMaxHealth(),
+                                    3.0f,
+                                    player,
+                                    tower.getTeamName()
+                            );
+                        }
+                    }
                 }
             }
         }, 0L, 1L);

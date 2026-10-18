@@ -176,7 +176,9 @@ public class Tower extends Objective {
                 getName(),
                 getCurrentHealth(),
                 getMaxHealth(),
-                3f
+                3f,
+                null,
+                getTeamName()
         );
     }
 

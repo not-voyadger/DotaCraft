@@ -1,15 +1,15 @@
 package com.dotaCraft.Manager;
 
-import com.dotaCraft.DotaCraft;
+import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Objective.Objective;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
-import net.kyori.adventure.text.format.NamedTextColor;
 import org.bukkit.Color;
 import org.bukkit.Location;
 import org.bukkit.entity.Display;
 import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.entity.TextDisplay;
-import org.joml.Vector3f;
 
 import java.util.Map;
 import java.util.UUID;
@@ -19,8 +19,10 @@ public class HealthBarManager {
 
     private static final Key DOTA_FONT = Key.key("dotacraft", "default");
 
-    private static final char HEALTH_BAR_BASE_CHAR = '\uE100';
-    private static final int HEALTH_STATES_COUNT = 50;
+    // From default.json
+    private static final char GREEN_HEALTH_BAR_BASE = '\uE100'; // \uE100 .. \uE132
+    private static final char RED_HEALTH_BAR_BASE   = '\uE133'; // \uE133 .. \uE165
+    private static final int HEALTH_STATES_COUNT    = 50;       // 51 variant (0..50)
 
     private final Map<UUID, TextDisplay> activeBars = new ConcurrentHashMap<>();
 
@@ -32,9 +34,11 @@ public class HealthBarManager {
      * @param currentHealth
      * @param maxHealth
      * @param scaleMultiplier
+     * @param viewer
+     * @param targetTeam
      */
-    public TextDisplay updateOrCreateBar(Entity target, Location spawnLoc, String name, double currentHealth, double maxHealth, float scaleMultiplier) {
-        UUID key = (target != null) ? target.getUniqueId() : spawnLoc.hashCode() == 0 ? UUID.randomUUID() : UUID.nameUUIDFromBytes(spawnLoc.toString().getBytes());
+    public TextDisplay updateOrCreateBar(Entity target, Location spawnLoc, String name, double currentHealth, double maxHealth, float scaleMultiplier, Player viewer, String targetTeam) {
+        UUID key = (target != null) ? target.getUniqueId() : (spawnLoc.hashCode() == 0 ? UUID.randomUUID() : UUID.nameUUIDFromBytes(spawnLoc.toString().getBytes()));
 
         TextDisplay display = activeBars.get(key);
 
@@ -47,7 +51,6 @@ public class HealthBarManager {
 
                 if (scaleMultiplier != 1.0f) {
                     org.bukkit.util.Transformation currentTransform = text.getTransformation();
-
                     text.setTransformation(new org.bukkit.util.Transformation(
                             currentTransform.getTranslation(),
                             currentTransform.getLeftRotation(),
@@ -55,8 +58,6 @@ public class HealthBarManager {
                             currentTransform.getRightRotation()
                     ));
                 }
-
-                text.getPersistentDataContainer();
             });
 
             if (target != null) {
@@ -66,21 +67,37 @@ public class HealthBarManager {
             activeBars.put(key, display);
         }
 
-        display.text(buildHealthComponent(name, currentHealth, maxHealth));
+        boolean isAlly = isAlly(viewer, targetTeam);
+
+        display.text(buildHealthComponent(currentHealth, maxHealth, isAlly));
 
         return display;
     }
 
-    private Component buildHealthComponent(String name, double currentHp, double maxHp) {
+    public TextDisplay updateOrCreateBar(Entity target, Location spawnLoc, String name, double currentHealth, double maxHealth, float scaleMultiplier) {
+        return updateOrCreateBar(target, spawnLoc, name, currentHealth, maxHealth, scaleMultiplier, null, "neutral");
+    }
+
+
+    private boolean isAlly(Player viewer, String targetTeam) {
+        if (viewer == null || targetTeam == null) return false;
+        if (targetTeam.equalsIgnoreCase("neutral")) return false;
+
+        Hero viewerHero = HeroManager.getHero(viewer);
+        if (viewerHero == null) return false;
+
+        return viewerHero.getTeam().equalsIgnoreCase(targetTeam);
+    }
+
+    private Component buildHealthComponent(double currentHp, double maxHp, boolean isAlly) {
         double ratio = Math.max(0.0, Math.min(1.0, currentHp / maxHp));
 
         int state = (int) Math.round(ratio * HEALTH_STATES_COUNT);
-        char barSymbol = (char) (HEALTH_BAR_BASE_CHAR + state);
 
-        NamedTextColor hpColor = ratio > 0.5 ? NamedTextColor.GREEN : (ratio > 0.2 ? NamedTextColor.YELLOW : NamedTextColor.RED);
+        char baseChar = isAlly ? GREEN_HEALTH_BAR_BASE : RED_HEALTH_BAR_BASE;
+        char barSymbol = (char) (baseChar + state);
 
-        return Component.empty()
-                .append(Component.text(barSymbol).font(DOTA_FONT));
+        return Component.text(barSymbol).font(DOTA_FONT);
     }
 
     public void removeBar(Entity target) {
