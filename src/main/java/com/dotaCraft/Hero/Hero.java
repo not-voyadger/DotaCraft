@@ -59,6 +59,7 @@ public abstract class Hero {
     private Hero lastAttacker;
     private long lastAttackTimestamp;
     private static final long DAMAGE_TIMEOUT_MS = 15_000;
+    private long disarmEndTime = 0;
 
     private int baseDamageMin;
     private int baseDamageMax;

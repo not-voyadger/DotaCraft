@@ -3,6 +3,7 @@ package com.dotaCraft.Hero.impl.lion;
 import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Manager.EffectManager;
 import com.dotaCraft.Manager.HologramManager;
 import org.bukkit.Particle;
 import org.bukkit.entity.*;

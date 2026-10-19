@@ -11,6 +11,7 @@ public class GameManager {
     private List radiantHeroes = new ArrayList();
     private List direHeroes = new ArrayList();
     public List availableHeroes = new ArrayList();
+    private static GameManager instance;
 
     public void randomizePlayers(List players) {
         // TO DO
@@ -50,11 +51,18 @@ public class GameManager {
         availableHeroes.remove(hero);
     }
 
-    public List getRadiantHeroes() {
+    public List<Hero> getRadiantHeroes() {
         return radiantHeroes;
     }
 
-    public List getDireHeroes() {
+    public List<Hero> getDireHeroes() {
         return direHeroes;
+    }
+
+    public static GameManager getInstance() {
+        if (instance == null) {
+            instance = new GameManager();
+        }
+        return instance;
     }
 }

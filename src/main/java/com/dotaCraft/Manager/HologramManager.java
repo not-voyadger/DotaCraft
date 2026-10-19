@@ -96,6 +96,10 @@ public class HologramManager {
         createEntityProgressBar(target, "ROOTED", rootLength, "§f");
     }
 
+    public static void spawnSilencedIndicator(Entity target, double silenceLength) {
+        createEntityProgressBar(target, "SILENCED", silenceLength, "§f");
+    }
+
     public static void createEntityProgressBar(Entity target, String title, double durationSeconds, String colorCode) {
         if (target == null || target.isDead()) return;
 
