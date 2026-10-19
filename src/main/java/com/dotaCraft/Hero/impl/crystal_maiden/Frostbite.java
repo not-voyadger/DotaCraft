@@ -4,6 +4,7 @@ import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Manager.DamageManager;
+import com.dotaCraft.Manager.EffectManager;
 import com.dotaCraft.Manager.HologramManager;
 import com.dotaCraft.Units.NeutralCreep;
 import org.bukkit.Location;
@@ -70,8 +71,7 @@ public class Frostbite extends Ability {
 
         player.getWorld().playSound(player.getLocation(), "dotacraft:crystal_maiden.crystal_maiden_frostbite_cast", 0.5f, 1.0f);
 
-        targetEntity.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, durationTicks, 255, false, false));
-        targetEntity.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, durationTicks, 255, false, false));
+        EffectManager.applyRooted(targetEntity, durationSeconds);
 
         HologramManager.spawnRootedIndicator(targetEntity, durationSeconds);
         spawnFrozenBlocks(targetEntity.getLocation(), targetEntity, player);

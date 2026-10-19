@@ -4,6 +4,7 @@ import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Manager.DamageManager;
+import com.dotaCraft.Manager.EffectManager;
 import com.dotaCraft.Manager.HologramManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
@@ -101,7 +102,7 @@ public class EarthSpike extends Ability {
                         hitEntityIds.add(entity.getUniqueId());
 
                         DamageManager.dealDamageFromAbility(hero, victim, damage, getDamageType());
-                        applyStun(victim, stunDuration);
+                        EffectManager.applyStun(victim, stunDuration);
                         HologramManager.spawnStunIndicator(victim, stunDuration);
 
                         Bukkit.getScheduler().runTaskLater(DotaCraft.getInstance(), () -> {
@@ -161,11 +162,5 @@ public class EarthSpike extends Ability {
 
         }.runTaskTimer(DotaCraft.getInstance(), 0L, 1L);
         return true;
-    }
-
-    private void applyStun(LivingEntity victim, double durationSeconds) {
-        int ticks = (int) (durationSeconds * 20);
-        victim.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, ticks, 10, false, false, true));
-        victim.addPotionEffect(new PotionEffect(PotionEffectType.MINING_FATIGUE, ticks, 10, false, false, false));
     }
 }
