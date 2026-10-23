@@ -30,7 +30,7 @@ public class Tango extends Item {
 
             treeManager.destroyTree(targetBlock);
 
-            player.addPotionEffect(new PotionEffect(PotionEffectType.REGENERATION, 16 * 20, 1, false, false));
+            hero.getHealthRegen(); // TODO: add real health-regen here.
             player.sendMessage("§a[Tango] Вы съели дерево и восстанавливаете здоровье!");
 
             int slot = hero.getSlotOfItem(this);

@@ -1,15 +1,11 @@
 package com.dotaCraft.Hero.impl.lion;
 
 import com.dotaCraft.Ability.Ability;
-import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Manager.EffectManager;
-import com.dotaCraft.Manager.HologramManager;
-import org.bukkit.Particle;
-import org.bukkit.entity.*;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
-import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.entity.Frog;
+import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
 
 public class Hex extends Ability {
     public Hex() {
@@ -36,9 +32,7 @@ public class Hex extends Ability {
 
     @Override
     public boolean cast(Hero hero) {
-
         Player player = hero.getPlayer();
-
         double range = this.getCastRange(hero.getLevel());
 
         org.bukkit.util.RayTraceResult result = player.getWorld().rayTraceEntities(
@@ -54,67 +48,15 @@ public class Hex extends Ability {
         }
 
         double durationSeconds = this.getDuration(hero.getLevel());
-        int durationTicks = (int) (durationSeconds * 20);
 
-        player.getWorld().playSound(player.getLocation(), "dotacraft:lion.lion_hex_cast", 0.8f, 1.0f);
+        EffectManager.applyHex(
+                targetEntity,
+                durationSeconds,
+                Frog.class,
+                "dotacraft:lion.lion_hex_cast",
+                null
+        );
 
-        targetEntity.getWorld().spawnParticle(Particle.EXPLOSION, targetEntity.getLocation().add(0, 1, 0), 10, 0.3, 0.3, 0.3);
-
-        targetEntity.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, durationTicks, 0, false, false));
-        targetEntity.addPotionEffect(new PotionEffect(PotionEffectType.SLOWNESS, durationTicks, 3, false, false));
-        targetEntity.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, durationTicks, 255, false, false));
-
-        HologramManager.spawnHexIndicator(targetEntity, durationSeconds);
-
-        Frog frog = targetEntity.getWorld().spawn(targetEntity.getLocation(), Frog.class, f -> {
-            f.setVariant(Frog.Variant.COLD);
-            f.setBaby();
-            f.setInvulnerable(true);
-            f.setAI(false);
-            f.setGravity(false);
-            f.setSilent(true);
-        });
-
-        new BukkitRunnable() {
-            private int ticksLived = 0;
-
-            @Override
-            public void run() {
-                try {
-                    if (!targetEntity.isValid() || targetEntity.isDead() || ticksLived >= durationTicks) {
-                        cleanup();
-                        cancel();
-                        return;
-                    }
-
-                    frog.teleport(targetEntity.getLocation());
-
-                    if (ticksLived % 5 == 0) {
-                        targetEntity.getWorld().spawnParticle(
-                                Particle.WITCH,
-                                targetEntity.getLocation().add(0, 0.5, 0),
-                                3, 0.2, 0.2, 0.2
-                        );
-                    }
-                } finally {
-                    ticksLived++;
-                }
-            }
-
-            private void cleanup() {
-
-                if (frog != null && frog.isValid()) {
-                    frog.remove();
-                }
-
-                if (targetEntity.isValid()) {
-                    targetEntity.getWorld().spawnParticle(Particle.POOF, targetEntity.getLocation().add(0, 1, 0), 10, 0.2, 0.2, 0.2);
-                    targetEntity.removePotionEffect(PotionEffectType.INVISIBILITY);
-                    targetEntity.removePotionEffect(PotionEffectType.SLOWNESS);
-                    targetEntity.removePotionEffect(PotionEffectType.WEAKNESS);
-                }
-            }
-        }.runTaskTimer(DotaCraft.getInstance(), 0L, 1L);
         return true;
     }
 }

@@ -1,12 +1,15 @@
 package com.dotaCraft.Manager;
 
 import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Objective.Rune;
 
+import javax.xml.stream.Location;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Random;
 
 public class GameManager {
-    public enum Runes {DOUBLE_DAMAGE, WATER, HASTE, }; // TO DO
+    public enum Runes {DOUBLE_DAMAGE, HASTE, SHIELD, REGENERATION, INVISIBILITY, ILLUSION, ARCANE};
 
     private List radiantHeroes = new ArrayList();
     private List direHeroes = new ArrayList();
@@ -19,6 +22,22 @@ public class GameManager {
 
     public void getTimeForNextRoshan() {
         // TO DO
+    }
+
+    public void spawnMidRune() {
+        Random random = new Random();
+        List spawnedRunes = new ArrayList();
+
+        getNextRune(spawnedRunes);
+
+        int randomVal = random.nextInt(2);
+
+        if (randomVal == 1 ) {
+            // spawn top tune
+        } else {
+            // spawn bottom rune
+        }
+
     }
 
     public void getNextRune(List spawnedRunes) {

@@ -39,6 +39,7 @@ public abstract class Hero {
     private double agilityGain;
     private double intellectGain;
     private double baseHealthRegen;
+    private double currentHealthRegen;
     private double baseManaRegen;
 
     private double currentHealth;
@@ -50,6 +51,8 @@ public abstract class Hero {
     private double currentGold = 600.0;
 
     private boolean isHeroDead = false;
+    private boolean isRegenDisabled = false;
+
     private int level = 1;
 
     private AttackType attackType;
@@ -130,7 +133,7 @@ public abstract class Hero {
 
     public void onTick() {
         if (player != null && player.isOnline()) {
-            double hpRegen = (baseHealthRegen + (getStrength() * 0.1)) / 20.0;
+            double hpRegen = getHealthRegen() / 20.0;
             double manaRegen = (baseManaRegen + (getIntellect() * 0.05)) / 20.0;
             double goldPerTick = 90.0 / 1200.0;
 
@@ -139,7 +142,6 @@ public abstract class Hero {
 
             updateSpeedAttribute();
             addGold(goldPerTick);
-            //player.sendMessage("Current gold: " + (int) this.currentGold);
         }
     }
 
@@ -524,6 +526,23 @@ public abstract class Hero {
         return armorFromAgility + armorFromItems;
     }
 
+    public double getHealthRegen() {
+        if (isRegenDisabled) {
+            return 0.0;
+        }
+
+        double healthRegenFromItems = 0;
+        for (Object obj : itemsBySlot.values()) {
+            if (obj instanceof Item item) {
+                healthRegenFromItems += item.getStatBonus(Item.StatType.HEALTH_REGEN);
+            }
+        }
+
+        double strengthBonusRegen = getStrength() * 0.1;
+
+        return baseHealthRegen + healthRegenFromItems + strengthBonusRegen;
+    }
+
     public int getCurrentXp() {
         return currentXp;
     }
@@ -637,6 +656,14 @@ public abstract class Hero {
         return "dire"; //temporary
     }
 
+    public boolean isHeroDead() {
+        return isHeroDead;
+    }
+
+    public boolean isRegenDisabled() {
+        return isRegenDisabled;
+    }
+
     // Setters
 
     public void setBaseAttackTime(double baseAttackTime) {
@@ -645,5 +672,6 @@ public abstract class Hero {
     public void setAttackType(AttackType attackType) { this.attackType = attackType; }
     public void setAttackRange(double attackRange) { this.attackRange = attackRange; }
     public void setProjectileSpeed(double projectileSpeed) { this.projectileSpeed = projectileSpeed; }
+    public void setRegenDisabled(boolean disabled) { this.isRegenDisabled = disabled; }
 
 }
