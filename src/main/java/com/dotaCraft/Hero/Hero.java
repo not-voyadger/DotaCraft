@@ -30,7 +30,7 @@ public abstract class Hero {
     public enum AttackType { MELEE, RANGED }
     public enum Attribute { STRENGTH, AGILITY, INTELLECT, UNIVERSAL }
 
-    private final Player player;
+    private Player player;
     private final String heroName;
     private final Attribute primaryAttribute;
 
@@ -714,5 +714,6 @@ public abstract class Hero {
     public void setProjectileSpeed(double projectileSpeed) { this.projectileSpeed = projectileSpeed; }
     public void setRegenDisabled(boolean disabled) { this.isRegenDisabled = disabled; }
     public void setBaseHealthRegen(double baseHealthRegen) { this.baseHealthRegen = baseHealthRegen; }
+    public void setPlayer(Player player) { this.player = player; }
 
 }

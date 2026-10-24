@@ -2,19 +2,28 @@ package com.dotaCraft.Manager;
 
 import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Objective.Rune;
+import org.bukkit.World;
 
-import javax.xml.stream.Location;
+import org.bukkit.Location;
+import org.bukkit.entity.Player;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
 public class GameManager {
-    public enum Runes {DOUBLE_DAMAGE, HASTE, SHIELD, REGENERATION, INVISIBILITY, ILLUSION, ARCANE};
+    private enum GameState {WAITING, DRAFT, PRE_GAME, GAME, POST_GAME};
 
     private List radiantHeroes = new ArrayList();
     private List direHeroes = new ArrayList();
     public List availableHeroes = new ArrayList();
+    List spawnedRunes = new ArrayList();
     private static GameManager instance;
+    private GameState gameState = GameState.WAITING;
+
+    public void changeGameState(GameState gameState) {
+        // TODO
+    }
 
     public void randomizePlayers(List players) {
         // TO DO
@@ -25,23 +34,48 @@ public class GameManager {
     }
 
     public void spawnMidRune() {
+        World world = null; // Temp
         Random random = new Random();
-        List spawnedRunes = new ArrayList();
 
-        getNextRune(spawnedRunes);
+        Rune.RuneType runeType = getNextRune(spawnedRunes);
 
-        int randomVal = random.nextInt(2);
+        Location topRuneSpot = new Location(world, 0, 0, 0);
+        Location bottomRuneSpot = new Location(world, 1, 1, 1);
 
-        if (randomVal == 1 ) {
-            // spawn top tune
+        Location loc;
+        if (random.nextBoolean()) {
+            loc = topRuneSpot;
         } else {
-            // spawn bottom rune
+            loc = bottomRuneSpot;
         }
 
+        Rune rune = Rune.spawn(loc, runeType);
+        spawnedRunes.add(rune);
     }
 
-    public void getNextRune(List spawnedRunes) {
-        // TO DO
+    public Rune.RuneType getNextRune(List<Rune> spawnedRunes) {
+        Random random = new Random();
+        Rune.RuneType[] types = Rune.RuneType.values();
+
+        Rune.RuneType nextType = types[random.nextInt(types.length)];
+
+        if (!spawnedRunes.isEmpty()) {
+            Rune lastRune = spawnedRunes.get(spawnedRunes.size() - 1);
+
+            while (nextType == lastRune.getType()) {
+                nextType = types[random.nextInt(types.length)];
+            }
+        }
+
+        return nextType;
+    }
+
+    public void assignPlayerToHero(Player player, Hero hero) {
+        if (hero == null || player == null) {
+            return;
+        }
+
+        hero.setPlayer(player);
     }
 
     public void addHeroToRadiant(Hero hero) {
