@@ -4,11 +4,11 @@ import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Item.Item;
 import com.dotaCraft.Manager.HeroManager;
+import com.dotaCraft.Manager.IconManager;
+import com.dotaCraft.Manager.ModifierManager;
 import org.bukkit.Location;
 import org.bukkit.block.Block;
 import org.bukkit.entity.Player;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 
 public class Tango extends Item {
 
@@ -27,18 +27,22 @@ public class Tango extends Item {
         var treeManager = DotaCraft.getInstance().getTreeManager();
 
         if (treeManager.isTreeBlock(targetBlock)) {
-
             treeManager.destroyTree(targetBlock);
 
-            hero.getHealthRegen(); // TODO: add real health-regen here.
-            player.sendMessage("§a[Tango] Вы съели дерево и восстанавливаете здоровье!");
+            double duration = treeManager.isPlantedByPlayer() ? 32.0 : 16.0;
+            double durationInTicks = duration * 20.0;
+
+            // TODO: tango sound here.
+            IconManager.spawnPositiveIcon("\uE200", durationInTicks);
+
+            hero.addModifier(new ModifierManager("tango_regen", 7.0, duration));
 
             int slot = hero.getSlotOfItem(this);
             if (slot != -1) {
                 hero.removeItemFromSlot(slot);
             }
         } else {
-            player.sendMessage("§cНеобходимо выбрать блок дерева!");
+            // TODO: error sound here.
         }
     }
 }

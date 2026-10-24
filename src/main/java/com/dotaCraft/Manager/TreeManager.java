@@ -92,4 +92,8 @@ public class TreeManager implements Listener {
 
         return true;
     }
+
+    public boolean isPlantedByPlayer() {
+        return true; // temp
+    }
 }

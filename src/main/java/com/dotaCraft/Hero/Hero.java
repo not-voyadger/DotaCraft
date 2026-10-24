@@ -6,6 +6,7 @@ import com.dotaCraft.Item.Item;
 import com.dotaCraft.Manager.DamageManager;
 import com.dotaCraft.Manager.HologramManager;
 import com.dotaCraft.Manager.ItemManager;
+import com.dotaCraft.Manager.ModifierManager;
 import com.dotaCraft.UI.MainHUD;
 import com.dotaCraft.Utils.DotaUnits;
 import org.bukkit.Location;
@@ -16,6 +17,8 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.Interaction;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
+import java.util.ArrayList;
+import java.util.List;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -78,6 +81,7 @@ public abstract class Hero {
 
     private final Map abilitiesBySlot = new HashMap<>();
     private final Map<Integer, Item> itemsBySlot = new HashMap<>();
+    private final List<ModifierManager> activeModifiers = new ArrayList<>();
 
     private static final int[] XP_VALUES = {
             240, 400, 520, 600, 680, 760, 800, 900, 1000, 1100,
@@ -133,6 +137,8 @@ public abstract class Hero {
 
     public void onTick() {
         if (player != null && player.isOnline()) {
+            activeModifiers.removeIf(ModifierManager::tick);
+
             double hpRegen = getHealthRegen() / 20.0;
             double manaRegen = (baseManaRegen + (getIntellect() * 0.05)) / 20.0;
             double goldPerTick = 90.0 / 1200.0;
@@ -267,6 +273,22 @@ public abstract class Hero {
             target.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, target.getLocation(), 10, 0.2, 0.2, 0.2, 0.1);
             target.getWorld().playSound(target.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_HIT, 1.0f, 1.2f);
         }
+    }
+
+    // ---------- Modifiers ----------
+    public void addModifier(ModifierManager modifier) {
+        if (modifier == null) return;
+        removeModifier(modifier.getId());
+        activeModifiers.add(modifier);
+    }
+
+    public void removeModifier(String modifierId) {
+        if (modifierId == null) return;
+        activeModifiers.removeIf(m -> m.getId().equalsIgnoreCase(modifierId));
+    }
+
+    public boolean hasModifier(String modifierId) {
+        return activeModifiers.stream().anyMatch(m -> m.getId().equalsIgnoreCase(modifierId));
     }
 
     private boolean isTargetObjective(Entity target) {
@@ -523,7 +545,11 @@ public abstract class Hero {
                 armorFromItems += item.getStatBonus(Item.StatType.ARMOR);
             }
         }
-        return armorFromAgility + armorFromItems;
+        double modifierArmor = activeModifiers.stream()
+                .mapToDouble(ModifierManager::getArmor)
+                .sum();
+
+        return armorFromAgility + armorFromItems + modifierArmor;
     }
 
     public double getHealthRegen() {
@@ -540,7 +566,17 @@ public abstract class Hero {
 
         double strengthBonusRegen = getStrength() * 0.1;
 
-        return baseHealthRegen + healthRegenFromItems + strengthBonusRegen;
+        double modifierRegen = activeModifiers.stream()
+                .mapToDouble(ModifierManager::getHealthRegen)
+                .sum();
+
+        return baseHealthRegen + healthRegenFromItems + strengthBonusRegen + modifierRegen;
+    }
+
+    private double getModifierManaRegen() {
+        return activeModifiers.stream()
+                .mapToDouble(ModifierManager::getManaRegen)
+                .sum();
     }
 
     public int getCurrentXp() {
@@ -664,6 +700,10 @@ public abstract class Hero {
         return isRegenDisabled;
     }
 
+    public double getBaseHealthRegen() {
+        return baseHealthRegen;
+    }
+
     // Setters
 
     public void setBaseAttackTime(double baseAttackTime) {
@@ -673,5 +713,6 @@ public abstract class Hero {
     public void setAttackRange(double attackRange) { this.attackRange = attackRange; }
     public void setProjectileSpeed(double projectileSpeed) { this.projectileSpeed = projectileSpeed; }
     public void setRegenDisabled(boolean disabled) { this.isRegenDisabled = disabled; }
+    public void setBaseHealthRegen(double baseHealthRegen) { this.baseHealthRegen = baseHealthRegen; }
 
 }
