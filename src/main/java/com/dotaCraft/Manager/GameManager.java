@@ -26,11 +26,11 @@ public class GameManager {
     }
 
     public void randomizePlayers(List players) {
-        // TO DO
+        // TODO
     }
 
     public void getTimeForNextRoshan() {
-        // TO DO
+        // TODO
     }
 
     public void spawnMidRune() {
@@ -39,8 +39,8 @@ public class GameManager {
 
         Rune.RuneType runeType = getNextRune(spawnedRunes);
 
-        Location topRuneSpot = new Location(world, 0, 0, 0);
-        Location bottomRuneSpot = new Location(world, 1, 1, 1);
+        Location topRuneSpot = new Location(world, 0, 0, 0); //temp
+        Location bottomRuneSpot = new Location(world, 1, 1, 1); //temp
 
         Location loc;
         if (random.nextBoolean()) {

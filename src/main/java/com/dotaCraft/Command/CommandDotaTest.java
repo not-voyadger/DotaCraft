@@ -49,6 +49,7 @@ public class CommandDotaTest implements BasicCommand {
 
         if (heroId.equals("lion")) {
             hero.addItem(1, new MagicStick());
+            hero.addItem(2, new BlinkDagger());
         }
 
         if (heroId.equals("crystal_maiden")) {
