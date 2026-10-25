@@ -32,8 +32,9 @@ public class Tango extends Item {
             double duration = treeManager.isPlantedByPlayer() ? 32.0 : 16.0;
             double durationInTicks = duration * 20.0;
 
-            // TODO: tango sound here.
-            IconManager.spawnPositiveIcon("\uE200", durationInTicks);
+            player.getWorld().playSound(player.getLocation(), "dotacraft:items.tango_consume", 0.2f, 1.0f);
+
+            IconManager.spawnPositiveIcon(player, "\uE300", durationInTicks);
 
             hero.addModifier(new ModifierManager("tango_regen", 7.0, duration));
 

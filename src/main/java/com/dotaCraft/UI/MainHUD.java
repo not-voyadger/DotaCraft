@@ -3,6 +3,7 @@ package com.dotaCraft.UI;
 import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Manager.HeroManager;
+import com.dotaCraft.Manager.IconManager;
 import com.dotaCraft.Utils.HUDUtils;
 import net.kyori.adventure.key.Key;
 import net.kyori.adventure.text.Component;
@@ -44,6 +45,8 @@ public class MainHUD {
 
         UUID uuid = player.getUniqueId();
 
+        IconManager.onTick(player);
+
         player.sendActionBar(buildActionBarComponent(hero));
 
         Component courierComponent       = createHudElement(DOTA_FONT, COURIER_BG,          140, 50);
@@ -53,7 +56,14 @@ public class MainHUD {
         Component courierSpeedComponent  = createHudElement(DOTA_FONT, COURIER_SPEED_BOOST,   46, 50);
         Component courierShieldComponent = createHudElement(DOTA_FONT, COURIER_SHIELD,        28, 50);
 
+        Component buffsHUD = IconManager.renderBuffsComponent(player);
+
+        Component positionedBuffs = Component.empty()
+                .append(HUDUtils.getSpaceComponent(109))
+                .append(buffsHUD);
+
         Component fullSubComponent = Component.empty()
+                .append(positionedBuffs)
                 .append(courierComponent)
                 .append(goldComponent)
                 .append(courierItemsComponent)
