@@ -4,6 +4,7 @@ import com.dotaCraft.Command.CommandDotaTest;
 import com.dotaCraft.Command.CommandSpawnNeutral;
 import com.dotaCraft.Command.CommandStartGame;
 import com.dotaCraft.Listeners.AbilityListener;
+import com.dotaCraft.Listeners.ChatListener;
 import com.dotaCraft.Listeners.CourierListener;
 import com.dotaCraft.Manager.*;
 import com.dotaCraft.Objective.Objective;
@@ -48,6 +49,7 @@ public final class DotaCraft extends JavaPlugin {
         getServer().getPluginManager().registerEvents(this.visionManager, this);
         getServer().getPluginManager().registerEvents(this.treeManager, this);
         getServer().getPluginManager().registerEvents(new CourierListener(), this);
+        getServer().getPluginManager().registerEvents(new ChatListener(), this);
 
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             event.registrar().register("dotatest", "Test command", new CommandDotaTest(heroManager));
