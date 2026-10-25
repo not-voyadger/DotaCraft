@@ -53,6 +53,7 @@ public class CommandDotaTest implements BasicCommand {
         }
 
         if (heroId.equals("crystal_maiden")) {
+            hero.addItem(0, new Clarity());
             hero.addItem(1, new ObserverWardItem());
             hero.addItem(2, new Tango());
         }
