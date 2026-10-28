@@ -4,4 +4,8 @@ version: '${version}'
 main: com.dotaCraft.DotaCraft
 api-version: '26.3'
 load: POSTWORLD
-depend: [ModelEngine]
+dependencies:
+  server:
+    ModelEngine:
+      load: BEFORE
+      required: true

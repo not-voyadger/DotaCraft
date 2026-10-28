@@ -6,6 +6,7 @@ import com.dotaCraft.Command.CommandStartGame;
 import com.dotaCraft.Listeners.AbilityListener;
 import com.dotaCraft.Listeners.ChatListener;
 import com.dotaCraft.Listeners.CourierListener;
+import com.dotaCraft.Command.CommandSpawnLaneCreep;
 import com.dotaCraft.Manager.*;
 import com.dotaCraft.Objective.Objective;
 import com.dotaCraft.Objective.Tower;
@@ -29,6 +30,7 @@ public final class DotaCraft extends JavaPlugin {
     private TreeManager treeManager;
     private ObjectiveManager objectiveManager;
     private HealthBarManager healthBarManager;
+    private CreepLaneManager creepLaneManager;
 
     @Override
     public void onEnable() {
@@ -43,6 +45,7 @@ public final class DotaCraft extends JavaPlugin {
         this.treeManager = new TreeManager();
         this.objectiveManager = new ObjectiveManager();
         this.healthBarManager = new HealthBarManager();
+        this.creepLaneManager = new CreepLaneManager(this);
 
         getServer().getPluginManager().registerEvents(new AbilityListener(heroManager), this);
         getServer().getPluginManager().registerEvents(new AttackManager(), this);
@@ -54,12 +57,17 @@ public final class DotaCraft extends JavaPlugin {
         this.getLifecycleManager().registerEventHandler(LifecycleEvents.COMMANDS, event -> {
             event.registrar().register("dotatest", "Test command", new CommandDotaTest(heroManager));
             event.registrar().register("spawnneutral", "Spawn neutral creep command", new CommandSpawnNeutral(neutralManager));
+            event.registrar().register("spawnlane", "Spawn lane creep command", new CommandSpawnLaneCreep(this));
             event.registrar().register("startgame", "Start dota match and setup map", new CommandStartGame(this));
         });
 
         Bukkit.getScheduler().runTaskTimer(this, () -> {
             if (objectiveManager != null) {
                 objectiveManager.onTick();
+            }
+
+            if (creepLaneManager != null) {
+                creepLaneManager.onTick();
             }
 
             for (Player player : Bukkit.getOnlinePlayers()) {
@@ -128,4 +136,6 @@ public final class DotaCraft extends JavaPlugin {
     public ObjectiveManager getObjectiveManager() { return objectiveManager; }
 
     public HealthBarManager getHealthBarManager() { return healthBarManager; }
+
+    public CreepLaneManager getCreepLaneManager() { return creepLaneManager; }
 }
