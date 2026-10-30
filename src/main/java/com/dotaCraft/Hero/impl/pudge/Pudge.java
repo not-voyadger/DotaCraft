@@ -21,6 +21,7 @@ public class Pudge extends Hero {
         //applyPudgeModel();
     }
 
+    //FIXME: pudge.bbmodel model has no hitbox and can't be loaded correctly
     private void applyPudgeModel() {
         Player player = getPlayer();
 

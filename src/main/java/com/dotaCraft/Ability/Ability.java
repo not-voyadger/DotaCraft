@@ -6,6 +6,9 @@ import com.dotaCraft.Utils.DotaUnits;
 import java.util.HashMap;
 import java.util.Map;
 
+/**
+ * Abstract base class representing a Dota ability.
+ */
 public abstract class Ability {
     public enum AbilityTypes { PASSIVE, UNIT_TARGET, POINT_TARGET, NO_TARGET, TOGGLE, AUTO_CAST }
     public enum DamageTypes { PHYSICAL, MAGICAL, PURE, NONE }
@@ -63,7 +66,16 @@ public abstract class Ability {
         this.hasShardUpgrade = hasShardUpgrade;
     }
 
-    public void onCast(Hero hero) {}
+    /**
+     * Executes the active cast behavior of the ability.
+     *
+     * @return true if the cast was successful
+     */
+    public abstract boolean cast(Hero hero);
+
+    // ------ Event Hooks / Callbacks ------
+
+    public void onCast(Hero hero) {} // no usages - delete?
 
     public double onTakeDamage(Hero hero, double incomingDamage) {
         return incomingDamage;
@@ -73,17 +85,7 @@ public abstract class Ability {
 
     public void onTick(Hero hero) {}
 
-    public abstract boolean cast(Hero hero);
-
-    // --- Getters ---
-
-    public int getAbilityLevel() {
-        return abilityLevel;
-    }
-
-    public void setAbilityLevel(int abilityLevel) {
-        this.abilityLevel = Math.min(abilityLevel, abilityMaxLevel);
-    }
+    // ------ Scaled Attribute Accessors ------
 
     public double getDamage(int level) {
         return getArrayValueByLevel(damage, level);
@@ -113,12 +115,16 @@ public abstract class Ability {
         return getArrayValueByLevel(duration, level);
     }
 
-    // Вспомогательный метод, чтобы не дублировать проверки массивов
-    private double getArrayValueByLevel(double[] array, int level) {
-        if (level <= 0 || array == null || array.length == 0) return 0;
-        int index = Math.min(level - 1, array.length - 1);
-        return array[index];
+    // ------ Getters & Setters ------
+
+    public int getAbilityLevel() {
+        return abilityLevel;
     }
+
+    public void setAbilityLevel(int abilityLevel) {
+        this.abilityLevel = Math.min(abilityLevel, abilityMaxLevel);
+    }
+
 
     public DamageTypes getDamageType() { return damageType; }
     public AbilityTypes getAbilityType() { return abilityType; }
@@ -130,4 +136,13 @@ public abstract class Ability {
     public boolean isInnate() { return isInnate; }
     public boolean hasScepterUpgrade() { return hasScepterUpgrade; }
     public boolean hasShardUpgrade() { return hasShardUpgrade; }
+
+    // ------ Helpers ------
+
+    // Helper method to safely extract array values based on ability level index.
+    private double getArrayValueByLevel(double[] array, int level) {
+        if (level <= 0 || array == null || array.length == 0) return 0;
+        int index = Math.min(level - 1, array.length - 1);
+        return array[index];
+    }
 }

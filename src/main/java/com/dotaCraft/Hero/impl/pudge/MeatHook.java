@@ -44,6 +44,7 @@ public class MeatHook extends Ability implements org.bukkit.event.Listener {
         }
     }
 
+    //FIXME: this shit doesn't work anymore
     @Override
     public boolean cast(Hero hero) {
         Player player = hero.getPlayer();

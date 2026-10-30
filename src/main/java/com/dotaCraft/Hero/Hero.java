@@ -134,6 +134,7 @@ public abstract class Hero {
                 baseAttackTime,
                 AttackType.MELEE, 3.5, 0.0, baseDamageMin, baseDamageMax, baseMoveSpeed);
     }
+    // ------ Game loop ------
 
     public void onTick() {
         if (player != null && player.isOnline()) {
@@ -151,20 +152,33 @@ public abstract class Hero {
         }
     }
 
+    // ------ Active Modifiers Management ------
+
+    public void addModifier(ModifierManager modifier) {
+        if (modifier == null) return;
+        removeModifier(modifier.getId());
+        activeModifiers.add(modifier);
+    }
+
+    public void removeModifier(String modifierId) {
+        if (modifierId == null) return;
+        activeModifiers.removeIf(m -> m.getId().equalsIgnoreCase(modifierId));
+    }
+
+    public boolean hasModifier(String modifierId) {
+        return activeModifiers.stream().anyMatch(m -> m.getId().equalsIgnoreCase(modifierId));
+    }
+
+    // ------ Progression & Economy Mechanics ------
+
     public int getRequiredXpToNextLevel(int currentLevel) {
         if (currentLevel <= 0) return XP_VALUES[0];
-
-        if (currentLevel >= XP_VALUES.length) {
-            return 0;
-        }
-
+        if (currentLevel >= XP_VALUES.length) return 0;
         return XP_VALUES[currentLevel - 1];
     }
 
     public void addXp(int amount) {
-        if (amount < 0) {
-            return;
-        }
+        if (amount < 0) return;
 
         this.currentXp += amount;
         if (currentXp >= (getRequiredXpToNextLevel(this.level))) {
@@ -173,39 +187,11 @@ public abstract class Hero {
         }
     }
 
-    public void addGold(double amount) {
-        if (amount < 0) {
-            return;
-        }
-
-        this.currentGold += amount;
-    }
-
-    public void spendGold(double amount) {
-        if (amount < 0) {
-            return;
-        }
-
-        this.currentGold -= amount;
-    }
-
-    public void buyItem(Item item) {
-        int cost = item.getCost();
-
-        if (cost < 0) {
-            return;
-        }
-
-        spendGold(cost);
-    }
-
     public void levelUp() {
         this.level++;
         this.player.sendMessage("Current level: " + this.level);
+        player.playSound(player.getLocation(), Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.0f);
 
-        player.playSound(player.getLocation(),Sound.ENTITY_PLAYER_LEVELUP, 0.8f, 1.0f);
-
-        //Add stats
         int currentMaxStrength = getStrength();
         int currentMaxAgility = getAgility();
         int currentMaxIntellect = getIntellect();
@@ -215,13 +201,99 @@ public abstract class Hero {
         currentMaxIntellect += this.intellectGain;
     }
 
-    public boolean useMana(double amount) {
-        if (currentMana >= amount) {
-            currentMana -= amount;
-            return true;
+    public void addGold(double amount) {
+        if (amount < 0) return;
+        this.currentGold += amount;
+    }
+
+    public void spendGold(double amount) {
+        if (amount < 0) return;
+        this.currentGold -= amount;
+    }
+
+    public void buyItem(Item item) {
+        int cost = item.getCost();
+        if (cost < 0) return;
+        spendGold(cost);
+    }
+
+    // ------ Combat & Attack Mechanics ------
+
+    public double getMainDamage() {
+        int primaryAttrValue = switch (primaryAttribute) {
+            case STRENGTH -> getStrength();
+            case AGILITY -> getAgility();
+            case INTELLECT -> getIntellect();
+            case UNIVERSAL -> (int) ((getStrength() + getAgility() + getIntellect()) * 0.7);
+        };
+
+        double bonusDamage = 0;
+        for (Item item : itemsBySlot.values()) {
+            if (item != null) {
+                bonusDamage += item.getStatBonus(Item.StatType.DAMAGE);
+            }
+        }
+
+        int randomBase = ThreadLocalRandom.current().nextInt(baseDamageMin, baseDamageMax + 1);
+        return randomBase + primaryAttrValue + bonusDamage;
+    }
+
+    public double getAttackSpeed() {
+        double speedFromItems = 0;
+        for (Item item : itemsBySlot.values()) {
+            if (item != null) {
+                speedFromItems += item.getStatBonus(Item.StatType.ATTACK_SPEED);
+            }
+        }
+        return 100.0 + getAgility() + speedFromItems;
+    }
+
+    public long getAttackIntervalMillis() {
+        double attacksPerSecond = (getAttackSpeed() / 100.0) / getBaseAttackTime();
+        return (long) (1000.0 / attacksPerSecond);
+    }
+
+    public boolean canAttack() {
+        return (System.currentTimeMillis() - lastAttackTime) >= getAttackIntervalMillis();
+    }
+
+    public void resetAttackCooldown() {
+        this.lastAttackTime = System.currentTimeMillis();
+    }
+
+    public void launchProjectile(Hero attacker, Entity target, double damage) {
+        // Default behavior for Melee heroes.
+    }
+
+    protected void onProjectileHit(Entity target, double damage) {
+        boolean isObjective = target instanceof Interaction || isTargetObjective(target);
+        boolean isLowGround = !isObjective && (target.getLocation().getY() - player.getLocation().getY() > 0.5);
+        boolean isMiss = isLowGround && ThreadLocalRandom.current().nextInt(100) < 25;
+
+        if (isMiss) {
+            target.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0f, 1.5f);
+            HologramManager.spawnMissIndicator(target);
+        } else {
+            if (target instanceof LivingEntity living) {
+                living.setNoDamageTicks(0);
+            }
+            DamageManager.dealDamage(this, target, damage, Ability.DamageTypes.PHYSICAL);
+            target.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, target.getLocation(), 10, 0.2, 0.2, 0.2, 0.1);
+            target.getWorld().playSound(target.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_HIT, 1.0f, 1.2f);
+        }
+    }
+
+    private boolean isTargetObjective(Entity target) {
+        if (target == null) return false;
+        for (var obj : DotaCraft.getInstance().getObjectiveManager().getActiveObjectives()) {
+            if (obj.isAlive() && obj.getEntity() != null && obj.getEntity().getUniqueId().equals(target.getUniqueId())) {
+                return true;
+            }
         }
         return false;
     }
+
+    // ------ Abilities & Items Usage ------
 
     public boolean castAbility(int slot) {
         Ability ability = (Ability) abilitiesBySlot.get(slot);
@@ -253,60 +325,12 @@ public abstract class Hero {
         return false;
     }
 
-    public void launchProjectile(Hero attacker, Entity target, double damage) {
-        // Default behavior for Melee heroes.
-    }
-
-    protected void onProjectileHit(Entity target, double damage) {
-        boolean isObjective = target instanceof Interaction || isTargetObjective(target);
-        boolean isLowGround = !isObjective && (target.getLocation().getY() - player.getLocation().getY() > 0.5);
-        boolean isMiss = isLowGround && ThreadLocalRandom.current().nextInt(100) < 25;
-
-        if (isMiss) {
-            target.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_NODAMAGE, 1.0f, 1.5f);
-            HologramManager.spawnMissIndicator(target);
-        } else {
-            if (target instanceof LivingEntity living) {
-                living.setNoDamageTicks(0);
-            }
-            DamageManager.dealDamage(this, target, damage, Ability.DamageTypes.PHYSICAL);
-            target.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, target.getLocation(), 10, 0.2, 0.2, 0.2, 0.1);
-            target.getWorld().playSound(target.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_HIT, 1.0f, 1.2f);
-        }
-    }
-
-    // ---------- Modifiers ----------
-    public void addModifier(ModifierManager modifier) {
-        if (modifier == null) return;
-        removeModifier(modifier.getId());
-        activeModifiers.add(modifier);
-    }
-
-    public void removeModifier(String modifierId) {
-        if (modifierId == null) return;
-        activeModifiers.removeIf(m -> m.getId().equalsIgnoreCase(modifierId));
-    }
-
-    public boolean hasModifier(String modifierId) {
-        return activeModifiers.stream().anyMatch(m -> m.getId().equalsIgnoreCase(modifierId));
-    }
-
-    private boolean isTargetObjective(Entity target) {
-        if (target == null) return false;
-        for (var obj : DotaCraft.getInstance().getObjectiveManager().getActiveObjectives()) {
-            if (obj.isAlive() && obj.getEntity() != null && obj.getEntity().getUniqueId().equals(target.getUniqueId())) {
-                return true;
-            }
-        }
-        return false;
-    }
-
     public void useItem(int slot) {
         useItem(slot, null);
     }
 
     public void useItem(int slot, Entity manualTarget) {
-        Item item = (Item) itemsBySlot.get(slot);
+        Item item = itemsBySlot.get(slot);
         if (item == null) {
             player.sendMessage("§cNo item in slot " + slot);
             return;
@@ -315,8 +339,6 @@ public abstract class Hero {
         if (!item.canCast(player)) {
             if (item.isOnCooldown()) {
                 player.getWorld().playSound(player.getLocation(), "dotacraft:ui.ui_deny_cooldown", 0.5f, 1.0f);
-
-                // UI sign with remaining time
                 double remainingSeconds = item.getRemainingCooldownInSeconds();
                 DotaCraft.getInstance().getMainHUD().showCoolDownIcon(this.player, remainingSeconds);
 
@@ -359,6 +381,18 @@ public abstract class Hero {
         }
     }
 
+    public void addAbility(int slot, Ability ability) {
+        this.abilitiesBySlot.put(slot, ability);
+    }
+
+    public void addItem(int slot, Item item) {
+        if (item != null) {
+            this.itemsBySlot.put(slot, item);
+            item.onEquip(this);
+            ItemManager.tryCraftItems(this);
+        }
+    }
+
     public void removeItemFromSlot(int slot) {
         this.itemsBySlot.remove(slot);
     }
@@ -366,9 +400,9 @@ public abstract class Hero {
     public int getSlotOfItem(Item item) {
         if (item == null) return -1;
 
-        for (Map.Entry entry : itemsBySlot.entrySet()) {
+        for (Map.Entry<Integer, Item> entry : itemsBySlot.entrySet()) {
             if (entry.getValue().equals(item)) {
-                return (int) entry.getKey();
+                return entry.getKey();
             }
         }
         return -1;
@@ -382,6 +416,150 @@ public abstract class Hero {
                 entity -> !entity.equals(player) && entity instanceof LivingEntity
         );
         return result != null ? result.getHitEntity() : null;
+    }
+
+    // ------ Secondary Mechanics & Calculations ------
+
+    public boolean useMana(double amount) {
+        if (currentMana >= amount) {
+            currentMana -= amount;
+            return true;
+        }
+        return false;
+    }
+
+    public void addHealth(double amount) {
+        this.currentHealth = Math.min(this.currentHealth + amount, getMaxHealth());
+    }
+
+    public void addMana(double amount) {
+        this.currentMana = Math.min(this.currentMana + amount, getMaxMana());
+    }
+
+    public double getArmor() {
+        double armorFromAgility = getAgility() * 0.166;
+        double armorFromItems = 0;
+        for (Item item : itemsBySlot.values()) {
+            if (item != null) {
+                armorFromItems += item.getStatBonus(Item.StatType.ARMOR);
+            }
+        }
+        double modifierArmor = activeModifiers.stream()
+                .mapToDouble(ModifierManager::getArmor)
+                .sum();
+
+        return armorFromAgility + armorFromItems + modifierArmor;
+    }
+
+    public double getHealthRegen() {
+        if (isRegenDisabled) {
+            return 0.0;
+        }
+
+        double healthRegenFromItems = 0;
+        for (Item item : itemsBySlot.values()) {
+            if (item != null) {
+                healthRegenFromItems += item.getStatBonus(Item.StatType.HEALTH_REGEN);
+            }
+        }
+
+        double strengthBonusRegen = getStrength() * 0.1;
+        double modifierRegen = activeModifiers.stream()
+                .mapToDouble(ModifierManager::getHealthRegen)
+                .sum();
+
+        return baseHealthRegen + healthRegenFromItems + strengthBonusRegen + modifierRegen;
+    }
+
+    private double getModifierManaRegen() {
+        return activeModifiers.stream()
+                .mapToDouble(ModifierManager::getManaRegen)
+                .sum();
+    }
+
+    public double getMagicResist() {
+        double baseResist = 0.25;
+        double intBonus = (getIntellect() * 0.1) / 100.0;
+        return Math.min(0.9, baseResist + intBonus);
+    }
+
+    public boolean hasCleave() {
+        for (Item item : itemsBySlot.values()) {
+            if (item != null && item.getId().equalsIgnoreCase("battle_fury")) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    public double getCritChance() {
+        double highestChance = 0;
+        for (Item item : itemsBySlot.values()) {
+            if (item != null) {
+                highestChance = Math.max(highestChance, item.getStatBonus(Item.StatType.CRIT_CHANCE));
+            }
+        }
+        return highestChance;
+    }
+
+    public double getCritMultiplier() {
+        double highestMultiplier = 1.0;
+        for (Item item : itemsBySlot.values()) {
+            if (item != null && item.getStatBonus(Item.StatType.CRIT_CHANCE) > 0) {
+                highestMultiplier = Math.max(highestMultiplier, item.getStatBonus(Item.StatType.CRIT_MULTIPLIER));
+            }
+        }
+        return highestMultiplier;
+    }
+
+    // --- Movement & Speed ---
+
+    public double getBonusMoveSpeed() {
+        double bonus = 0;
+        for (Item item : itemsBySlot.values()) {
+            if (item != null) {
+                bonus += item.getStatBonus(Item.StatType.MOVEMENT_SPEED);
+            }
+        }
+        return bonus;
+    }
+
+    public double getMoveSpeed() {
+        return baseMoveSpeed + getBonusMoveSpeed();
+    }
+
+    public void updateSpeedAttribute() {
+        if (player == null || !player.isOnline()) return;
+
+        double mcSpeed = (getMoveSpeed() / 300.0) * 0.1;
+
+        var attribute = player.getAttribute(org.bukkit.attribute.Attribute.MOVEMENT_SPEED);
+        if (attribute != null) {
+            attribute.setBaseValue(mcSpeed);
+        }
+    }
+
+    // --- Vision ---
+
+    public double getDayVision() {
+        return DotaUnits.toBlocks(baseHeroDayVision);
+    }
+
+    public double getNightVision() {
+        return DotaUnits.toBlocks(baseHeroNightVision);
+    }
+
+    public double getCurrentVisionRadius() {
+        if (player == null || player.getWorld() == null) return getDayVision();
+
+        long time = player.getWorld().getTime();
+        boolean isDay = time < 12300 || time > 23850;
+        return isDay ? getDayVision() : getNightVision();
+    }
+
+    public boolean isInUnexploredArea() {
+        if (player == null || player.getWorld() == null) return false;
+        return true;
     }
 
     public boolean isChanneling() {
@@ -405,34 +583,12 @@ public abstract class Hero {
             return null;
         }
 
-        // Если прошло больше 15 секунд с последнего удара, считать, что бой завершился
         if (System.currentTimeMillis() - lastAttackTimestamp > DAMAGE_TIMEOUT_MS) {
             this.lastAttacker = null;
             return null;
         }
 
         return lastAttacker;
-    }
-
-    public void addAbility(int slot, Ability ability) {
-        this.abilitiesBySlot.put(slot, ability);
-    }
-
-    public void addItem(int slot, Item item) {
-        if (item != null) {
-            this.itemsBySlot.put(slot, item);
-            item.onEquip(this);
-
-            ItemManager.tryCraftItems(this);
-        }
-    }
-
-    public void addHealth(double amount) {
-        this.currentHealth = Math.min(this.currentHealth + amount, getMaxHealth());
-    }
-
-    public void addMana(double amount) {
-        this.currentMana = Math.min(this.currentMana + amount, getMaxMana());
     }
 
     public void addStrength(int amount) { baseStrength += amount; }
@@ -449,29 +605,6 @@ public abstract class Hero {
 
     public double getBaseAttackTime() {
         return baseAttackTime;
-    }
-
-    public double getAttackSpeed() {
-        double speedFromItems = 0;
-        for (Object obj : itemsBySlot.values()) {
-            if (obj instanceof Item item) {
-                speedFromItems += item.getStatBonus(Item.StatType.ATTACK_SPEED);
-            }
-        }
-        return 100.0 + getAgility() + speedFromItems;
-    }
-
-    public long getAttackIntervalMillis() {
-        double attacksPerSecond = (getAttackSpeed() / 100.0) / getBaseAttackTime();
-        return (long) (1000.0 / attacksPerSecond);
-    }
-
-    public boolean canAttack() {
-        return (System.currentTimeMillis() - lastAttackTime) >= getAttackIntervalMillis();
-    }
-
-    public void resetAttackCooldown() {
-        this.lastAttackTime = System.currentTimeMillis();
     }
 
     public int getBonusStrength() {
@@ -504,79 +637,9 @@ public abstract class Hero {
         return bonus;
     }
 
-    public double getMainDamage() {
-        int primaryAttrValue = switch (primaryAttribute) {
-            case Attribute.STRENGTH -> getStrength();
-            case Attribute.AGILITY -> getAgility();
-            case Attribute.INTELLECT -> getIntellect();
-            case Attribute.UNIVERSAL -> (int) ((getStrength() + getAgility() + getIntellect()) * 0.7);
-        };
-
-        double bonusDamage = 0;
-        for (Object obj : itemsBySlot.values()) {
-            if (obj instanceof Item item) {
-                bonusDamage += item.getStatBonus(Item.StatType.DAMAGE);
-            }
-        }
-
-        int randomBase = ThreadLocalRandom.current().nextInt(baseDamageMin, baseDamageMax + 1);
-        return randomBase + primaryAttrValue + bonusDamage;
-    }
-
     public void setMainDamage(double bonusBaseDamage) {
         this.baseDamageMin += bonusBaseDamage;
         this.baseDamageMax += bonusBaseDamage;
-    }
-
-    public boolean hasCleave() {
-        for (Object obj : itemsBySlot.values()) {
-            if (obj instanceof Item item && item.getId().equalsIgnoreCase("battle_fury")) {
-                return true;
-            }
-        }
-        return false;
-    }
-
-    public double getArmor() {
-        double armorFromAgility = getAgility() * 0.166;
-        double armorFromItems = 0;
-        for (Object obj : itemsBySlot.values()) {
-            if (obj instanceof Item item) {
-                armorFromItems += item.getStatBonus(Item.StatType.ARMOR);
-            }
-        }
-        double modifierArmor = activeModifiers.stream()
-                .mapToDouble(ModifierManager::getArmor)
-                .sum();
-
-        return armorFromAgility + armorFromItems + modifierArmor;
-    }
-
-    public double getHealthRegen() {
-        if (isRegenDisabled) {
-            return 0.0;
-        }
-
-        double healthRegenFromItems = 0;
-        for (Object obj : itemsBySlot.values()) {
-            if (obj instanceof Item item) {
-                healthRegenFromItems += item.getStatBonus(Item.StatType.HEALTH_REGEN);
-            }
-        }
-
-        double strengthBonusRegen = getStrength() * 0.1;
-
-        double modifierRegen = activeModifiers.stream()
-                .mapToDouble(ModifierManager::getHealthRegen)
-                .sum();
-
-        return baseHealthRegen + healthRegenFromItems + strengthBonusRegen + modifierRegen;
-    }
-
-    private double getModifierManaRegen() {
-        return activeModifiers.stream()
-                .mapToDouble(ModifierManager::getManaRegen)
-                .sum();
     }
 
     public int getCurrentXp() {
@@ -587,86 +650,10 @@ public abstract class Hero {
         return (int) currentGold;
     }
 
-    public double getMagicResist() {
-        double baseResist = 0.25;
-        double intBonus = (getIntellect() * 0.1) / 100.0; // +0.1% for intellect
-        return Math.min(0.9, baseResist + intBonus);
-    }
-
     public void setLastAttacker(Hero attacker) {
         if (attacker == null || attacker.equals(this)) return;
         this.lastAttacker = attacker;
         this.lastAttackTimestamp = System.currentTimeMillis();
-    }
-
-    public double getBonusMoveSpeed() {
-        double bonus = 0;
-        for (Object obj : itemsBySlot.values()) {
-            if (obj instanceof Item item) {
-                bonus += item.getStatBonus(Item.StatType.MOVEMENT_SPEED);
-            }
-        }
-        return bonus;
-    }
-
-    public double getMoveSpeed() {
-        return baseMoveSpeed + getBonusMoveSpeed();
-    }
-
-    public void updateSpeedAttribute() {
-        if (player == null || !player.isOnline()) return;
-
-        double mcSpeed = (getMoveSpeed() / 300.0) * 0.1;
-
-        var attribute = player.getAttribute(org.bukkit.attribute.Attribute.MOVEMENT_SPEED);
-        if (attribute != null) {
-            attribute.setBaseValue(mcSpeed);
-        }
-    }
-
-    public double getCritChance() {
-        double highestChance = 0;
-        for (Object obj : itemsBySlot.values()) {
-            if (obj instanceof Item item) {
-                highestChance = Math.max(highestChance, item.getStatBonus(Item.StatType.CRIT_CHANCE));
-            }
-        }
-        return highestChance;
-    }
-
-    public double getCritMultiplier() {
-        double highestMultiplier = 1.0;
-        for (Object obj : itemsBySlot.values()) {
-            if (obj instanceof Item item) {
-                if (item.getStatBonus(Item.StatType.CRIT_CHANCE) > 0) {
-                    highestMultiplier = Math.max(highestMultiplier, item.getStatBonus(Item.StatType.CRIT_MULTIPLIER));
-                }
-            }
-        }
-        return highestMultiplier;
-    }
-
-    public double getDayVision() {
-        return DotaUnits.toBlocks(baseHeroDayVision);
-    }
-
-    public double getNightVision() {
-        return DotaUnits.toBlocks(baseHeroNightVision);
-    }
-
-    public double getCurrentVisionRadius() {
-        if (player == null || player.getWorld() == null) return getDayVision();
-
-        long time = player.getWorld().getTime();
-
-        boolean isDay = time < 12300 || time > 23850;
-        return isDay ? getDayVision() : getNightVision();
-    }
-
-    public boolean isInUnexploredArea() {
-        if (player == null || player.getWorld() == null) return false;
-
-        return true;
     }
 
     public int getStrength() { return getBaseStrength() + getBonusStrength(); }

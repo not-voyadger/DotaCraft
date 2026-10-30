@@ -98,7 +98,7 @@ public class LaneCreep extends Creep {
                 PotionEffectType.INVISIBILITY, Integer.MAX_VALUE, 1, false, false
         ));
 
-        this.activeModel = com.dotaCraft.Utils.ModelEngineHook.applyModel(entity, modelId, 0.7  5f);
+        this.activeModel = com.dotaCraft.Utils.ModelEngineHook.applyModel(entity, modelId, 0.75f);
         this.hasModel = (this.activeModel != null);
     }
 
