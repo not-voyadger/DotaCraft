@@ -6,7 +6,6 @@ import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Manager.DamageManager;
 import com.dotaCraft.Manager.EffectManager;
 import com.dotaCraft.Manager.HologramManager;
-import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.Particle;
@@ -19,9 +18,8 @@ import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
-import org.bukkit.potion.PotionEffect;
-import org.bukkit.potion.PotionEffectType;
 import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.util.BoundingBox;
 import org.bukkit.util.Vector;
 
 import java.util.HashSet;
@@ -35,14 +33,14 @@ public class EarthSpike extends Ability {
                 AbilityTypes.POINT_TARGET,
                 TargetTypes.ENEMY,
                 DispelTypes.STRONG,
-                new double[]{105, 170, 235, 300}, // damage
-                new double[]{90, 110, 130, 150},  // manaCost
-                new double[]{0, 0, 0, 0},         // healthCost
-                new double[]{14, 13, 12, 11},     // coolDown
-                new double[]{575, 650, 725, 800},     // castRange
+                new double[]{105, 170, 235, 300},
+                new double[]{90, 110, 130, 150},
+                new double[]{0, 0, 0, 0},
+                new double[]{14, 13, 12, 11},
+                new double[]{575, 650, 725, 800},
                 0,
-                new double[]{125, 125, 125, 125}, // effectRadius
-                new double[]{1.3, 1.6, 1.9, 2.2}, // duration (stun)
+                new double[]{125, 125, 125, 125},
+                new double[]{1.3, 1.6, 1.9, 2.2},
                 1, 4, 1,
                 false, false, false
         );
@@ -60,18 +58,20 @@ public class EarthSpike extends Ability {
         double stunDuration = getDuration(level);
 
         Location startLoc = player.getLocation();
-        Vector direction = startLoc.getDirection().setY(0).normalize();
         World world = player.getWorld();
+
+        // Фиксированный вектор шага (1.2 блока)
+        Vector stepVector = startLoc.getDirection().setY(0).normalize().multiply(1.2);
+        Vector tossVector = new Vector(0, 0.65, 0).add(stepVector.clone().normalize().multiply(0.15));
 
         world.playSound(startLoc, "dotacraft:lion.lion_earth_spike_cast", org.bukkit.SoundCategory.PLAYERS, 0.8f, 1.0f);
 
-        final Set hitEntityIds = new HashSet<>();
+        // Храним прямо Entity (без boxing/unboxing UUID)
+        final Set<Entity> hitEntities = new HashSet<>();
 
         new BukkitRunnable() {
             private double currentDistance = 0;
-            private final double step = 1.2;
-            private Location currentLoc = startLoc.clone();
-            private int stepIndex = 0;
+            private final Location currentLoc = startLoc.clone();
 
             @Override
             public void run() {
@@ -80,9 +80,8 @@ public class EarthSpike extends Ability {
                     return;
                 }
 
-                stepIndex++;
-                currentLoc.add(direction.clone().multiply(step));
-                currentDistance += step;
+                currentLoc.add(stepVector);
+                currentDistance += 1.2;
 
                 Block targetBlock = getSurfaceBlock(currentLoc);
                 if (targetBlock == null) return;
@@ -91,27 +90,22 @@ public class EarthSpike extends Ability {
 
                 spawnSpikeBlock(targetBlock);
 
-                world.spawnParticle(Particle.BLOCK, spikeLoc.clone().add(0.5, 1, 0.5), 15, 0.3, 0.3, 0.3, targetBlock.getBlockData());
+                world.spawnParticle(Particle.BLOCK, spikeLoc.add(0.5, 1, 0.5), 15, 0.3, 0.3, 0.3, targetBlock.getBlockData());
 
-                for (Entity entity : world.getNearbyEntities(spikeLoc, radius, 2.5, radius)) {
+                BoundingBox searchBox = BoundingBox.of(spikeLoc, radius, 2.5, radius);
+
+                for (Entity entity : world.getNearbyEntities(searchBox)) {
                     if (entity instanceof LivingEntity victim
                             && !(entity instanceof ArmorStand)
                             && !entity.equals(player)
-                            && !hitEntityIds.contains(entity.getUniqueId())) {
-
-                        hitEntityIds.add(entity.getUniqueId());
+                            && hitEntities.add(entity)) {
 
                         DamageManager.dealDamageFromAbility(hero, victim, damage, getDamageType());
                         EffectManager.applyStun(victim, stunDuration);
                         HologramManager.spawnStunIndicator(victim, stunDuration);
 
-                        Bukkit.getScheduler().runTaskLater(DotaCraft.getInstance(), () -> {
-                            if (victim.isValid() && !victim.isDead()) {
-                                Vector toss = new Vector(0, 0.65, 0).add(direction.clone().multiply(0.15));
-                                world.playSound(spikeLoc, "dotacraft:lion.lion_earth_spike_impact", org.bukkit.SoundCategory.PLAYERS, 0.8f, 1.0f);
-                                victim.setVelocity(toss);
-                            }
-                        }, 1L);
+                        world.playSound(spikeLoc, "dotacraft:lion.lion_earth_spike_impact", org.bukkit.SoundCategory.PLAYERS, 0.8f, 1.0f);
+                        victim.setVelocity(tossVector);
                     }
                 }
             }
@@ -119,19 +113,18 @@ public class EarthSpike extends Ability {
             private Block getSurfaceBlock(Location loc) {
                 Block b = loc.getBlock();
                 for (int i = 0; i < 4; i++) {
-                    if (!b.getType().isAir() && b.getRelative(0, 1, 0).getType().isAir()) {
-                        return b.getRelative(0, 1, 0);
+                    if (b.getType() != Material.AIR && b.getRelative(BlockFace.UP).getType() == Material.AIR) {
+                        return b.getRelative(BlockFace.UP);
                     }
-                    b = b.getRelative(0, -1, 0);
+                    b = b.getRelative(BlockFace.DOWN);
                 }
                 return loc.getBlock();
             }
 
             private void spawnSpikeBlock(Block block) {
-                if (!block.getType().isAir()) return;
+                if (block.getType() != Material.AIR) return;
 
                 BlockData originalData = block.getBlockData();
-
                 block.setType(Material.POINTED_DRIPSTONE, false);
 
                 if (block.getBlockData() instanceof Directional directional) {
@@ -140,27 +133,20 @@ public class EarthSpike extends Ability {
                 }
 
                 Location spawnLoc = block.getLocation().add(0.5, 0.5, 0.5);
-                World world = block.getWorld();
 
                 world.spawnParticle(Particle.LAVA, spawnLoc, 4, 0.2, 0.2, 0.2, 0.0);
-
                 world.spawnParticle(Particle.FLAME, spawnLoc, 8, 0.25, 0.25, 0.25, 0.05);
 
-                world.spawnParticle(Particle.CAMPFIRE_COSY_SMOKE, spawnLoc, 2, 0.1, 0.1, 0.1, 0.02);
-
-                new BukkitRunnable() {
-                    @Override
-                    public void run() {
-                        if (block.getType() == Material.POINTED_DRIPSTONE) {
-                            block.setBlockData(originalData, false);
-
-                            world.spawnParticle(Particle.SMOKE, spawnLoc, 5, 0.2, 0.2, 0.2, 0.02);
-                        }
+                DotaCraft.getInstance().getServer().getScheduler().runTaskLater(DotaCraft.getInstance(), () -> {
+                    if (block.getType() == Material.POINTED_DRIPSTONE) {
+                        block.setBlockData(originalData, false);
+                        world.spawnParticle(Particle.SMOKE, spawnLoc, 5, 0.2, 0.2, 0.2, 0.02);
                     }
-                }.runTaskLater(DotaCraft.getInstance(), 18L);
+                }, 18L);
             }
 
         }.runTaskTimer(DotaCraft.getInstance(), 0L, 1L);
+
         return true;
     }
 }
