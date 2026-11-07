@@ -7,8 +7,8 @@ import org.bukkit.entity.Player;
 
 public class Exort extends Ability {
 
+    public static final String ICON = ""; //TODO
     private double[] damageGainByOrbByLevel = {2, 4, 6, 8, 10, 12, 14, 16};
-    private static final String EXORT_ICON = "\uE403";
 
     public Exort() {
         super(
@@ -29,7 +29,8 @@ public class Exort extends Ability {
                 0,                         // required level
                 false,                     // isInnate?
                 true,                      // hasScepterUpgrade?
-                true                       // hasShardUpgrade?
+                true,                       // hasShardUpgrade?
+                ICON
         );
     }
 

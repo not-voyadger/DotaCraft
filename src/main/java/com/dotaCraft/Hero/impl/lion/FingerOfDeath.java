@@ -16,12 +16,14 @@ import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.util.Vector;
 
 public class FingerOfDeath extends Ability {
+
+    public static final String ICON = "\uE503";
     private double[] additionalDamage = {20, 30, 40};
     private int charges = 0;
     private final double DAMAGE_PER_KILL = 25.0;
 
     public FingerOfDeath() {
-        super(DamageTypes.MAGICAL, AbilityTypes.UNIT_TARGET, TargetTypes.ENEMY, DispelTypes.NONE, new double[]{600, 725, 850}, new double[]{200, 400, 600}, new double[]{0, 0, 0}, new double[]{140, 90, 40}, new double[]{900, 900, 900}, 0.3, new double[]{0, 0, 0}, new double[]{0, 0, 0}, 1, 3, 6, false, true, false);
+        super(DamageTypes.MAGICAL, AbilityTypes.UNIT_TARGET, TargetTypes.ENEMY, DispelTypes.NONE, new double[]{600, 725, 850}, new double[]{200, 400, 600}, new double[]{0, 0, 0}, new double[]{140, 90, 40}, new double[]{900, 900, 900}, 0.3, new double[]{0, 0, 0}, new double[]{0, 0, 0}, 1, 3, 6, false, true, false, ICON);
     }
 
     private double additionalDamageBasedOnAbilityLevel(int currentLevel) {

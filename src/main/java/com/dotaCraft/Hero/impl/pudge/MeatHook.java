@@ -17,6 +17,8 @@ import org.bukkit.util.Vector;
 
 public class MeatHook extends Ability implements org.bukkit.event.Listener {
 
+    public static final String ICON = ""; //TODO
+
     public MeatHook() {
         super(
                 DamageTypes.PURE,
@@ -32,7 +34,7 @@ public class MeatHook extends Ability implements org.bukkit.event.Listener {
                 new double[]{0, 0, 0, 0},
                 new double[]{2, 2, 2, 2},
                 1, 4, 1,
-                false, false, true
+                false, false, true, ICON
         );
         org.bukkit.Bukkit.getPluginManager().registerEvents(this, DotaCraft.getInstance());
     }

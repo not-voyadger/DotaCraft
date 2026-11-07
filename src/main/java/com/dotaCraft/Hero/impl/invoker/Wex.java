@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 
 public class Wex extends Ability {
 
-    private static final String WEX_ICON = "\uE402";
+    public static final String ICON = ""; //TODO
 
     public Wex() {
         super(
@@ -28,7 +28,8 @@ public class Wex extends Ability {
                 0,
                 false,
                 true,
-                true
+                true,
+                ICON
         );
     }
 

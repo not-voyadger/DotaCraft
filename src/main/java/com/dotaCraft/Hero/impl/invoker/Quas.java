@@ -7,7 +7,7 @@ import org.bukkit.entity.Player;
 
 public class Quas extends Ability {
 
-    private static final String QUAS_ICON = "\uE401";
+    public static final String ICON = ""; //TODO
 
     public Quas() {
         super(
@@ -28,7 +28,8 @@ public class Quas extends Ability {
                 0,
                 false,
                 true,
-                true
+                true,
+                ICON
         );
     }
 

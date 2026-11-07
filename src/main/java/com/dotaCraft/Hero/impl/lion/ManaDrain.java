@@ -14,6 +14,9 @@ import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 public class ManaDrain extends Ability {
+
+    public static final String ICON = "\uE502";
+
     private static final double[] MANA_DRAIN_PER_SECOND = {20.0, 40.0, 60.0, 120.0};
 
     public ManaDrain() {
@@ -35,7 +38,9 @@ public class ManaDrain extends Ability {
                 1,
                 false,
                 false,
-                true);
+                true,
+                ICON
+        );
     }
 
     @Override

@@ -11,6 +11,9 @@ import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
 public class ForgeSpirits extends Ability {
+
+    public static final String ICON = ""; //TODO
+
     public ForgeSpirits() {
         super(
                 DamageTypes.NONE,
@@ -30,7 +33,8 @@ public class ForgeSpirits extends Ability {
                 2,
                 false,
                 false,
-                false
+                false,
+                ICON
         );
     }
 

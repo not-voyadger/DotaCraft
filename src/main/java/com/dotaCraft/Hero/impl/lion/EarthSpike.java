@@ -27,6 +27,8 @@ import java.util.Set;
 
 public class EarthSpike extends Ability {
 
+    public static final String ICON = "\uE500";
+
     public EarthSpike() {
         super(
                 DamageTypes.MAGICAL,
@@ -42,7 +44,7 @@ public class EarthSpike extends Ability {
                 new double[]{125, 125, 125, 125},
                 new double[]{1.3, 1.6, 1.9, 2.2},
                 1, 4, 1,
-                false, false, false
+                false, false, false, ICON
         );
     }
 

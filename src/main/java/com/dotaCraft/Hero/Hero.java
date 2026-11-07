@@ -339,7 +339,7 @@ public abstract class Hero {
             if (item.isOnCooldown()) {
                 player.getWorld().playSound(player.getLocation(), "dotacraft:ui.ui_deny_cooldown", 0.5f, 1.0f);
                 double remainingSeconds = item.getRemainingCooldownInSeconds();
-                DotaCraft.getInstance().getMainHUD().showCoolDownIcon(this.player, remainingSeconds);
+                //REDO: DotaCraft.getInstance().getMainHUD().showCoolDownIcon(this.player, remainingSeconds);
 
             } else if (currentMana < item.getManaCost()) {
                 player.getWorld().playSound(player.getLocation(), "dotacraft:ui.ui_deny_mana", 0.8f, 1.0f);

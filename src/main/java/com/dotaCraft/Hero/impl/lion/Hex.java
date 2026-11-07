@@ -8,6 +8,9 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 public class Hex extends Ability {
+
+    public static final String ICON = "\uE501";
+
     public Hex() {
         super(
                 DamageTypes.NONE,
@@ -27,7 +30,9 @@ public class Hex extends Ability {
                 1,
                 false,
                 false,
-                false);
+                false,
+                ICON
+        );
     }
 
     @Override

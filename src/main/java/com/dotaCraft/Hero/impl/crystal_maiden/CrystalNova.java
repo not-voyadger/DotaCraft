@@ -22,6 +22,8 @@ import java.util.Set;
 
 public class CrystalNova extends Ability {
 
+    public static final String ICON = ""; //TODO
+
     public CrystalNova() {
         super(
                 DamageTypes.MAGICAL,
@@ -37,7 +39,8 @@ public class CrystalNova extends Ability {
                 new double[] {425, 425, 425, 425},
                 new double[] {5, 5, 5, 5},
                 1, 4, 1,
-                false, false, false
+                false, false, false,
+                ICON
         );
     }
 

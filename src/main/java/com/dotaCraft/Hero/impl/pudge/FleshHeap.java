@@ -6,6 +6,7 @@ import com.dotaCraft.Utils.DotaUnits;
 
 public class FleshHeap extends Ability {
 
+    public static final String ICON = ""; //TODO
     private int stackCount = 0;
 
     public FleshHeap() {
@@ -27,7 +28,8 @@ public class FleshHeap extends Ability {
                 1,
                 true,  // isInnate = true
                 false, // hasScepterUpgrade
-                false  // hasShardUpgrade
+                false,  // hasShardUpgrade
+                ICON
         );
     }
 

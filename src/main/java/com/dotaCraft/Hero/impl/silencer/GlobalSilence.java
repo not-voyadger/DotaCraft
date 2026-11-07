@@ -10,6 +10,9 @@ import org.bukkit.entity.Player;
 import java.util.List;
 
 public class GlobalSilence extends Ability {
+
+    public static final String ICON = ""; //TODO
+
     public GlobalSilence() {
         super(
                 DamageTypes.PHYSICAL,
@@ -29,7 +32,8 @@ public class GlobalSilence extends Ability {
                 6,
                 false,
                 true,
-                false
+                false,
+                ICON
         );
     }
 

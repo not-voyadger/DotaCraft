@@ -10,6 +10,8 @@ import java.util.function.Supplier;
 
 public class Invoke extends Ability {
 
+    public static final String ICON = ""; //TODO
+
     private static final Map<String, Supplier<Ability>> SPELL_RECIPES = new HashMap<>();
 
     static {
@@ -54,7 +56,8 @@ public class Invoke extends Ability {
                 0,
                 false,
                 false,
-                false
+                false,
+                ICON
         );
     }
 

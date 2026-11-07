@@ -36,10 +36,12 @@ public class CommandDotaTest implements BasicCommand {
         }
 
         if (heroId.equals("pudge")) {
-            hero.addItem(0, new ScytheOfVyse());
-            hero.addItem(1, new MagicStick());
-            hero.addItem(2, new PhaseBoots());
-            hero.addItem(3, new Daedalus());
+            hero.addItem(0, new ScytheOfVyse());     // Slot 0 (SLOT_5)
+            hero.addItem(1, new MagicStick());       // Slot 1 (SLOT_6)
+            hero.addItem(2, new PhaseBoots());       // Slot 2 (SLOT_7)
+            hero.addItem(3, new Daedalus());         // Slot 3 (SLOT_8)
+            hero.addItem(4, new BlinkDagger());       // Slot 4 (PRESS_DOUBLE_W)
+            hero.addItem(5, new BladesOfAttack());    // Slot 5 (PRESS_SHIFT)
         }
 
         if (heroId.equals("invoker")) {

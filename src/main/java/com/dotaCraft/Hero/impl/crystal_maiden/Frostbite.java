@@ -17,6 +17,8 @@ import org.bukkit.scheduler.BukkitRunnable;
 
 public class Frostbite extends Ability {
 
+    public static final String ICON = ""; //TODO
+
     public Frostbite() {
         super(
                 DamageTypes.MAGICAL,
@@ -36,7 +38,8 @@ public class Frostbite extends Ability {
                 1,
                 false,
                 false,
-                false
+                false,
+                ICON
         );
     }
 

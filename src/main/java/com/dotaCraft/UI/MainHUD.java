@@ -2,6 +2,7 @@ package com.dotaCraft.UI;
 
 import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Item.Item;
 import com.dotaCraft.Manager.HeroManager;
 import com.dotaCraft.Manager.IconManager;
 import com.dotaCraft.Utils.HUDUtils;
@@ -13,27 +14,15 @@ import net.kyori.adventure.title.Title;
 import org.bukkit.entity.Player;
 
 import java.time.Duration;
-import java.util.HashMap;
-import java.util.Map;
-import java.util.UUID;
 
 public class MainHUD {
 
     private final HeroManager heroManager;
 
-    private final Map<UUID, Double> activeCooldowns = new HashMap<>();
-    private final Map<UUID, Long> cooldownExpiration = new HashMap<>();
-
     private static final Key DOTA_FONT = Key.key("dotacraft", "default");
-    private static final Key DEFAULT_FONT = Key.key("minecraft", "default");
 
-    private static final String COOLDOWN_BG          = "\uE000";
-    private static final String COURIER_BG           = "\uE001";
-    private static final String GOLD_INDICATOR       = "\uE002";
-    private static final String COURIER_BRING_ITEMS  = "\uE003";
-    private static final String COURIER_INSPECT      = "\uE004";
-    private static final String COURIER_SPEED_BOOST  = "\uE005";
-    private static final String COURIER_SHIELD       = "\uE006";
+    private static final int[] SKILL_SLOT_OFFSETS = {-120, -96, -72, -48, -24, 0};
+    private static final int[] ITEM_SLOT_OFFSETS  = {24, 48, 72, 96, 120, 144};
 
     public MainHUD(HeroManager heroManager) {
         this.heroManager = heroManager;
@@ -43,71 +32,43 @@ public class MainHUD {
         Hero hero = HeroManager.getHero(player);
         if (hero == null) return;
 
-        UUID uuid = player.getUniqueId();
-
         IconManager.onTick(player);
 
         player.sendActionBar(buildActionBarComponent(hero));
 
-        Component courierComponent       = createHudElement(DOTA_FONT, COURIER_BG,          140, 50);
-        Component goldComponent          = createHudElement(DOTA_FONT, GOLD_INDICATOR,       97, 50);
-        Component courierItemsComponent  = createHudElement(DOTA_FONT, COURIER_BRING_ITEMS,    97, 50);
-        Component courierInspect         = createHudElement(DOTA_FONT, COURIER_INSPECT,        56, 50);
-        Component courierSpeedComponent  = createHudElement(DOTA_FONT, COURIER_SPEED_BOOST,   46, 50);
-        Component courierShieldComponent = createHudElement(DOTA_FONT, COURIER_SHIELD,        28, 50);
-
         Component positiveBuffsHUD = IconManager.renderPositiveBuffsComponent(player);
         Component negativeBuffsHUD = IconManager.renderNegativeBuffsComponent(player);
 
-        Component positionedNegativeBuffs = Component.empty()
-                .append(HUDUtils.getSpaceComponent(-30))
-                .append(negativeBuffsHUD);
-
-        Component positionedPositiveBuffs = Component.empty()
-                .append(HUDUtils.getSpaceComponent(130))
-                .append(positiveBuffsHUD);
-
         Component fullSubComponent = Component.empty()
-                .append(positionedNegativeBuffs)
-                .append(positionedPositiveBuffs)
-                .append(courierComponent)
-                .append(goldComponent)
-                .append(courierItemsComponent)
-                .append(courierInspect)
-                .append(courierSpeedComponent)
-                .append(courierShieldComponent);
+                .append(Component.empty().append(HUDUtils.getSpaceComponent(-30)).append(negativeBuffsHUD))
+                .append(Component.empty().append(HUDUtils.getSpaceComponent(130)).append(positiveBuffsHUD));
 
-        Long expireTime = cooldownExpiration.get(uuid);
-        Component mainTitleComponent = Component.empty();
-
-        if (expireTime != null && System.currentTimeMillis() < expireTime) {
-            Double remainingSeconds = activeCooldowns.get(uuid);
-            if (remainingSeconds != null) {
-                mainTitleComponent = buildCoolDownComponent(remainingSeconds);
-            }
-        }
+        Component slotsOverlay = buildSlotsOverlay(hero);
 
         Title hudTitle = Title.title(
-                mainTitleComponent,
+                slotsOverlay,
                 fullSubComponent,
                 Title.Times.times(Duration.ZERO, Duration.ofMillis(100), Duration.ofMillis(50))
         );
         player.showTitle(hudTitle);
     }
 
-    public void showCoolDownIcon(Player player, double remainingTime) {
-        if (player == null || !player.isOnline()) return;
+    private Component buildSlotsOverlay(Hero hero) {
+        Component overlay = Component.empty();
 
-        UUID uuid = player.getUniqueId();
-        activeCooldowns.put(uuid, remainingTime);
-        cooldownExpiration.put(uuid, System.currentTimeMillis() + 1500L);
-    }
+        overlay = overlay.append(HUDUtils.getSpaceComponent(145));
 
-    private Component buildCoolDownComponent(Double remainingSeconds) {
-        String timeText = String.format(java.util.Locale.US, "%.1f", remainingSeconds);
+        for (int i = 0; i < 6; i++) {
+            Ability ability = hero.getAbilityInSlot(i);
+            if (ability != null && ability.getIconSymbol() != null && !ability.getIconSymbol().isEmpty()) {
+                int slotOffset = SKILL_SLOT_OFFSETS[i];
+                overlay = overlay.append(HUDUtils.getSpaceComponent(slotOffset))
+                        .append(Component.text(ability.getIconSymbol()).font(DOTA_FONT))
+                        .append(HUDUtils.getSpaceComponent(-(slotOffset + 23)));
+            }
+        }
 
-        return createHudElement(DOTA_FONT, COOLDOWN_BG, 0, 50)
-                .append(Component.text(timeText, NamedTextColor.WHITE, TextDecoration.BOLD).font(DEFAULT_FONT));
+        return overlay;
     }
 
     private Component buildActionBarComponent(Hero hero) {
@@ -120,35 +81,35 @@ public class MainHUD {
                 .append(Component.text("   ", NamedTextColor.AQUA))
                 .append(Component.text(hero.getIntellect(), NamedTextColor.AQUA));
 
-        int currentXp = hero.getCurrentXp();
-        int reqXp = hero.getRequiredXpToNextLevel(hero.getLevel());
-
         Component levelInfo = Component.text("   [Lvl ", NamedTextColor.YELLOW)
                 .append(Component.text(hero.getLevel(), NamedTextColor.YELLOW))
                 .append(Component.text(" (", NamedTextColor.GRAY))
-                .append(Component.text(currentXp + "/" + reqXp, NamedTextColor.GRAY))
+                .append(Component.text(hero.getCurrentXp() + "/" + hero.getRequiredXpToNextLevel(hero.getLevel()), NamedTextColor.GRAY))
                 .append(Component.text(" XP)]", NamedTextColor.YELLOW));
 
-        Component abilityStatus = Component.empty();
-        Ability qAbility = hero.getAbilityInSlot(0);
-        if (qAbility != null) {
-            abilityStatus = Component.text("   [1: ", NamedTextColor.LIGHT_PURPLE)
-                    .append(getAbilityStatusComponent(qAbility))
-                    .append(Component.text("]", NamedTextColor.LIGHT_PURPLE));
+        Component abilitiesSummary = Component.empty();
+        for (int i = 0; i < 6; i++) {
+            Ability ab = hero.getAbilityInSlot(i);
+            if (ab != null) {
+                abilitiesSummary = abilitiesSummary
+                        .append(Component.text(" [" + (i + 1) + ":", NamedTextColor.LIGHT_PURPLE))
+                        .append(getAbilityStatusComponent(ab))
+                        .append(Component.text("]", NamedTextColor.LIGHT_PURPLE));
+            }
         }
 
         return Component.empty()
                 .append(gold)
                 .append(stats)
                 .append(levelInfo)
-                .append(abilityStatus);
+                .append(abilitiesSummary);
     }
 
     private Component getAbilityStatusComponent(Ability ability) {
         if (ability.getAbilityLevel() <= 0) {
-            return Component.text("Unlearned", NamedTextColor.GRAY);
+            return Component.text("•", NamedTextColor.GRAY);
         }
-        return Component.text("Ready", NamedTextColor.GREEN);
+        return Component.text("✓", NamedTextColor.GREEN);
     }
 
     private Component createHudElement(Key font, String iconSymbol, int offsetPx, int iconWidthPx) {

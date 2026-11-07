@@ -30,7 +30,6 @@ public abstract class Ability {
 
     private double castPoint; // time to cast in ticks/ms
 
-
     private int abilityLevel;
     private int abilityMaxLevel;
     private int requiredHeroLevel;
@@ -39,12 +38,14 @@ public abstract class Ability {
     private boolean hasScepterUpgrade;
     private boolean hasShardUpgrade;
 
+    private String iconSymbol = "";
+
     private final Map specialValues = new HashMap<>();
 
     public Ability(DamageTypes damageType, AbilityTypes abilityType, TargetTypes targetType, DispelTypes dispelType,
                    double[] damage, double[] manaCost, double[] healthCost, double[] coolDown, double[] castRange,
                    double castPoint, double[] effectRadius, double[] duration, int abilityLevel, int abilityMaxLevel,
-                   int requiredHeroLevel, boolean isInnate, boolean hasScepterUpgrade, boolean hasShardUpgrade) {
+                   int requiredHeroLevel, boolean isInnate, boolean hasScepterUpgrade, boolean hasShardUpgrade, String iconSymbol) {
 
         this.damageType = damageType;
         this.abilityType = abilityType;
@@ -64,6 +65,7 @@ public abstract class Ability {
         this.isInnate = isInnate;
         this.hasScepterUpgrade = hasScepterUpgrade;
         this.hasShardUpgrade = hasShardUpgrade;
+        this.iconSymbol = iconSymbol;
     }
 
     /**
@@ -136,6 +138,7 @@ public abstract class Ability {
     public boolean isInnate() { return isInnate; }
     public boolean hasScepterUpgrade() { return hasScepterUpgrade; }
     public boolean hasShardUpgrade() { return hasShardUpgrade; }
+    public String getIconSymbol() { return iconSymbol; }
 
     // ------ Helpers ------
 
