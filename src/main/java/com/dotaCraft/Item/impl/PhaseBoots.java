@@ -4,6 +4,7 @@ import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Item.Item;
 import com.dotaCraft.Manager.HeroManager;
+import com.dotaCraft.Manager.IconManager;
 import org.bukkit.Bukkit;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -16,6 +17,7 @@ import java.util.List;
 
 public class PhaseBoots extends Item {
     private final int activeDuration = 3;
+    private static final String PHASE_BOOTS_ICON = "\uE400";
 
     public PhaseBoots() {
         super(
@@ -58,6 +60,9 @@ public class PhaseBoots extends Item {
         player.getWorld().playSound(player.getLocation(), "dotacraft:items.phase_boots", 0.2f, 1.0f);
 
         int activeDurationTicks = activeDuration * 20;
+
+        // icon
+        IconManager.spawnPositiveIcon(player, PHASE_BOOTS_ICON, activeDurationTicks);
 
         BukkitTask trailTask = new BukkitRunnable() {
             @Override

@@ -99,8 +99,19 @@ public class CreepLaneManager {
         });
     }
 
-    public List<LaneCreep> getActiveLaneCreeps() {
-        return activeLaneCreeps;
+    public LaneCreep getActiveLaneCreep(UUID uuid) {
+        for (LaneCreep creep : activeLaneCreeps) {
+            if (creep.getEntity() != null && creep.getEntity().getUniqueId().equals(uuid)) {
+                return creep;
+            }
+        }
+        return null;
+    }
+
+    public void addLaneCreep(LaneCreep creep) {
+        if (creep != null) {
+            this.activeLaneCreeps.add(creep);
+        }
     }
 
     public void clearAll() {

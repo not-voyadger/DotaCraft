@@ -60,13 +60,11 @@ public class EarthSpike extends Ability {
         Location startLoc = player.getLocation();
         World world = player.getWorld();
 
-        // Фиксированный вектор шага (1.2 блока)
         Vector stepVector = startLoc.getDirection().setY(0).normalize().multiply(1.2);
         Vector tossVector = new Vector(0, 0.65, 0).add(stepVector.clone().normalize().multiply(0.15));
 
         world.playSound(startLoc, "dotacraft:lion.lion_earth_spike_cast", org.bukkit.SoundCategory.PLAYERS, 0.8f, 1.0f);
 
-        // Храним прямо Entity (без boxing/unboxing UUID)
         final Set<Entity> hitEntities = new HashSet<>();
 
         new BukkitRunnable() {

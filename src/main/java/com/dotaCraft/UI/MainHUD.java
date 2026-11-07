@@ -56,14 +56,20 @@ public class MainHUD {
         Component courierSpeedComponent  = createHudElement(DOTA_FONT, COURIER_SPEED_BOOST,   46, 50);
         Component courierShieldComponent = createHudElement(DOTA_FONT, COURIER_SHIELD,        28, 50);
 
-        Component buffsHUD = IconManager.renderBuffsComponent(player);
+        Component positiveBuffsHUD = IconManager.renderPositiveBuffsComponent(player);
+        Component negativeBuffsHUD = IconManager.renderNegativeBuffsComponent(player);
 
-        Component positionedBuffs = Component.empty()
-                .append(HUDUtils.getSpaceComponent(109))
-                .append(buffsHUD);
+        Component positionedNegativeBuffs = Component.empty()
+                .append(HUDUtils.getSpaceComponent(-30))
+                .append(negativeBuffsHUD);
+
+        Component positionedPositiveBuffs = Component.empty()
+                .append(HUDUtils.getSpaceComponent(130))
+                .append(positiveBuffsHUD);
 
         Component fullSubComponent = Component.empty()
-                .append(positionedBuffs)
+                .append(positionedNegativeBuffs)
+                .append(positionedPositiveBuffs)
                 .append(courierComponent)
                 .append(goldComponent)
                 .append(courierItemsComponent)

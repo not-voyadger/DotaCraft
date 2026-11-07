@@ -42,6 +42,8 @@ public class HeroManager {
 
         unregisterHero(player);
 
+        IconManager.clearPlayer(player);
+
         Hero hero = (Hero) factory.apply(player);
         registerHero(player, hero);
 

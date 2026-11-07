@@ -31,7 +31,7 @@ public class CommandSpawnLaneCreep implements BasicCommand {
 
         String team = args[0].toLowerCase();
         if (!team.equals("radiant") && !team.equals("dire")) {
-            player.sendMessage("§Choose 'radiant' or 'dire'.");
+            player.sendMessage("§cChoose 'radiant' or 'dire'.");
             return;
         }
 
@@ -59,7 +59,7 @@ public class CommandSpawnLaneCreep implements BasicCommand {
             LaneCreep creep = new LaneCreep(creepType, team, spawnLoc, Collections.emptyList());
             creep.spawn(spawnLoc);
 
-            plugin.getCreepLaneManager().getActiveLaneCreeps().add(creep);
+            plugin.getCreepLaneManager().addLaneCreep(creep);
         }
 
         String teamColor = team.equals("radiant") ? "§a" : "§c";

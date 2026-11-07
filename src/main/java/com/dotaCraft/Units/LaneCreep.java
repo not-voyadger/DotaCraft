@@ -19,7 +19,7 @@ import java.util.List;
 public class LaneCreep extends Creep {
 
     public enum CreepType {
-        MELEE("radiant_melee", "Radiant Melee Creep", 550, 21, 2, 21, 41, 1.5, EntityType.VILLAGER, "melee_creep"),
+        MELEE("radiant_melee", "Radiant Melee Creep", 550, 21, 2, 21, 41, 1.5, EntityType.COW, "melee_creep"),
         RANGED("radiant_ranged", "Radiant Ranged Creep", 300, 26, 0, 26, 41, 4.0, EntityType.SKELETON, null),
         SIEGE("radiant_siege", "Radiant Siege Creep", 850, 41, 0, 41, 73, 4.5, EntityType.IRON_GOLEM, null);
 
@@ -124,14 +124,15 @@ public class LaneCreep extends Creep {
         if (currentTarget != null) {
             double dist = mob.getLocation().distance(currentTarget.getLocation());
 
-            if (dist <= getAttackRange()) {
+            if (dist > getVisionRadius() || !currentTarget.isValid() || currentTarget.isDead()) {
+                currentTarget = null;
+                mob.getPathfinder().stopPathfinding();
+            } else if (dist <= getAttackRange()) {
                 mob.getPathfinder().stopPathfinding();
                 tryAttack(currentTarget);
             } else {
-                mob.getPathfinder().moveTo(currentTarget.getLocation(), 1.25);
+                mob.getPathfinder().moveTo(currentTarget.getLocation(), 0.5);
             }
-        } else {
-            followWaypoints(mob);
         }
     }
 
@@ -149,24 +150,53 @@ public class LaneCreep extends Creep {
     }
 
     private LivingEntity findTarget() {
+        if (getEntity() == null || !getEntity().isValid()) return null;
+
         LivingEntity best = null;
-        double closestDist = getVisionRadius();
+        double closestDistSq = getVisionRadius() * getVisionRadius();
 
-        for (Entity nearby : getEntity().getWorld().getNearbyEntities(getEntity().getLocation(), closestDist, 4.0, closestDist)) {
-            if (!(nearby instanceof LivingEntity target) || nearby.equals(getEntity()) || nearby.hasMetadata("no_vision_check")) continue;
+        for (Entity nearby : getEntity().getWorld().getNearbyEntities(getEntity().getLocation(), getVisionRadius(), 4.0, getVisionRadius())) {
+            if (!(nearby instanceof LivingEntity target)) continue;
 
-            if (target instanceof Player player) {
-                Hero hero = HeroManager.getHero(player);
-                if (hero != null && hero.getTeam().equalsIgnoreCase(getTeam())) continue;
-            }
+            if (target.equals(getEntity())) continue;
+            if (getEntity().getPassengers().contains(target)) continue;
 
-            double dist = getEntity().getLocation().distance(target.getLocation());
-            if (dist < closestDist) {
-                closestDist = dist;
+            if (target instanceof org.bukkit.entity.ArmorStand ||
+                    target instanceof org.bukkit.entity.Display) continue;
+            if (target.hasMetadata("no_vision_check")) continue;
+
+            if (isAlly(target)) continue;
+
+            double distSq = getEntity().getLocation().distanceSquared(target.getLocation());
+            if (distSq < closestDistSq) {
+                closestDistSq = distSq;
                 best = target;
             }
         }
         return best;
+    }
+
+    private boolean isAlly(LivingEntity target) {
+        if (target == null) return true;
+
+        if (target instanceof Player player) {
+            Hero hero = HeroManager.getHero(player);
+            if (hero == null || hero.getTeam() == null) return true;
+            return hero.getTeam().equalsIgnoreCase(this.getTeam());
+        }
+
+        LaneCreep activeCreep = DotaCraft.getInstance().getCreepLaneManager().getActiveLaneCreep(target.getUniqueId());
+        if (activeCreep != null) {
+            if (activeCreep.getTeam() == null) return true;
+            return activeCreep.getTeam().equalsIgnoreCase(this.getTeam());
+        }
+
+        NeutralCreep neutral = DotaCraft.getInstance().getNeutralManager().getActiveCreep(target.getUniqueId());
+        if (neutral != null) {
+            return true;
+        }
+
+        return true;
     }
 
     private void tryAttack(LivingEntity target) {

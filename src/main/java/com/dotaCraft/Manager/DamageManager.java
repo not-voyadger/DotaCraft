@@ -5,6 +5,7 @@ import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Objective.Objective;
 import com.dotaCraft.Objective.Tower;
+import com.dotaCraft.Units.LaneCreep;
 import com.dotaCraft.Units.NeutralCreep;
 import org.bukkit.Bukkit;
 import org.bukkit.entity.Entity;
@@ -21,6 +22,7 @@ public class DamageManager {
         Hero targetHero = (target instanceof Player playerTarget) ? HeroManager.getHero(playerTarget) : null;
 
         NeutralCreep neutralCreep = DotaCraft.getInstance().getNeutralManager().getActiveCreep(target.getUniqueId());
+        LaneCreep laneCreep = DotaCraft.getInstance().getCreepLaneManager().getActiveLaneCreep(target.getUniqueId());
 
         double finalDamage = rawDamage;
         boolean isCrit = false;
@@ -108,7 +110,11 @@ public class DamageManager {
             if (neutralCreep.isDead()) {
                 DotaCraft.getInstance().getNeutralManager().removeActiveCreep(target.getUniqueId());
             }
-        } else if (target instanceof LivingEntity living) {
+        }
+        else if (laneCreep != null) {
+            laneCreep.takeDamage(finalDamage, attacker);
+        }
+        else if (target instanceof LivingEntity living) {
             living.setNoDamageTicks(0);
             living.damage(finalDamage, attacker != null ? attacker.getPlayer() : null);
         }
@@ -141,6 +147,7 @@ public class DamageManager {
     private static double processAndApplyDamage(Hero attacker, LivingEntity target, double rawDamage, Ability.DamageTypes damageType, boolean isCrit) {
         Hero targetHero = (target instanceof Player playerTarget) ? HeroManager.getHero(playerTarget) : null;
         NeutralCreep neutralCreep = DotaCraft.getInstance().getNeutralManager().getActiveCreep(target.getUniqueId());
+        LaneCreep laneCreep = DotaCraft.getInstance().getCreepLaneManager().getActiveLaneCreep(target.getUniqueId());
 
         double finalDamage = rawDamage;
 
@@ -181,6 +188,9 @@ public class DamageManager {
             if (neutralCreep.isDead()) {
                 DotaCraft.getInstance().getNeutralManager().removeActiveCreep(target.getUniqueId());
             }
+        }
+        else if (laneCreep != null) {
+            laneCreep.takeDamage(finalDamage, attacker);
         } else {
             target.setNoDamageTicks(0);
             double newHealth = Math.max(0, target.getHealth() - finalDamage);
