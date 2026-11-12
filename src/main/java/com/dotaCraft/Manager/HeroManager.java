@@ -5,6 +5,7 @@ import com.dotaCraft.Hero.impl.crystal_maiden.CrystalMaiden;
 import com.dotaCraft.Hero.impl.invoker.Invoker;
 import com.dotaCraft.Hero.impl.lion.Lion;
 import com.dotaCraft.Hero.impl.pudge.Pudge;
+import com.dotaCraft.Hero.impl.shadow_fiend.ShadowFiend;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -30,6 +31,7 @@ public class HeroManager {
         registerHeroType("invoker", player -> new Invoker((Player) player));
         registerHeroType("lion", player -> new Lion((Player) player));
         registerHeroType("crystal_maiden", player -> new CrystalMaiden((Player) player));
+        registerHeroType("shadow_fiend", player -> new ShadowFiend((Player) player));
     }
 
     public static void registerHeroType(String id, Function factory) {

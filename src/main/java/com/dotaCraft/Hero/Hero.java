@@ -278,7 +278,7 @@ public abstract class Hero {
             }
             DamageManager.dealDamage(this, target, damage, Ability.DamageTypes.PHYSICAL);
             target.getWorld().spawnParticle(Particle.ITEM_SNOWBALL, target.getLocation(), 10, 0.2, 0.2, 0.2, 0.1);
-            target.getWorld().playSound(target.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_HIT, 1.0f, 1.2f);
+            //target.getWorld().playSound(target.getLocation(), Sound.BLOCK_AMETHYST_BLOCK_HIT, 1.0f, 1.2f);
         }
     }
 

@@ -63,6 +63,14 @@ public class CommandDotaTest implements BasicCommand {
             hero.addItem(2, new Tango());
         }
 
+        if (heroId.equals("shadow_fiend")) {
+            hero.addItem(0, new Daedalus());
+            hero.addItem(1, new Bottle());
+            hero.addItem(2, new BlinkDagger());
+            hero.addItem(3, new BladeOfAlacrity());
+        }
+
+
         player.sendMessage("§aYou've picked : " + hero.getHeroName());
     }
 }
