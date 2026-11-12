@@ -2,12 +2,16 @@ package com.dotaCraft.Manager;
 
 import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.DotaCraft;
+import com.dotaCraft.Hero.Hero;
 import org.bukkit.Bukkit;
+import org.bukkit.ChatColor;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.ArmorStand;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.plugin.Plugin;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.concurrent.ThreadLocalRandom;
@@ -34,6 +38,47 @@ public class HologramManager {
         Bukkit.getScheduler().runTaskLater(com.dotaCraft.DotaCraft.getInstance(), hologram::remove, 15L);
 
         target.getWorld().playSound(target.getLocation(), Sound.ENTITY_PLAYER_ATTACK_KNOCKBACK, 0.7f, 1.0f);
+    }
+
+    // Health regen indicator is shown only to the players in the same team
+    public static void spawnHealthRegenerationIndicator(Hero targetHero, double amount) {
+        Player targetPlayer = targetHero.getPlayer();
+        String team = targetHero.getTeam();
+
+        double offsetX = ThreadLocalRandom.current().nextDouble(-0.5, 0.5);
+        double offsetZ = ThreadLocalRandom.current().nextDouble(-0.5, 0.5);
+        Location spawnLoc = targetPlayer.getLocation().add(offsetX, 1.8, offsetZ);
+
+        String formattedAmount = (amount % 1 == 0)
+                ? String.valueOf((int) amount)
+                : String.format("%.1f", amount);
+
+        ArmorStand hologram = spawnLoc.getWorld().spawn(spawnLoc, ArmorStand.class, stand -> {
+            stand.setInvisible(true);
+            stand.setMarker(true);
+            stand.setGravity(false);
+            stand.setSmall(true);
+            stand.setCustomName(ChatColor.GREEN + "+" + formattedAmount);
+            stand.setCustomNameVisible(true);
+        });
+
+        Plugin plugin = DotaCraft.getInstance();
+
+        for (Player onlinePlayer : Bukkit.getOnlinePlayers()) {
+            Hero otherHero = HeroManager.getHero(onlinePlayer);
+            if (otherHero == null || !otherHero.getTeam().equals(team)) {
+                onlinePlayer.hideEntity(plugin, hologram);
+            }
+        }
+
+        Bukkit.getScheduler().runTaskTimer(plugin, task -> {
+            if (!hologram.isValid() || hologram.getTicksLived() >= 20) {
+                hologram.remove();
+                task.cancel();
+                return;
+            }
+            hologram.teleport(hologram.getLocation().add(0, 0.04, 0));
+        }, 1L, 1L);
     }
 
     public static void spawnMissIndicator(Entity target) {

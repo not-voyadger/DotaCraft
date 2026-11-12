@@ -48,6 +48,7 @@ public class CommandDotaTest implements BasicCommand {
             hero.addItem(0, new ScytheOfVyse());
             hero.addItem(1, new MagicStick());
             hero.addItem(2, new Bottle());
+            hero.addItem(3, new FaerieFire());
         }
 
         if (heroId.equals("lion")) {
