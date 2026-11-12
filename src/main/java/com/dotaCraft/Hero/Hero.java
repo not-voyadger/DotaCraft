@@ -690,6 +690,8 @@ public abstract class Hero {
         return baseHealthRegen;
     }
 
+    public long getLastAttackTimestamp() { return lastAttackTimestamp; }
+
     // Setters
 
     public void setBaseAttackTime(double baseAttackTime) {

@@ -198,4 +198,14 @@ public class IconManager {
                         buff.getIconSymbol().equals("\uE403")
         );
     }
+
+    public static void removePositiveIcon(Player player, String... iconSymbols) {
+        if (player == null || iconSymbols == null) return;
+        List<ActiveBuff> buffs = positiveBuffs.get(player.getUniqueId());
+        if (buffs == null) return;
+
+        for (String symbol : iconSymbols) {
+            buffs.removeIf(buff -> buff.getIconSymbol().equals(symbol));
+        }
+    }
 }

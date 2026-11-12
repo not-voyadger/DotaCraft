@@ -47,6 +47,7 @@ public class CommandDotaTest implements BasicCommand {
         if (heroId.equals("invoker")) {
             hero.addItem(0, new ScytheOfVyse());
             hero.addItem(1, new MagicStick());
+            hero.addItem(2, new Bottle());
         }
 
         if (heroId.equals("lion")) {
