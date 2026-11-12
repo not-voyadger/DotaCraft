@@ -2,12 +2,16 @@ package com.dotaCraft.Hero.impl.shadow_fiend;
 
 import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Manager.HeroManager;
+import com.dotaCraft.Manager.IconManager;
 import org.bukkit.Particle;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 public class Necromastery extends Ability {
 
-    public static final String ICON = ""; // TODO
+    public static final String ICON = ""; // TODO: иконка в панели скиллов
+    public static final String BUFF_ICON = "\uE506";
 
     private static final int[] MAX_SOULS = {20, 20, 20, 20};
     private static final double[] DAMAGE_PER_SOUL = {1.0, 2.0, 3.0, 4.0};
@@ -38,22 +42,33 @@ public class Necromastery extends Ability {
     }
 
     @Override
+    public void onLearn(Hero hero) {
+        updateBuffIcon(hero);
+    }
+
+    @Override
     public boolean cast(Hero hero) {
-        hero.getPlayer().sendMessage("§c[Necromastery] §7Current soul count: §f" + currentSouls + " / " + getMaxSouls());
+        Player player = hero.getPlayer();
+        if (player != null) {
+            player.sendMessage("§c[Necromastery] §7Current souls: §f" + currentSouls + " / " + getMaxSouls());
+        }
         return false;
     }
 
     @Override
-    public void onEnemyDeath(Hero sf, Hero victim, double radius) {
-        if (sf.equals(victim.getLastAttacker())) {
-            addSouls(sf, 1);
-        }
+    public void onUnitDeath(Hero owner, LivingEntity victim, Hero killer, double distanceBlocks) {
+        if (!owner.equals(killer)) return;
+
+        int soulsToAdd = (victim instanceof Player) ? 5 : 1;
+        addSouls(owner, soulsToAdd);
     }
 
     public void addSouls(Hero hero, int amount) {
         if (amount <= 0) return;
+
         currentSouls = Math.min(getMaxSouls(), currentSouls + amount);
         recalculateBonusDamage(hero);
+        updateBuffIcon(hero);
 
         Player player = hero.getPlayer();
         if (player != null && player.isOnline()) {
@@ -64,6 +79,7 @@ public class Necromastery extends Ability {
     public void onHeroDeath(Hero hero) {
         currentSouls = currentSouls / 2;
         recalculateBonusDamage(hero);
+        updateBuffIcon(hero);
     }
 
     public void recalculateBonusDamage(Hero hero) {
@@ -81,6 +97,13 @@ public class Necromastery extends Ability {
         if (appliedBonusDamage > 0) {
             hero.setMainDamage(appliedBonusDamage);
         }
+    }
+
+    private void updateBuffIcon(Hero hero) {
+        Player player = hero.getPlayer();
+        if (player == null || !player.isOnline()) return;
+
+        IconManager.spawnPositiveIconWithStack(player, BUFF_ICON, currentSouls);
     }
 
     public int getCurrentSouls() {

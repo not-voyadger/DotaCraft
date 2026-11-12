@@ -382,6 +382,9 @@ public abstract class Hero {
 
     public void addAbility(int slot, Ability ability) {
         this.abilitiesBySlot.put(slot, ability);
+        if (ability != null && ability.getAbilityLevel() > 0) {
+            ability.onLearn(this);
+        }
     }
 
     public void addItem(int slot, Item item) {

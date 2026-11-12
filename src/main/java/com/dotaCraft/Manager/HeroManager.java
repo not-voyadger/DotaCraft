@@ -1,11 +1,13 @@
 package com.dotaCraft.Manager;
 
+import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Hero.impl.crystal_maiden.CrystalMaiden;
 import com.dotaCraft.Hero.impl.invoker.Invoker;
 import com.dotaCraft.Hero.impl.lion.Lion;
 import com.dotaCraft.Hero.impl.pudge.Pudge;
 import com.dotaCraft.Hero.impl.shadow_fiend.ShadowFiend;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.util.HashMap;
@@ -55,6 +57,27 @@ public class HeroManager {
             heroBarManager.createBars(player, hero);
         }
         return hero;
+    }
+
+    public static void notifyUnitDeath(LivingEntity victim, Hero killer) {
+        if (victim == null) return;
+
+        for (Object obj : activeHeroes.values()) {
+            Hero hero = (Hero) obj;
+            Player player = hero.getPlayer();
+            if (player == null || !player.isOnline()) continue;
+
+            double distance = player.getWorld().equals(victim.getWorld())
+                    ? player.getLocation().distance(victim.getLocation())
+                    : Double.MAX_VALUE;
+
+            for (int i = 0; i < 6; i++) {
+                Ability ability = hero.getAbilityInSlot(i);
+                if (ability != null && ability.getAbilityLevel() > 0) {
+                    ability.onUnitDeath(hero, victim, killer, distance);
+                }
+            }
+        }
     }
 
     public void registerHero(Player player, Hero hero) {

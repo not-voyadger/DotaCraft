@@ -2,6 +2,7 @@ package com.dotaCraft.Units;
 
 import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Manager.HeroManager;
 import com.dotaCraft.Manager.HologramManager;
 import org.bukkit.EntityEffect;
 import org.bukkit.Location;
@@ -92,7 +93,6 @@ public class NeutralCreep {
 
     public void die(Hero killer) {
         if (entity != null && entity.isValid()) {
-
             if (killer != null) {
                 killer.addXp(xpReward);
                 killer.addGold(goldReward);
@@ -100,6 +100,8 @@ public class NeutralCreep {
                 DotaCraft.getInstance().getHealthBarManager().removeBar(entity);
                 killer.getPlayer().sendMessage("[Debug] Current xp:" + killer.getCurrentXp());
             }
+
+            HeroManager.notifyUnitDeath(entity, killer);
 
             org.bukkit.Bukkit.getScheduler().runTask(com.dotaCraft.DotaCraft.getInstance(), () -> {
                 if (entity.isValid()) {

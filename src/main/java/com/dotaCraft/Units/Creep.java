@@ -1,7 +1,10 @@
 package com.dotaCraft.Units;
 
+import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Manager.DamageManager;
+import com.dotaCraft.Manager.HeroManager;
+import com.dotaCraft.Manager.HologramManager;
 import com.dotaCraft.Manager.sources.VisionSource;
 import org.bukkit.Location;
 import org.bukkit.entity.EntityType;
@@ -82,7 +85,11 @@ public abstract class Creep implements VisionSource {
             if (killer != null) {
                 killer.addXp(xpReward);
                 killer.addGold(goldReward);
-                com.dotaCraft.Manager.HologramManager.spawnGoldIndicator(entity, goldReward);
+                HologramManager.spawnGoldIndicator(entity, goldReward);
+            }
+
+            if (killer != null) {
+                double dist = killer.getPlayer().getLocation().distance(entity.getLocation());
             }
 
             com.dotaCraft.DotaCraft.getInstance().getHealthBarManager().removeBar(entity);
@@ -92,6 +99,8 @@ public abstract class Creep implements VisionSource {
                     entity.setHealth(0);
                 }
             });
+
+            HeroManager.notifyUnitDeath(entity, killer);
         }
     }
 

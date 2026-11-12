@@ -2,6 +2,7 @@ package com.dotaCraft.Ability;
 
 import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Utils.DotaUnits;
+import org.bukkit.entity.LivingEntity;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -86,6 +87,10 @@ public abstract class Ability {
     public void onEnemyDeath(Hero hero, Hero victim, double radius) {}
 
     public void onTick(Hero hero) {}
+
+    public void onUnitDeath(Hero owner, LivingEntity victim, Hero killer, double distanceBlocks) {}
+
+    public void onLearn(Hero hero) {}
 
     // ------ Scaled Attribute Accessors ------
 
