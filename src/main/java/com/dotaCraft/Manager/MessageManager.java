@@ -1,5 +1,6 @@
 package com.dotaCraft.Manager;
 
+import com.dotaCraft.Objective.Rune;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -53,6 +54,10 @@ public class MessageManager {
             Bukkit.broadcastMessage(ChatColor.RED + "Dire structured fortified");
             //sound
         }
+    }
+
+    public static void broadcastPlayerStoringRuneToBottle (Player player, String team, Rune.RuneType rune) {
+        //TODO
     }
 
     public static void broadcast(String message) {

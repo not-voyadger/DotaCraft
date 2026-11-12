@@ -5,21 +5,22 @@ import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Item.Item;
 import com.dotaCraft.Manager.HeroManager;
 import com.dotaCraft.Manager.IconManager;
+import com.dotaCraft.Objective.Rune;
 import org.bukkit.entity.Player;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
 
 public class Bottle extends Item {
 
-    public enum StoredRune {DOUBLE_DAMAGE, HASTE, SHIELD, REGENERATION, INVISIBILITY, ILLUSION, ARCANE}
-
     private static final String BOTTLE_ICON_0 = "\uE305";
     private static final String BOTTLE_ICON_1 = "\uE306";
     private static final String BOTTLE_ICON_2 = "\uE307";
     private static final String BOTTLE_ICON_3 = "\uE308";
 
+    public Rune.RuneType storedRune = null;
+
     private int currentFills = 3;
-    private boolean isRuned = false;
+    public boolean isRuned = false;
 
     private static final double TOTAL_HEAL = 110.0;
     private static final double TOTAL_MANA = 60.0;
@@ -45,8 +46,13 @@ public class Bottle extends Item {
         Hero hero = HeroManager.getHero(player);
         if (hero == null) return;
 
-        if (isRuned) {
-            // TODO: rune activation logic
+        if (storedRune != null) {
+            Rune.RuneType runeToActivate = storedRune;
+            storedRune = null;
+            refill();
+
+            //player.getWorld().playSound(player.getLocation(), "dotacraft:items.bottle_use", 0.5f, 1.0f);
+            Rune.activateRune(hero, runeToActivate);
             return;
         }
 
@@ -135,5 +141,9 @@ public class Bottle extends Item {
 
     public void refill() {
         this.currentFills = 3;
+    }
+
+    public void storeRune (Rune.RuneType runeToAdd) {
+        // TODO
     }
 }

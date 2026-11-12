@@ -1,6 +1,11 @@
 package com.dotaCraft.Objective;
 
+import com.dotaCraft.Item.Item;
+import com.dotaCraft.Item.impl.Bottle;
+import com.dotaCraft.Manager.MessageManager;
 import org.bukkit.Location;
+import com.dotaCraft.Hero.Hero;
+import org.bukkit.entity.Player;
 
 public class Rune extends Objective {
 
@@ -48,7 +53,35 @@ public class Rune extends Objective {
 
     }
 
-    private void claimRune(Rune rune) {
+    private void claimRune(Hero hero, Rune rune) {
+        Player player = hero.getPlayer();
+
+        if (hero == null || rune == null) return;
+
+        for (int slot = 0; slot < 6; slot++) {
+            Item item = hero.getItemInSlot(slot);
+
+            if (item instanceof Bottle bottle && bottle.storedRune == null) {
+
+                RuneType runeToStore = rune.getType();
+                bottle.storeRune(runeToStore);
+
+                MessageManager.broadcastPlayerStoringRuneToBottle(player, hero.getTeam(), runeToStore);
+
+                // TODO: update bottle icon depending on rune
+
+                if (hero.getPlayer() != null) {
+                    player.getWorld().playSound(player.getLocation(), "dotacraft:items.bottle_store", 0.5f, 1.0f);
+                }
+                return;
+            }
+        }
+
+        Rune.activateRune(hero, rune.getType());
+    }
+
+    public static void activateRune(Hero hero, RuneType type) {
+        if (hero == null || type == null) return;
         // TODO
     }
 }
