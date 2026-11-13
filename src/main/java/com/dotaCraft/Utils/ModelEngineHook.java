@@ -21,9 +21,12 @@ public class ModelEngineHook {
     }
 
     public static void removeModel(LivingEntity entity, String modelId) {
+        if (entity == null) return;
         ModeledEntity modeledEntity = ModelEngineAPI.getModeledEntity(entity);
         if (modeledEntity != null) {
             modeledEntity.removeModel(modelId);
+            modeledEntity.destroy();
         }
+        ModelEngineAPI.removeModeledEntity(entity.getUniqueId());
     }
 }

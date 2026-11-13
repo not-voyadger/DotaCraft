@@ -2,15 +2,23 @@ package com.dotaCraft.Manager;
 
 import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Units.LaneCreep;
+import com.ticxo.modelengine.api.ModelEngineAPI;
+import com.ticxo.modelengine.api.model.ModeledEntity;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Entity;
+import org.bukkit.event.EventHandler;
+import org.bukkit.event.EventPriority;
+import org.bukkit.event.entity.EntityDamageByEntityEvent;
+import org.bukkit.event.entity.EntityDamageEvent;
 import org.bukkit.scheduler.BukkitRunnable;
 import org.bukkit.scheduler.BukkitTask;
+import org.bukkit.event.Listener;
 
 import java.util.*;
 
-public class CreepLaneManager {
+public class CreepLaneManager implements Listener {
 
     private final DotaCraft plugin;
     private final List<LaneCreep> activeLaneCreeps = new ArrayList<>();
@@ -121,5 +129,33 @@ public class CreepLaneManager {
             }
         }
         activeLaneCreeps.clear();
+    }
+
+    @EventHandler(priority = EventPriority.HIGHEST, ignoreCancelled = true)
+    public void onCreepVanillaDamage(EntityDamageEvent event) {
+        if (!isCustomCreep(event.getEntity())) return;
+
+        if (!(event instanceof EntityDamageByEntityEvent)) {
+            event.setCancelled(true);
+            return;
+        }
+
+        event.setDamage(0);
+    }
+
+    private boolean isCustomCreep(Entity entity) {
+        if (entity == null) return false;
+
+        UUID targetUuid = entity.getUniqueId();
+
+        if (Bukkit.getPluginManager().isPluginEnabled("ModelEngine")) {
+            ModeledEntity modeledEntity = ModelEngineAPI.getModeledEntity(entity);
+            if (modeledEntity != null && modeledEntity.getBase() != null) {
+                targetUuid = modeledEntity.getBase().getUUID();
+            }
+        }
+
+        return DotaCraft.getInstance().getCreepLaneManager().getActiveLaneCreep(targetUuid) != null
+                || DotaCraft.getInstance().getNeutralManager().getActiveCreep(targetUuid) != null;
     }
 }

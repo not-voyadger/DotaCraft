@@ -8,6 +8,7 @@ import com.dotaCraft.Utils.DotaUnits;
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.model.ActiveModel;
 import com.ticxo.modelengine.api.model.ModeledEntity;
+import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Sound;
 import org.bukkit.entity.*;
@@ -149,6 +150,7 @@ public class LaneCreep extends Creep {
         mob.getPathfinder().moveTo(targetLoc, 1.0);
     }
 
+    // FIXME: something wrong here, for some reason creep target himself?
     private LivingEntity findTarget() {
         if (getEntity() == null || !getEntity().isValid()) return null;
 
