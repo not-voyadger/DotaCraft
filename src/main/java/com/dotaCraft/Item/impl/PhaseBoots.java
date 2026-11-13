@@ -28,6 +28,7 @@ public class PhaseBoots extends Item {
                 0,
                 0,
                 0,
+                false,
                 false
         );
 

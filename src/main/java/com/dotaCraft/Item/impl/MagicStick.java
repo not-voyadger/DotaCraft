@@ -9,7 +9,7 @@ public class MagicStick extends Item {
 
     public MagicStick() {
         // id, targetType, cost, cooldown, manaCost, castRange, maxCharges, isConsumable
-        super("magic_stick", TargetTypes.NO_TARGET, 200, 13.0, 0.0, 0.0, 10, false);
+        super("magic_stick", TargetTypes.NO_TARGET, 200, 13.0, 0.0, 0.0, 10, false, false);
     }
 
     @Override

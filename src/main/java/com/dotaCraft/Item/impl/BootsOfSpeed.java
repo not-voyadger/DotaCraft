@@ -4,7 +4,7 @@ import com.dotaCraft.Item.Item;
 
 public class BootsOfSpeed extends Item {
     public BootsOfSpeed() {
-        super("boots_of_speed", TargetTypes.NO_TARGET, 500, 0, 0, 0, 0, false);
+        super("boots_of_speed", TargetTypes.NO_TARGET, 500, 0, 0, 0, 0, false, false);
 
         addStatBonus(StatType.MOVEMENT_SPEED, 45);
     }

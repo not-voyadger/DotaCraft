@@ -55,6 +55,7 @@ public class CommandDotaTest implements BasicCommand {
             hero.addItem(0, new HealingSalve());
             hero.addItem(1, new MagicStick());
             hero.addItem(2, new BlinkDagger());
+            hero.addItem(3, new ArmletOfMordiggian());
         }
 
         if (heroId.equals("crystal_maiden")) {

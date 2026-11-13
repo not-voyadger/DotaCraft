@@ -12,6 +12,7 @@ public class BladeOfAlacrity extends Item {
                 0,
                 0,
                 0,
+                false,
                 false
         );
 

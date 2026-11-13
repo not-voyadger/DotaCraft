@@ -37,7 +37,8 @@ public class Bottle extends Item {
                 0,
                 350,
                 3,
-                true
+                true,
+                false
         );
     }
 

@@ -11,7 +11,7 @@ public class ObserverWardItem extends Item {
 
     public ObserverWardItem() {
         // id, targetType, cost, cooldown, manaCost, castRange, maxCharges, isConsumable
-        super("observer_ward", TargetTypes.POINT_TARGET, 0, 1.0, 0.0, 500.0, 4, true);
+        super("observer_ward", TargetTypes.POINT_TARGET, 0, 1.0, 0.0, 500.0, 4, true, false);
     }
 
     @Override

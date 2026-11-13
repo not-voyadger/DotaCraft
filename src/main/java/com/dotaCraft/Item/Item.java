@@ -26,6 +26,8 @@ public abstract class Item {
     private final int maxCharges;
     private int currentCharges;
 
+    private boolean isActive;
+
     private final boolean isSellable;
     private final boolean isRecipe;
     private final boolean isConsumable;
@@ -43,7 +45,7 @@ public abstract class Item {
 
     public Item(String id, TargetTypes targetType, int baseCost,
                 double coolDown, double manaCost, double castRange,
-                int maxCharges, boolean isConsumable) {
+                int maxCharges, boolean isConsumable, boolean isActive) {
         this.id = id;
         this.targetType = targetType;
         this.baseCost = baseCost;
@@ -141,4 +143,6 @@ public abstract class Item {
     public double getCastRange() { return DotaUnits.toBlocks(castRange); }
     public int getCurrentCharges() { return currentCharges; }
     public int getMaxCharges() { return maxCharges; }
+    public boolean isActive() { return isActive; }
+    public void setActive(boolean active) { this.isActive = active; }
 }

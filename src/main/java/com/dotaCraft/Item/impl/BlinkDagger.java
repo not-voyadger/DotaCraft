@@ -19,6 +19,7 @@ public class BlinkDagger extends Item {
                 0,
                 1200,
                 0,
+                false,
                 false
         );
     }

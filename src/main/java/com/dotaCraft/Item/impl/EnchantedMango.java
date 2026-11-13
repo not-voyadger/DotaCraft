@@ -8,7 +8,7 @@ import org.bukkit.entity.Player;
 
 public class EnchantedMango extends Item {
     public EnchantedMango() {
-        super("enchanted_mango", TargetTypes.NO_TARGET, 65, 0, 0, 400.0, 0, true);
+        super("enchanted_mango", TargetTypes.NO_TARGET, 65, 0, 0, 400.0, 0, true, false);
 
         addStatBonus(StatType.MANA_REGEN, 0.4);
     }

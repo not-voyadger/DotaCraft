@@ -13,7 +13,7 @@ import org.bukkit.entity.Player;
 public class Tango extends Item {
 
     public Tango() {
-        super("tango", TargetTypes.POINT_TARGET, 90, 4.0, 0.0, 200.0, 3, true);
+        super("tango", TargetTypes.POINT_TARGET, 90, 4.0, 0.0, 200.0, 3, true, false);
     }
 
     @Override

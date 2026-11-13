@@ -18,7 +18,8 @@ public class HealingSalve extends Item {
                 0,
                 250.0,
                 0,
-                true
+                true,
+                false
         );
     }
 

@@ -335,6 +335,31 @@ public abstract class Hero {
             return;
         }
 
+        if (item.getTargetType() == Item.TargetTypes.TOGGLE) {
+            boolean nextState = !item.isActive();
+
+            if (item.isOnCooldown()) {
+                player.getWorld().playSound(player.getLocation(), "dotacraft:ui.ui_deny_cooldown", 0.5f, 1.0f);
+                double remainingSeconds = item.getRemainingCooldownInSeconds();
+                //REDO: DotaCraft.getInstance().getMainHUD().showCoolDownIcon(this.player, remainingSeconds);
+                return;
+            }
+
+            if (nextState && currentMana < item.getManaCost()) {
+                player.getWorld().playSound(player.getLocation(), "dotacraft:ui.ui_deny_mana", 0.8f, 1.0f);
+                return;
+            }
+
+            if (nextState) {
+                useMana(item.getManaCost());
+            }
+
+            item.setActive(nextState);
+            item.startCooldown();
+            item.onToggle(this.player, nextState);
+            return;
+        }
+
         if (!item.canCast(player)) {
             if (item.isOnCooldown()) {
                 player.getWorld().playSound(player.getLocation(), "dotacraft:ui.ui_deny_cooldown", 0.5f, 1.0f);

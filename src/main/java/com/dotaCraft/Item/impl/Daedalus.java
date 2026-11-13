@@ -6,7 +6,7 @@ import java.util.List;
 
 public class Daedalus extends Item {
     public Daedalus() {
-        super("daedalus", TargetTypes.NO_TARGET, 0, 0, 0, 0, 0, false);
+        super("daedalus", TargetTypes.NO_TARGET, 0, 0, 0, 0, 0, false, false);
 
         addStatBonus(StatType.DAMAGE, 88.0);
         addStatBonus(StatType.CRIT_CHANCE, 30.0);

@@ -21,7 +21,8 @@ public class FaerieFire extends Item {
                 0,
                 0,
                 1,
-                true
+                true,
+                false
         );
 
         addStatBonus(StatType.DAMAGE, 2.0);

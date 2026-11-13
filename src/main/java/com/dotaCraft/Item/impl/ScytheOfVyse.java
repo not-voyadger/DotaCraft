@@ -15,7 +15,7 @@ public class ScytheOfVyse extends Item {
     private static final int MANA_COST = 250;
 
     public ScytheOfVyse() {
-        super("scythe_of_vyse", TargetTypes.UNIT_TARGET, 700, 20.0, MANA_COST, 800.0, 0, false);
+        super("scythe_of_vyse", TargetTypes.UNIT_TARGET, 700, 20.0, MANA_COST, 800.0, 0, false, false);
 
         addStatBonus(StatType.INTELLECT, 30.0);
         addStatBonus(StatType.MANA_REGEN, 8.5);

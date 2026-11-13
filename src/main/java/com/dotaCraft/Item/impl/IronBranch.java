@@ -5,7 +5,7 @@ import com.dotaCraft.Item.Item;
 public class IronBranch extends Item {
 
     public IronBranch() {
-        super("iron_branch", TargetTypes.POINT_TARGET, 50, 0.0, 0.0, 200.0, 0, true);
+        super("iron_branch", TargetTypes.POINT_TARGET, 50, 0.0, 0.0, 200.0, 0, true, false);
 
         // Adding stats
         addStatBonus(StatType.STRENGTH, 1.0);
