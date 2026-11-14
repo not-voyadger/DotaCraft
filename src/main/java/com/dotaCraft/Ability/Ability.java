@@ -11,7 +11,7 @@ import java.util.Map;
  * Abstract base class representing a Dota ability.
  */
 public abstract class Ability {
-    public enum AbilityTypes { PASSIVE, UNIT_TARGET, POINT_TARGET, NO_TARGET, TOGGLE, AUTO_CAST }
+    public enum AbilityTypes { PASSIVE, UNIT_TARGET, POINT_TARGET, NO_TARGET, TOGGLE, AUTO_CAST, AURA }
     public enum DamageTypes { PHYSICAL, MAGICAL, PURE, NONE }
     public enum TargetTypes { ALLY, ENEMY, ALL, NONE }
     public enum DispelTypes { NONE, BASIC, STRONG }

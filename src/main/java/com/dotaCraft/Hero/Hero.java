@@ -32,6 +32,7 @@ public abstract class Hero {
     private Player player;
     private final String heroName;
     private final Attribute primaryAttribute;
+    private Ability innateAbility;
 
     private int baseStrength;
     private int baseAgility;
@@ -77,6 +78,9 @@ public abstract class Hero {
 
     private double baseHeroDayVision = 1800.0;
     private double baseHeroNightVision = 800.0;
+
+    private double bonusAttackSpeedFromAbilities = 0;
+    private double bonusMoveSpeedPercent = 0;
 
     private final Map abilitiesBySlot = new HashMap<>();
     private final Map<Integer, Item> itemsBySlot = new HashMap<>();
@@ -138,6 +142,10 @@ public abstract class Hero {
     public void onTick() {
         if (player != null && player.isOnline()) {
             activeModifiers.removeIf(ModifierManager::tick);
+
+            if (innateAbility != null && innateAbility.getAbilityLevel() > 0) {
+                innateAbility.onTick(this);
+            }
 
             double hpRegen = getHealthRegen() / 20.0;
             double manaRegen = (baseManaRegen + (getIntellect() * 0.05)) / 20.0;
@@ -244,7 +252,7 @@ public abstract class Hero {
                 speedFromItems += item.getStatBonus(Item.StatType.ATTACK_SPEED);
             }
         }
-        return 100.0 + getAgility() + speedFromItems;
+        return 100.0 + getAgility() + speedFromItems + bonusAttackSpeedFromAbilities;
     }
 
     public long getAttackIntervalMillis() {
@@ -552,7 +560,17 @@ public abstract class Hero {
     }
 
     public double getMoveSpeed() {
-        return baseMoveSpeed + getBonusMoveSpeed();
+        double flatSpeed = baseMoveSpeed + getBonusMoveSpeed();
+        return flatSpeed * (1.0 + bonusMoveSpeedPercent);
+    }
+
+    public void addBonusAttackSpeed(double amount) {
+        this.bonusAttackSpeedFromAbilities += amount;
+    }
+
+    public void addBonusMoveSpeedPercent(double percent) {
+        this.bonusMoveSpeedPercent += percent;
+        updateSpeedAttribute();
     }
 
     public void updateSpeedAttribute() {
@@ -720,6 +738,8 @@ public abstract class Hero {
 
     public long getLastAttackTimestamp() { return lastAttackTimestamp; }
 
+    public Ability getInnateAbility() { return innateAbility; }
+
     // Setters
 
     public void setBaseAttackTime(double baseAttackTime) {
@@ -731,5 +751,11 @@ public abstract class Hero {
     public void setRegenDisabled(boolean disabled) { this.isRegenDisabled = disabled; }
     public void setBaseHealthRegen(double baseHealthRegen) { this.baseHealthRegen = baseHealthRegen; }
     public void setPlayer(Player player) { this.player = player; }
+    public void setInnateAbility(Ability ability) {
+        this.innateAbility = ability;
+        if (ability != null && ability.getAbilityLevel() > 0) {
+            ability.onLearn(this);
+        }
+    }
 
 }

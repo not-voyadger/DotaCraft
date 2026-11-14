@@ -33,10 +33,13 @@ public class ShadowFiend extends Hero {
                 305
         );
 
+        this.setInnateAbility(new Necromastery());
+
         this.addAbility(0, new ShadowrazeNear());
         this.addAbility(1, new ShadowrazeMedium());
         this.addAbility(2, new ShadowrazeFar());
-        this.addAbility(3, new Necromastery());
+        this.addAbility(3, new FeastOfSouls());
+        this.addAbility(4, new PresenceOfTheDarkLord());
     }
 
     @Override

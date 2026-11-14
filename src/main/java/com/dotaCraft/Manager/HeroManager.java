@@ -71,6 +71,11 @@ public class HeroManager {
                     ? player.getLocation().distance(victim.getLocation())
                     : Double.MAX_VALUE;
 
+            Ability innate = hero.getInnateAbility();
+            if (innate != null && innate.getAbilityLevel() > 0) {
+                innate.onUnitDeath(hero, victim, killer, distance);
+            }
+
             for (int i = 0; i < 6; i++) {
                 Ability ability = hero.getAbilityInSlot(i);
                 if (ability != null && ability.getAbilityLevel() > 0) {

@@ -50,6 +50,11 @@ public class DamageManager {
 
         // Passives
         if (targetHero != null) {
+            Ability innate = targetHero.getInnateAbility();
+            if (innate != null && innate.getAbilityLevel() > 0) {
+                finalDamage = innate.onTakeDamage(targetHero, finalDamage);
+            }
+
             for (int i = 0; i < 6; i++) {
                 Ability ability = targetHero.getAbilityInSlot(i);
                 if (ability != null && ability.getAbilityLevel() > 0) {
