@@ -2,7 +2,6 @@ package com.dotaCraft.Hero.impl.shadow_fiend;
 
 import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.Hero.Hero;
-import com.dotaCraft.Manager.HeroManager;
 import com.dotaCraft.Manager.IconManager;
 import org.bukkit.Particle;
 import org.bukkit.entity.LivingEntity;
@@ -10,7 +9,7 @@ import org.bukkit.entity.Player;
 
 public class Necromastery extends Ability {
 
-    public static final String ICON = ""; // TODO: иконка в панели скиллов
+    public static final String ICON = ""; // TODO
     public static final String BUFF_ICON = "\uE506";
 
     private static final int[] MAX_SOULS = {20, 20, 20, 20};
@@ -35,7 +34,7 @@ public class Necromastery extends Ability {
                 new double[]{0, 0, 0, 0},
                 1, 4, 1,
                 true,   // isInnate
-                true,           // hasScepterUpgrade
+                true,   // hasScepterUpgrade
                 false,
                 ICON
         );
@@ -66,10 +65,41 @@ public class Necromastery extends Ability {
     public void addSouls(Hero hero, int amount) {
         if (amount <= 0) return;
 
-        currentSouls = Math.min(getMaxSouls(), currentSouls + amount);
+        if (currentSouls < getMaxSouls()) {
+            currentSouls = Math.min(getMaxSouls(), currentSouls + amount);
+        }
         recalculateBonusDamage(hero);
         updateBuffIcon(hero);
+        spawnSoulParticle(hero);
+    }
 
+    public void addTemporarySouls(Hero hero, int amount) {
+        if (amount <= 0) return;
+
+        currentSouls += amount;
+        recalculateBonusDamage(hero);
+        updateBuffIcon(hero);
+        spawnSoulParticle(hero);
+    }
+
+    public void removeSouls(Hero hero, int amount) {
+        if (amount <= 0) return;
+
+        currentSouls = Math.max(0, currentSouls - amount);
+        recalculateBonusDamage(hero);
+        updateBuffIcon(hero);
+    }
+
+    public void clampToMaxSouls(Hero hero) {
+        int max = getMaxSouls();
+        if (currentSouls > max) {
+            currentSouls = max;
+            recalculateBonusDamage(hero);
+            updateBuffIcon(hero);
+        }
+    }
+
+    private void spawnSoulParticle(Hero hero) {
         Player player = hero.getPlayer();
         if (player != null && player.isOnline()) {
             player.getWorld().spawnParticle(Particle.SOUL, player.getLocation().add(0, 1.2, 0), 6, 0.3, 0.4, 0.3, 0.03);
