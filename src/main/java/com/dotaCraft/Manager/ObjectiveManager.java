@@ -5,6 +5,7 @@ import com.dotaCraft.Objective.Tower;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
+import org.bukkit.entity.Entity;
 import org.bukkit.event.Listener;
 
 import java.util.ArrayList;
@@ -63,5 +64,34 @@ public class ObjectiveManager implements Listener {
             }
         }
         activeObjectives.clear();
+    }
+
+    public Objective getObjectiveByEntity(Entity entity) {
+        if (entity == null) return null;
+        for (Objective obj : activeObjectives) {
+            if (obj.getEntity() != null && obj.getEntity().equals(entity)) {
+                return obj;
+            }
+        }
+        return null;
+    }
+
+    public Objective getNearestEnemyObjective(Location loc, String myTeam, double maxRadius) {
+        Objective nearest = null;
+        double minDistSq = maxRadius * maxRadius;
+
+        for (Objective obj : activeObjectives) {
+            if (!obj.isAlive()) continue;
+            if (obj.getTeam().equalsIgnoreCase(myTeam)) continue;
+
+            if (obj.getEntity() == null || !obj.getEntity().isValid()) continue;
+
+            double distSq = loc.distanceSquared(obj.getEntity().getLocation());
+            if (distSq <= minDistSq) {
+                minDistSq = distSq;
+                nearest = obj;
+            }
+        }
+        return nearest;
     }
 }

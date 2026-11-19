@@ -158,4 +158,8 @@ public class CreepLaneManager implements Listener {
         return DotaCraft.getInstance().getCreepLaneManager().getActiveLaneCreep(targetUuid) != null
                 || DotaCraft.getInstance().getNeutralManager().getActiveCreep(targetUuid) != null;
     }
+
+    public java.util.Collection<LaneCreep> getAllActiveCreeps() {
+        return Collections.unmodifiableList(activeLaneCreeps);
+    }
 }

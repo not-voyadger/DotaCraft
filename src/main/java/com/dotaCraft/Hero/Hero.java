@@ -72,7 +72,7 @@ public abstract class Hero {
 
     private boolean isChanneling = false;
 
-    private int currentXp = 0;
+    private double currentXp = 0.0;
 
     private double baseMoveSpeed = 300.0;
 
@@ -139,6 +139,11 @@ public abstract class Hero {
     }
     // ------ Game loop ------
 
+    double hpRegen = getHealthRegen() / 20.0;
+    double manaRegen = (baseManaRegen + (getIntellect() * 0.05)) / 20.0;
+    double goldPerTick = 90.0 / 1200.0;
+    double xpPerTick = 50.0 / 1200.0;
+
     public void onTick() {
         if (player != null && player.isOnline()) {
             activeModifiers.removeIf(ModifierManager::tick);
@@ -147,15 +152,12 @@ public abstract class Hero {
                 innateAbility.onTick(this);
             }
 
-            double hpRegen = getHealthRegen() / 20.0;
-            double manaRegen = (baseManaRegen + (getIntellect() * 0.05)) / 20.0;
-            double goldPerTick = 90.0 / 1200.0;
-
             addHealth(hpRegen);
             addMana(manaRegen);
 
             updateSpeedAttribute();
             addGold(goldPerTick);
+            addXp(xpPerTick);
         }
     }
 
@@ -184,7 +186,7 @@ public abstract class Hero {
         return XP_VALUES[currentLevel - 1];
     }
 
-    public void addXp(int amount) {
+    public void addXp(double amount) {
         if (amount < 0) return;
 
         this.currentXp += amount;
@@ -687,7 +689,7 @@ public abstract class Hero {
         this.baseDamageMax += bonusBaseDamage;
     }
 
-    public int getCurrentXp() {
+    public double getCurrentXp() {
         return currentXp;
     }
 

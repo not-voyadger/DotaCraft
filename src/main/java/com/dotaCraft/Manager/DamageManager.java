@@ -101,6 +101,16 @@ public class DamageManager {
             targetHero.setCurrentHealth((int) Math.max(0, targetHero.getCurrentHealth() - finalDamage));
             targetHero.setLastAttacker(attacker);
 
+            if (attacker != null && attacker.getPlayer() != null && attacker.getTeam() != null
+                    && targetHero.getTeam() != null && !attacker.getTeam().equalsIgnoreCase(targetHero.getTeam())) {
+
+                for (LaneCreep creep : DotaCraft.getInstance().getCreepLaneManager().getAllActiveCreeps()) {
+                    if (creep.getTeam() != null && creep.getTeam().equalsIgnoreCase(targetHero.getTeam())) {
+                        creep.onEnemyHeroAttackAlly(attacker.getPlayer());
+                    }
+                }
+            }
+
             if (targetHero.getCurrentHealth() <= 0) {
                 onHeroDeath(attacker, targetHero);
             }

@@ -84,7 +84,7 @@ public class MainHUD {
         Component levelInfo = Component.text("   [Lvl ", NamedTextColor.YELLOW)
                 .append(Component.text(hero.getLevel(), NamedTextColor.YELLOW))
                 .append(Component.text(" (", NamedTextColor.GRAY))
-                .append(Component.text(hero.getCurrentXp() + "/" + hero.getRequiredXpToNextLevel(hero.getLevel()), NamedTextColor.GRAY))
+                .append(Component.text((int) hero.getCurrentXp() + "/" + hero.getRequiredXpToNextLevel(hero.getLevel()), NamedTextColor.GRAY))
                 .append(Component.text(" XP)]", NamedTextColor.YELLOW));
 
         Component abilitiesSummary = Component.empty();

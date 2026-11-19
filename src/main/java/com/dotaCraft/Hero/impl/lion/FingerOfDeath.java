@@ -6,6 +6,7 @@ import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Item.Item;
 import com.dotaCraft.Manager.DamageManager;
 import com.dotaCraft.Manager.HologramManager;
+import com.dotaCraft.Manager.IconManager;
 import com.dotaCraft.Utils.DotaUnits;
 import org.bukkit.Color;
 import org.bukkit.Location;
@@ -17,6 +18,9 @@ import org.bukkit.util.Vector;
 
 public class FingerOfDeath extends Ability {
 
+    public static final String STACK_EFFECT_ICON = "\uE509";
+    private int currentStack = 0;
+    public static final String EFFECT_ICON = "\uE508";
     public static final String ICON = "\uE503";
     private double[] additionalDamage = {20, 30, 40};
     private int charges = 0;
@@ -34,6 +38,11 @@ public class FingerOfDeath extends Ability {
         }
 
         return additionalDamage[currentLevel - 1];
+    }
+
+    @Override
+    public void onLearn(Hero hero) {
+        updateBuffIcon(hero);
     }
 
     @Override
@@ -81,12 +90,15 @@ public class FingerOfDeath extends Ability {
         double spellDamage = this.getDamage(level);
         DamageManager.dealDamageFromAbility(hero, targetEntity, spellDamage, getDamageType());
 
+        IconManager.spawnPositiveIcon(player, EFFECT_ICON, totalMeleeTicks);
+
         new BukkitRunnable() {
             @Override
             public void run() {
                 if (targetEntity.isDead() || targetEntity.getHealth() <= 0) {
                     addKill();
-                    player.sendMessage("§a[Debug] Killed with finger of death. Current charges: " + charges);
+                    currentStack++;
+                    updateBuffIcon(hero);
                 }
             }
         }.runTaskLater(DotaCraft.getInstance(), 1L);
@@ -140,5 +152,12 @@ public class FingerOfDeath extends Ability {
             start.getWorld().spawnParticle(Particle.DUST, current, 1, 0.0, 0.0, 0.0, 0.0, yellowDust);
             start.getWorld().spawnParticle(Particle.FLAME, current, 3, 0.03, 0.03, 0.03, 0.01);
         }
+    }
+
+    private void updateBuffIcon(Hero hero) {
+        Player player = hero.getPlayer();
+        if (player == null || !player.isOnline()) return;
+
+        IconManager.spawnPositiveIconWithStack(player, STACK_EFFECT_ICON, currentStack);
     }
 }

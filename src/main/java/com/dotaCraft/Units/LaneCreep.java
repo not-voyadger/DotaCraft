@@ -4,6 +4,7 @@ import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Manager.DamageManager;
 import com.dotaCraft.Manager.HeroManager;
+import com.dotaCraft.Objective.Objective;
 import com.dotaCraft.Utils.DotaUnits;
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.model.ActiveModel;
@@ -53,7 +54,14 @@ public class LaneCreep extends Creep {
     private final List<Location> waypoints;
     private int currentWaypointIndex = 0;
     private LivingEntity currentTarget = null;
+    private Objective currentObjectiveTarget = null;
+
     private long lastAttackTime = 0;
+    private int tickCounter = 0;
+
+    private LivingEntity forcedAggroTarget = null;
+    private long aggroExpireTime = 0;
+    private long aggroCooldownEndTime = 0;
 
     private ModeledEntity modeledEntity;
     private ActiveModel activeModel;
@@ -117,23 +125,66 @@ public class LaneCreep extends Creep {
     public void onTick() {
         if (isDead() || getEntity() == null) return;
         Mob mob = (Mob) getEntity();
+        tickCounter++;
+        long now = System.currentTimeMillis();
 
-        if (currentTarget == null || !currentTarget.isValid() || currentTarget.isDead()) {
-            currentTarget = findTarget();
+        if (forcedAggroTarget != null) {
+            if (now > aggroExpireTime || !forcedAggroTarget.isValid() || forcedAggroTarget.isDead()
+                    || mob.getLocation().distance(forcedAggroTarget.getLocation()) > getVisionRadius()) {
+                forcedAggroTarget = null;
+            }
+        }
+
+        boolean needTargetRecalc = (tickCounter % 10 == 0)
+                || (currentTarget == null && currentObjectiveTarget == null)
+                || (currentTarget != null && (!currentTarget.isValid() || currentTarget.isDead()))
+                || (currentObjectiveTarget != null && !currentObjectiveTarget.isAlive());
+
+        if (needTargetRecalc) {
+            if (forcedAggroTarget != null) {
+                currentTarget = forcedAggroTarget;
+                currentObjectiveTarget = null;
+            } else {
+                updateTargetByPriority(mob);
+            }
         }
 
         if (currentTarget != null) {
-            double dist = mob.getLocation().distance(currentTarget.getLocation());
+            handleEntityCombat(mob, currentTarget);
+        } else if (currentObjectiveTarget != null) {
+            handleObjectiveCombat(mob, currentObjectiveTarget);
+        } else {
+            followWaypoints(mob);
+        }
+    }
 
-            if (dist > getVisionRadius() || !currentTarget.isValid() || currentTarget.isDead()) {
-                currentTarget = null;
-                mob.getPathfinder().stopPathfinding();
-            } else if (dist <= getAttackRange()) {
-                mob.getPathfinder().stopPathfinding();
-                tryAttack(currentTarget);
-            } else {
-                mob.getPathfinder().moveTo(currentTarget.getLocation(), 0.5);
-            }
+    private void handleEntityCombat(Mob mob, LivingEntity target) {
+        double dist = mob.getLocation().distance(target.getLocation());
+
+        if (dist > getVisionRadius() || !target.isValid() || target.isDead()) {
+            currentTarget = null;
+            mob.getPathfinder().stopPathfinding();
+        } else if (dist <= getAttackRange()) {
+            mob.getPathfinder().stopPathfinding();
+            tryAttack(target);
+        } else {
+            mob.getPathfinder().moveTo(target.getLocation(), 1.0);
+        }
+    }
+
+    private void handleObjectiveCombat(Mob mob, Objective obj) {
+        Entity objEntity = obj.getEntity();
+        if (!obj.isAlive() || objEntity == null || !objEntity.isValid()) {
+            currentObjectiveTarget = null;
+            return;
+        }
+
+        double dist = mob.getLocation().distance(objEntity.getLocation());
+        if (dist <= getAttackRange() + 1.5) {
+            mob.getPathfinder().stopPathfinding();
+            tryAttackEntity(objEntity);
+        } else {
+            mob.getPathfinder().moveTo(objEntity.getLocation(), 1.0);
         }
     }
 
@@ -150,7 +201,66 @@ public class LaneCreep extends Creep {
         mob.getPathfinder().moveTo(targetLoc, 1.0);
     }
 
-    // FIXME: something wrong here, for some reason creep target himself?
+    private void updateTargetByPriority(Mob mob) {
+        LivingEntity bestUnit = null;
+        double closestUnitDistSq = getVisionRadius() * getVisionRadius();
+
+        for (Entity nearby : mob.getWorld().getNearbyEntities(mob.getLocation(), getVisionRadius(), 4.0, getVisionRadius())) {
+            if (!(nearby instanceof LivingEntity target)) continue;
+            if (target.equals(mob) || mob.getPassengers().contains(target)) continue;
+            if (target instanceof ArmorStand || target instanceof Display) continue;
+            if (target.hasMetadata("no_vision_check")) continue;
+            if (target.isDead() || !target.isValid()) continue;
+
+            if (DotaCraft.getInstance().getObjectiveManager().getObjectiveByEntity(target) != null) {
+                continue;
+            }
+
+            if (isAlly(target)) continue;
+
+            double distSq = mob.getLocation().distanceSquared(target.getLocation());
+            if (distSq < closestUnitDistSq) {
+                closestUnitDistSq = distSq;
+                bestUnit = target;
+            }
+        }
+
+        Objective nearestTower = DotaCraft.getInstance().getObjectiveManager()
+                .getNearestEnemyObjective(mob.getLocation(), this.getTeam(), getVisionRadius());
+
+        if (this.creepType == CreepType.SIEGE && nearestTower != null) {
+            this.currentObjectiveTarget = nearestTower;
+            this.currentTarget = null;
+            return;
+        }
+
+        if (bestUnit != null) {
+            this.currentTarget = bestUnit;
+            this.currentObjectiveTarget = null;
+        } else if (nearestTower != null) {
+            this.currentObjectiveTarget = nearestTower;
+            this.currentTarget = null;
+        } else {
+            this.currentTarget = null;
+            this.currentObjectiveTarget = null;
+        }
+    }
+
+    public void onEnemyHeroAttackAlly(LivingEntity enemyHero) {
+        long now = System.currentTimeMillis();
+        if (now < aggroCooldownEndTime) return;
+        if (getEntity() == null || enemyHero == null) return;
+
+        if (getEntity().getLocation().distance(enemyHero.getLocation()) <= getVisionRadius()) {
+            this.forcedAggroTarget = enemyHero;
+            this.currentTarget = enemyHero;
+            this.currentObjectiveTarget = null;
+
+            this.aggroExpireTime = now + 2300;
+            this.aggroCooldownEndTime = now + 3000;
+        }
+    }
+
     private LivingEntity findTarget() {
         if (getEntity() == null || !getEntity().isValid()) return null;
 
@@ -193,6 +303,11 @@ public class LaneCreep extends Creep {
             return activeCreep.getTeam().equalsIgnoreCase(this.getTeam());
         }
 
+        Objective obj = DotaCraft.getInstance().getObjectiveManager().getObjectiveByEntity(target);
+        if (obj != null) {
+            return obj.getTeam().equalsIgnoreCase(this.getTeam());
+        }
+
         NeutralCreep neutral = DotaCraft.getInstance().getNeutralManager().getActiveCreep(target.getUniqueId());
         if (neutral != null) {
             return true;
@@ -202,6 +317,20 @@ public class LaneCreep extends Creep {
     }
 
     private void tryAttack(LivingEntity target) {
+        long now = System.currentTimeMillis();
+        if (now - lastAttackTime >= 1000) {
+            lastAttackTime = now;
+            DamageManager.dealDamage(null, target, getDamage(), com.dotaCraft.Ability.Ability.DamageTypes.PHYSICAL);
+
+            if (activeModel != null && activeModel.getAnimationHandler() != null) {
+                activeModel.getAnimationHandler().playAnimation("melee_attack", 0.1, 0.1, 1.0, true);
+            }
+
+            getEntity().getWorld().playSound(getEntity().getLocation(), Sound.ENTITY_PLAYER_ATTACK_SWEEP, 0.6f, 1.2f);
+        }
+    }
+
+    private void tryAttackEntity(Entity target) {
         long now = System.currentTimeMillis();
         if (now - lastAttackTime >= 1000) {
             lastAttackTime = now;
