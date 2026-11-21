@@ -27,5 +27,6 @@ public class Axe extends Hero {
         );
 
         addAbility(1, new BattleHunger());
+        addAbility(3, new CullingBlade());
     }
 }

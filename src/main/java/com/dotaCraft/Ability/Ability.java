@@ -39,6 +39,7 @@ public abstract class Ability {
     private int abilityLevel;
     private int abilityMaxLevel;
     private int requiredHeroLevel;
+    private long cooldownEndMillis = 0L;
 
     private boolean isInnate;
     private boolean hasScepterUpgrade;
@@ -118,6 +119,25 @@ public abstract class Ability {
         }
     }
 
+    public void startCooldown() {
+        startCooldown(1.0);
+    }
+
+    public void startCooldown(double cooldownReductionMultiplier) {
+        double baseCdSeconds = getCoolDown(this.abilityLevel);
+        long durationMillis = Math.round(baseCdSeconds * cooldownReductionMultiplier * 1000.0);
+        this.cooldownEndMillis = System.currentTimeMillis() + durationMillis;
+    }
+
+    public boolean isOnCooldown() {
+        return System.currentTimeMillis() < this.cooldownEndMillis;
+    }
+
+    public double getRemainingCooldown() {
+        long remaining = this.cooldownEndMillis - System.currentTimeMillis();
+        return remaining > 0 ? remaining / 1000.0 : 0.0;
+    }
+
     // ------ Event Hooks / Callbacks ------
 
     public void onCast(Hero hero) {} // no usages - delete?
@@ -172,6 +192,10 @@ public abstract class Ability {
 
     public void setAbilityLevel(int abilityLevel) {
         this.abilityLevel = Math.min(abilityLevel, abilityMaxLevel);
+    }
+
+    public void resetCooldown() {
+        this.cooldownEndMillis = 0L;
     }
 
 
