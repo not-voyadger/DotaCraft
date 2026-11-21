@@ -42,7 +42,7 @@ public class BattleHunger extends Ability {
                 new double[] {0, 0, 0, 0},
                 new double[] {20, 15, 10, 5},
                 new double[] {700, 775, 850, 925},
-                0.8,
+                0.3,
                 new double[] {0, 0, 0, 0},
                 new double[] {12, 12, 12, 12},
                 1,
@@ -72,14 +72,26 @@ public class BattleHunger extends Ability {
             return false;
         }
 
-        int abilityLevel = getAbilityLevel();
-        int levelIndex = Math.max(0, Math.min(abilityLevel - 1, victimSlownessInPercent.length - 1));
-        double slowPercent = victimSlownessInPercent[levelIndex];
+        startCastWithPoint(hero, () -> {
+            if (!targetEntity.isValid() || targetEntity.isDead() || !targetEntity.getWorld().equals(player.getWorld())) {
+                return;
+            }
 
-        double durationTicks = this.getDuration(hero.getLevel()) * 20;
-        double damagePerTick = getDamage(getAbilityLevel());
+            double maxAllowedDistance = range + 2.0;
+            if (player.getLocation().distanceSquared(targetEntity.getLocation()) > maxAllowedDistance * maxAllowedDistance) {
+                return;
+            }
 
-        markEntityWithBattleHunger(hero, targetEntity, durationTicks, damagePerTick, slowPercent);
+            int abilityLevel = getAbilityLevel();
+            int levelIndex = Math.max(0, Math.min(abilityLevel - 1, victimSlownessInPercent.length - 1));
+            double slowPercent = victimSlownessInPercent[levelIndex];
+
+            double durationTicks = this.getDuration(hero.getLevel()) * 20;
+            double damagePerTick = getDamage(getAbilityLevel());
+
+            markEntityWithBattleHunger(hero, targetEntity, durationTicks, damagePerTick, slowPercent);
+
+        }, null);
 
         return true;
     }

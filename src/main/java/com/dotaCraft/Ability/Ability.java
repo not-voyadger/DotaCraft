@@ -1,11 +1,16 @@
 package com.dotaCraft.Ability;
 
+import com.dotaCraft.DotaCraft;
 import com.dotaCraft.Hero.Hero;
 import com.dotaCraft.Utils.DotaUnits;
 import org.bukkit.entity.LivingEntity;
+import org.bukkit.entity.Player;
+import org.bukkit.scheduler.BukkitRunnable;
+import org.bukkit.scheduler.BukkitTask;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.UUID;
 
 /**
  * Abstract base class representing a Dota ability.
@@ -41,6 +46,8 @@ public abstract class Ability {
 
     private String iconSymbol = "";
 
+    private static final Map<UUID, BukkitTask> ACTIVE_CASTS = new HashMap<>();
+
     private final Map specialValues = new HashMap<>();
 
     public Ability(DamageTypes damageType, AbilityTypes abilityType, TargetTypes targetType, DispelTypes dispelType,
@@ -75,6 +82,41 @@ public abstract class Ability {
      * @return true if the cast was successful
      */
     public abstract boolean cast(Hero hero);
+
+    protected void startCastWithPoint(Hero hero, Runnable onComplete, Runnable onCancel) {
+        Player player = hero.getPlayer();
+        UUID uuid = player.getUniqueId();
+
+        cancelCast(uuid);
+
+        long delayTicks = Math.round(this.castPoint * 20.0);
+
+        if (delayTicks <= 0) {
+            onComplete.run();
+            return;
+        }
+
+        BukkitTask task = new BukkitRunnable() {
+            @Override
+            public void run() {
+                ACTIVE_CASTS.remove(uuid);
+                if (!player.isOnline() || player.isDead()) {
+                    if (onCancel != null) onCancel.run();
+                    return;
+                }
+                onComplete.run();
+            }
+        }.runTaskLater(DotaCraft.getInstance(), delayTicks);
+
+        ACTIVE_CASTS.put(uuid, task);
+    }
+
+    public static void cancelCast(UUID playerUuid) {
+        BukkitTask existing = ACTIVE_CASTS.remove(playerUuid);
+        if (existing != null && !existing.isCancelled()) {
+            existing.cancel();
+        }
+    }
 
     // ------ Event Hooks / Callbacks ------
 
