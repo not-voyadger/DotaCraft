@@ -24,7 +24,10 @@ public class ModelEngineHook {
         if (entity == null) return;
         ModeledEntity modeledEntity = ModelEngineAPI.getModeledEntity(entity);
         if (modeledEntity != null) {
-            modeledEntity.removeModel(modelId);
+            modeledEntity.setBaseEntityVisible(true);
+            if (modelId != null) {
+                modeledEntity.removeModel(modelId);
+            }
             modeledEntity.destroy();
         }
         ModelEngineAPI.removeModeledEntity(entity.getUniqueId());

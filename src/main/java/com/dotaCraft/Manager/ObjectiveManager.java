@@ -32,9 +32,9 @@ public class ObjectiveManager implements Listener {
         spawnTower("Radiant Top T3", Objective.TeamEnum.RADIANT, 3, new Location(world, -273, -38, 10));
 
         // --- MID LANE ---
-        /*spawnTower("Radiant Mid T1", Objective.TeamEnum.RADIANT, 1, new Location(world, -45.5, 64.0, -45.5));
+        spawnTower("Radiant Mid T1", Objective.TeamEnum.RADIANT, 1, new Location(world, -45.5, 64.0, -45.5));
         spawnTower("Radiant Mid T2", Objective.TeamEnum.RADIANT, 2, new Location(world, -80.5, 64.0, -10.5));
-        spawnTower("Radiant Mid T3", Objective.TeamEnum.RADIANT, 3, new Location(world, -110.5, 64.0, 20.5));*/
+        spawnTower("Radiant Mid T3", Objective.TeamEnum.RADIANT, 3, new Location(world, -110.5, 64.0, 20.5));
 
         // --- BOT LANE ---
         spawnTower("Radiant Bot T1", Objective.TeamEnum.RADIANT, 1, new Location(world, -143, -40, 54));
@@ -44,6 +44,13 @@ public class ObjectiveManager implements Listener {
         // --- T4 TOWERS (Ancient Protectors) ---
         spawnTower("Radiant Ancient T4 Left", Objective.TeamEnum.RADIANT, 4, new Location(world, -255, -39, 33));
         spawnTower("Radiant Ancient T4 Right", Objective.TeamEnum.RADIANT, 4, new Location(world, -251, -39, 37));
+    }
+
+    public void setupDireStructures(World world) {
+        if (world == null) return;
+
+        // Dire Mid T1
+        spawnTower("Dire Mid T1", Objective.TeamEnum.DIRE, 1, new Location(world, -164, -36, -50));
     }
 
     public void onTick() {

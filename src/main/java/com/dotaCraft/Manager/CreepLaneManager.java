@@ -51,6 +51,25 @@ public class CreepLaneManager implements Listener {
         ));
 
         // MID LANE
+        radiantWaypoints.put("MID", List.of(
+                new Location(world, -245, -39, 28),
+                new Location(world, -215, -39, -5),
+                new Location(world, -164, -36, -50)
+        ));
+    }
+
+    public void spawnMidMeleeWave(World world) {
+        if (!radiantWaypoints.containsKey("MID")) {
+            setupRadiantWaypoints(world);
+        }
+
+        List<Location> midPoints = radiantWaypoints.get("MID");
+        Location spawnLoc = midPoints.get(0);
+
+        for (int i = 0; i < 3; i++) {
+            Location offsetLoc = spawnLoc.clone().add((i - 1) * 1.2, 0, (i - 1) * 1.2);
+            spawnCreep(LaneCreep.CreepType.MELEE, offsetLoc, midPoints);
+        }
     }
 
     public void startSpawning(World world) {
@@ -107,13 +126,41 @@ public class CreepLaneManager implements Listener {
         });
     }
 
+    public LaneCreep getActiveLaneCreep(Entity entity) {
+        if (entity == null) return null;
+        return getActiveLaneCreep(entity.getUniqueId());
+    }
+
     public LaneCreep getActiveLaneCreep(UUID uuid) {
+        if (uuid == null) return null;
+
+        UUID resolvedUuid = uuid;
+        if (Bukkit.getPluginManager().isPluginEnabled("ModelEngine")) {
+            Entity entity = Bukkit.getEntity(uuid);
+            if (entity != null) {
+                ModeledEntity modeledEntity = ModelEngineAPI.getModeledEntity(entity);
+                if (modeledEntity != null && modeledEntity.getBase() != null) {
+                    resolvedUuid = modeledEntity.getBase().getUUID();
+                }
+            }
+        }
+
         for (LaneCreep creep : activeLaneCreeps) {
-            if (creep.getEntity() != null && creep.getEntity().getUniqueId().equals(uuid)) {
+            if (creep.getEntity() != null && creep.getEntity().getUniqueId().equals(resolvedUuid)) {
                 return creep;
             }
         }
         return null;
+    }
+
+    @EventHandler(priority = EventPriority.MONITOR)
+    public void onCreepDeath(org.bukkit.event.entity.EntityDeathEvent event) {
+        LaneCreep creep = getActiveLaneCreep(event.getEntity());
+        if (creep != null) {
+            creep.removeCustomModel();
+            DotaCraft.getInstance().getHealthBarManager().removeBar(event.getEntity());
+            activeLaneCreeps.remove(creep);
+        }
     }
 
     public void addLaneCreep(LaneCreep creep) {
@@ -124,6 +171,7 @@ public class CreepLaneManager implements Listener {
 
     public void clearAll() {
         for (LaneCreep creep : activeLaneCreeps) {
+            creep.removeCustomModel();
             if (creep.getEntity() != null && creep.getEntity().isValid()) {
                 creep.getEntity().remove();
             }

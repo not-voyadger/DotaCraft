@@ -6,6 +6,7 @@ import com.dotaCraft.Manager.DamageManager;
 import com.dotaCraft.Manager.HeroManager;
 import com.dotaCraft.Objective.Objective;
 import com.dotaCraft.Utils.DotaUnits;
+import com.dotaCraft.Utils.ModelEngineHook;
 import com.ticxo.modelengine.api.ModelEngineAPI;
 import com.ticxo.modelengine.api.model.ActiveModel;
 import com.ticxo.modelengine.api.model.ModeledEntity;
@@ -113,12 +114,16 @@ public class LaneCreep extends Creep {
 
     @Override
     public void die(Hero killer) {
-        if (hasModel && getEntity() != null) {
-            if (org.bukkit.Bukkit.getPluginManager().isPluginEnabled("ModelEngine")) {
-                com.dotaCraft.Utils.ModelEngineHook.removeModel(getEntity(), creepType.modelId);
-            }
-        }
+        removeCustomModel();
         super.die(killer);
+    }
+
+    public void removeCustomModel() {
+        if (getEntity() != null && org.bukkit.Bukkit.getPluginManager().isPluginEnabled("ModelEngine")) {
+            com.dotaCraft.Utils.ModelEngineHook.removeModel(getEntity(), creepType.modelId);
+            this.activeModel = null;
+            this.hasModel = false;
+        }
     }
 
     @Override
@@ -180,10 +185,10 @@ public class LaneCreep extends Creep {
         }
 
         double dist = mob.getLocation().distance(objEntity.getLocation());
-        if (dist <= getAttackRange() + 1.5) {
+        if (dist <= getAttackRange() + 2.0) {
             mob.getPathfinder().stopPathfinding();
             tryAttackEntity(objEntity);
-        } else {
+        } else if (tickCounter % 10 == 0) {
             mob.getPathfinder().moveTo(objEntity.getLocation(), 1.0);
         }
     }
@@ -202,6 +207,15 @@ public class LaneCreep extends Creep {
     }
 
     private void updateTargetByPriority(Mob mob) {
+        Objective nearestTower = DotaCraft.getInstance().getObjectiveManager()
+                .getNearestEnemyObjective(mob.getLocation(), this.getTeam(), getVisionRadius());
+
+        if (nearestTower != null) {
+            this.currentObjectiveTarget = nearestTower;
+            this.currentTarget = null;
+            return;
+        }
+
         LivingEntity bestUnit = null;
         double closestUnitDistSq = getVisionRadius() * getVisionRadius();
 
@@ -225,21 +239,9 @@ public class LaneCreep extends Creep {
             }
         }
 
-        Objective nearestTower = DotaCraft.getInstance().getObjectiveManager()
-                .getNearestEnemyObjective(mob.getLocation(), this.getTeam(), getVisionRadius());
-
-        if (this.creepType == CreepType.SIEGE && nearestTower != null) {
-            this.currentObjectiveTarget = nearestTower;
-            this.currentTarget = null;
-            return;
-        }
-
         if (bestUnit != null) {
             this.currentTarget = bestUnit;
             this.currentObjectiveTarget = null;
-        } else if (nearestTower != null) {
-            this.currentObjectiveTarget = nearestTower;
-            this.currentTarget = null;
         } else {
             this.currentTarget = null;
             this.currentObjectiveTarget = null;

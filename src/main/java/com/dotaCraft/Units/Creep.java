@@ -97,7 +97,7 @@ public abstract class Creep implements VisionSource {
 
             org.bukkit.Bukkit.getScheduler().runTask(com.dotaCraft.DotaCraft.getInstance(), () -> {
                 if (entity.isValid()) {
-                    entity.setHealth(0);
+                    entity.remove();
                 }
             });
 

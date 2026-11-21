@@ -2,6 +2,7 @@ package com.dotaCraft.Manager;
 
 import com.dotaCraft.Ability.Ability;
 import com.dotaCraft.Hero.Hero;
+import com.dotaCraft.Hero.impl.axe.Axe;
 import com.dotaCraft.Hero.impl.crystal_maiden.CrystalMaiden;
 import com.dotaCraft.Hero.impl.invoker.Invoker;
 import com.dotaCraft.Hero.impl.lion.Lion;
@@ -34,6 +35,7 @@ public class HeroManager {
         registerHeroType("lion", player -> new Lion((Player) player));
         registerHeroType("crystal_maiden", player -> new CrystalMaiden((Player) player));
         registerHeroType("shadow_fiend", player -> new ShadowFiend((Player) player));
+        registerHeroType("axe", player -> new Axe((Player) player));
     }
 
     public static void registerHeroType(String id, Function factory) {

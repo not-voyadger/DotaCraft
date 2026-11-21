@@ -32,8 +32,10 @@ public class CommandStartGame implements BasicCommand {
 
         plugin.getObjectiveManager().clearAll();
         plugin.getObjectiveManager().setupRadiantStructures(world);
+        plugin.getObjectiveManager().setupDireStructures(world);
 
-        plugin.getCreepLaneManager().startSpawning(world);
+        plugin.getCreepLaneManager().stopSpawning();
+        plugin.getCreepLaneManager().spawnMidMeleeWave(world);
 
         Bukkit.broadcast(net.kyori.adventure.text.Component.text(
                 "§a§l[DotaCraft] §fGame started."

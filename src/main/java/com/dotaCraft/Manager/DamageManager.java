@@ -22,7 +22,7 @@ public class DamageManager {
         Hero targetHero = (target instanceof Player playerTarget) ? HeroManager.getHero(playerTarget) : null;
 
         NeutralCreep neutralCreep = DotaCraft.getInstance().getNeutralManager().getActiveCreep(target.getUniqueId());
-        LaneCreep laneCreep = DotaCraft.getInstance().getCreepLaneManager().getActiveLaneCreep(target.getUniqueId());
+        LaneCreep laneCreep = DotaCraft.getInstance().getCreepLaneManager().getActiveLaneCreep(target);
 
         double finalDamage = rawDamage;
         boolean isCrit = false;
@@ -162,7 +162,7 @@ public class DamageManager {
     private static double processAndApplyDamage(Hero attacker, LivingEntity target, double rawDamage, Ability.DamageTypes damageType, boolean isCrit) {
         Hero targetHero = (target instanceof Player playerTarget) ? HeroManager.getHero(playerTarget) : null;
         NeutralCreep neutralCreep = DotaCraft.getInstance().getNeutralManager().getActiveCreep(target.getUniqueId());
-        LaneCreep laneCreep = DotaCraft.getInstance().getCreepLaneManager().getActiveLaneCreep(target.getUniqueId());
+        LaneCreep laneCreep = DotaCraft.getInstance().getCreepLaneManager().getActiveLaneCreep(target);
 
         double finalDamage = rawDamage;
 
